@@ -15,6 +15,7 @@
 		88CA1B375DDC9EE88FE8D6A1 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 3CD2C335F027037535B4A313 /* PaCoShared */; };
 		AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */ = {isa = PBXBuildFile; fileRef = CB7661AD36BD006657E4F3AF /* PaCoAgent */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */; };
+		B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */; };
 		BBDBFBD2174DD468760A1D3B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCAF4EC892D63060DA886D /* main.swift */; };
 		DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */; };
 		E3FFB3EB2ABEB397C7AB874F /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61045659EE0AA299C210FD6E /* PaCoShared */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINManagerTests.swift; sourceTree = "<group>"; };
 		47FCAF4EC892D63060DA886D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		97A9911EFF8E1908510B6E7F /* PaCoShared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PaCoShared; path = PaCoShared; sourceTree = SOURCE_ROOT; };
@@ -111,6 +113,7 @@
 			children = (
 				7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */,
 				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
+				2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */,
 			);
 			path = PaCoTests;
 			sourceTree = "<group>";
@@ -288,6 +291,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */,
+				B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */,
 				21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
