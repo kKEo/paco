@@ -37,13 +37,13 @@ final class MenuBarManager: ObservableObject {
 
         if isGracePeriod {
             color = .systemYellow
-            imageName = "shield.checkered"
+            imageName = "shield.trianglebadge.exclamationmark"
         } else if isInternetEnabled {
             color = .systemGreen
             imageName = "shield.checkered"
         } else {
             color = .systemRed
-            imageName = "shield.checkered"
+            imageName = "shield.slash"
         }
 
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)

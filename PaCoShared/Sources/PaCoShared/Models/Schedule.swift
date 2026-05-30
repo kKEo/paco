@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-public final class Schedule {
+public final class Schedule: Schedulable {
     @Attribute(.unique) public var id: UUID
     public var label: String
     public var daysRaw: [Int]

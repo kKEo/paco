@@ -3,7 +3,7 @@ import SwiftData
 import PaCoShared
 
 struct HomeView: View {
-    @StateObject private var daemonClient = DaemonXPCClient()
+    @EnvironmentObject private var daemonClient: DaemonXPCClient
     @Query private var profiles: [ChildProfile]
     @Query private var pairings: [PairingInfo]
 
@@ -32,7 +32,6 @@ struct HomeView: View {
             }
             .padding(24)
         }
-        .onAppear { daemonClient.connect() }
     }
 }
 

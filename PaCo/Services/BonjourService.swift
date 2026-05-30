@@ -133,14 +133,50 @@ final class BonjourService: ObservableObject {
     }
 
     private func receiveMessages(on connection: NWConnection, handler: @escaping (PaCoResponse) -> Void) {
-        connection.receive(minimumIncompleteLength: 4, maximumLength: 65536) { [weak self] data, _, _, error in
-            if let data, data.count > 4 {
-                if let response = try? JSONDecoder().decode(PaCoResponse.self, from: data.dropFirst(4)) {
-                    handler(response)
-                }
+        // Step 1: Read exactly 4 bytes for the length header
+        connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { [weak self] headerData, _, _, error in
+            guard let self else { return }
+
+            if let error {
+                self.logger.error("Receive header error: \(error)")
+                return
             }
-            if error == nil {
-                self?.receiveMessages(on: connection, handler: handler)
+
+            guard let headerData, headerData.count == 4 else {
+                self.logger.warning("Incomplete header received")
+                return
+            }
+
+            // Parse length from big-endian 4-byte header
+            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+            guard length > 0, length < 1_048_576 else {  // Max 1MB message
+                self.logger.warning("Invalid message length: \(length)")
+                return
+            }
+
+            // Step 2: Read exactly `length` bytes for the message body
+            let messageLength = Int(length)
+            connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, bodyError in
+                guard let self else { return }
+
+                if let bodyError {
+                    self.logger.error("Receive body error: \(bodyError)")
+                    return
+                }
+
+                guard let bodyData, bodyData.count == messageLength else {
+                    self.logger.warning("Incomplete body: expected \(messageLength) bytes")
+                    return
+                }
+
+                if let response = try? JSONDecoder().decode(PaCoResponse.self, from: bodyData) {
+                    handler(response)
+                } else {
+                    self.logger.warning("Failed to decode PaCoResponse from \(messageLength) bytes")
+                }
+
+                // Continue receiving next message
+                self.receiveMessages(on: connection, handler: handler)
             }
         }
     }

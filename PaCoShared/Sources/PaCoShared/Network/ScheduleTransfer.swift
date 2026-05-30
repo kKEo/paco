@@ -3,7 +3,7 @@ import Foundation
 /// Codable schedule representation for network transfer and agent-side storage.
 /// The agent cannot use SwiftData @Model classes, so this lightweight struct
 /// is used for JSON serialization over Bonjour and local file caching.
-public struct ScheduleTransfer: Codable, Sendable, Equatable {
+public struct ScheduleTransfer: Codable, Sendable, Equatable, Schedulable {
     public var id: UUID
     public var label: String
     public var days: [DayOfWeek]

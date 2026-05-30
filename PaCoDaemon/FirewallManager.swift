@@ -2,34 +2,53 @@ import Foundation
 import PaCoShared
 
 final class FirewallManager {
-    private(set) var isBlocking = false
+    private var _isBlocking = false
+    private let lock = NSLock()
     private let logger = PaCoLogger.firewall
 
+    var isBlocking: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return _isBlocking
+    }
+
     func disableInternet() throws {
+        lock.lock()
+        defer { lock.unlock() }
         let rules = FirewallRuleBuilder.blockInternetRules()
         try rules.write(toFile: FirewallRuleBuilder.anchorFilePath, atomically: true, encoding: .utf8)
         try runPfctl(["-e"])
         try ensureAnchorInMainRuleset()
         try runPfctl(["-a", FirewallRuleBuilder.anchorName, "-f", FirewallRuleBuilder.anchorFilePath])
-        isBlocking = true
+        _isBlocking = true
         logger.info("Internet disabled: pf anchor rules loaded")
     }
 
     func enableInternet() throws {
+        lock.lock()
+        defer { lock.unlock() }
         try runPfctl(["-a", FirewallRuleBuilder.anchorName, "-F", "rules"])
         try? FileManager.default.removeItem(atPath: FirewallRuleBuilder.anchorFilePath)
-        isBlocking = false
+        _isBlocking = false
         logger.info("Internet enabled: pf anchor rules flushed")
     }
 
     func verifyIntegrity() -> Bool {
-        guard isBlocking else { return true }
+        lock.lock()
+        defer { lock.unlock() }
+        guard _isBlocking else { return true }
         do {
             let output = try runPfctlWithOutput(["-a", FirewallRuleBuilder.anchorName, "-sr"])
             let hasBlockRule = output.contains("block drop")
             if !hasBlockRule {
-                logger.warning("Tamper detected: pf anchor rules are missing")
-                try? disableInternet()
+                logger.warning("Tamper detected: pf anchor rules are missing, re-applying...")
+                do {
+                    try disableInternet()
+                    logger.info("Tamper recovery: rules re-applied successfully")
+                } catch {
+                    logger.error("Tamper recovery FAILED: \(error.localizedDescription)")
+                    // State is inconsistent — keep isBlocking true so we keep retrying
+                }
             }
             return hasBlockRule
         } catch {
@@ -38,14 +57,48 @@ final class FirewallManager {
         }
     }
 
+    /// Ensure the pf anchor reference exists in the main ruleset.
+    /// Uses /etc/pf.anchors/ for the anchor file and only appends to pf.conf if needed.
+    /// Idempotent: multiple calls are safe.
     private func ensureAnchorInMainRuleset() throws {
         let pfConf = "/etc/pf.conf"
         let anchorLine = "anchor \"\(FirewallRuleBuilder.anchorName)\""
-        guard let content = try? String(contentsOfFile: pfConf, encoding: .utf8) else { return }
+
+        // Read current pf.conf
+        let content: String
+        do {
+            content = try String(contentsOfFile: pfConf, encoding: .utf8)
+        } catch {
+            logger.warning("Cannot read \(pfConf): \(error.localizedDescription)")
+            return
+        }
+
+        // Already present — nothing to do
         if content.contains(anchorLine) { return }
-        let updatedContent = content + "\n\(anchorLine)\n"
-        try updatedContent.write(toFile: pfConf, atomically: true, encoding: .utf8)
-        try runPfctl(["-f", pfConf])
+
+        // Create a backup before modifying
+        let backupPath = pfConf + ".paco-backup"
+        if !FileManager.default.fileExists(atPath: backupPath) {
+            try? FileManager.default.copyItem(atPath: pfConf, toPath: backupPath)
+            logger.info("Backed up \(pfConf) to \(backupPath)")
+        }
+
+        // Append anchor line
+        let updatedContent = content.trimmingCharacters(in: .newlines) + "\n\(anchorLine)\n"
+        do {
+            try updatedContent.write(toFile: pfConf, atomically: true, encoding: .utf8)
+            try runPfctl(["-f", pfConf])
+            logger.info("Added anchor to \(pfConf)")
+        } catch {
+            logger.error("Failed to update \(pfConf): \(error.localizedDescription)")
+            // Try to restore backup
+            if FileManager.default.fileExists(atPath: backupPath) {
+                try? FileManager.default.copyItem(atPath: backupPath, toPath: pfConf)
+                _ = try? runPfctl(["-f", pfConf])
+                logger.info("Restored \(pfConf) from backup")
+            }
+            throw error
+        }
     }
 
     @discardableResult
@@ -57,6 +110,9 @@ final class FirewallManager {
         process.standardError = FileHandle.nullDevice
         try process.run()
         process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw FirewallError.pfctlFailed(arguments: arguments, exitCode: process.terminationStatus)
+        }
         return process
     }
 
@@ -71,5 +127,16 @@ final class FirewallManager {
         process.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         return String(data: data, encoding: .utf8) ?? ""
+    }
+}
+
+enum FirewallError: LocalizedError {
+    case pfctlFailed(arguments: [String], exitCode: Int32)
+
+    var errorDescription: String? {
+        switch self {
+        case .pfctlFailed(let args, let code):
+            return "pfctl \(args.joined(separator: " ")) exited with code \(code)"
+        }
     }
 }

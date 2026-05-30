@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 import PaCoShared
 
@@ -58,17 +57,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             return
         }
 
-        let converted = schedules.map { transfer in
-            Schedule(
-                label: transfer.label,
-                days: transfer.days,
-                offHour: transfer.offHour, offMinute: transfer.offMinute,
-                onHour: transfer.onHour, onMinute: transfer.onMinute,
-                gracePeriodMinutes: transfer.gracePeriodMinutes
-            )
-        }
-
-        let action = ScheduleEvaluator.evaluate(schedules: converted, at: Date())
+        let action = ScheduleEvaluator.evaluate(schedules: schedules, at: Date())
         switch action {
         case .allowed:
             setInternet(enabled: true)
@@ -132,12 +121,15 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     // MARK: - Notifications
+    // NOTE: UNUserNotificationCenter requires an .app bundle proxy and cannot be used
+    // in a LaunchAgent CLI tool. Blocked-app events are logged here; user-facing
+    // notifications will be delivered by the PaCo.app in V1.1 via the Bonjour channel.
 
     private func sendNotification(title: String, body: String) {
-        let notification = NSUserNotification()
-        notification.title = title
-        notification.informativeText = body
-        notification.soundName = NSUserNotificationDefaultSoundName
-        NSUserNotificationCenter.default.deliver(notification)
+        logger.info("Notification (not delivered — agent has no bundle): \(title): \(body)")
+    }
+
+    func requestNotificationPermission() {
+        // No-op in agent context; handled by PaCo.app
     }
 }

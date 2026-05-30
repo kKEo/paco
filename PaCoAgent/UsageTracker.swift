@@ -93,7 +93,6 @@ final class UsageTracker {
         if today != currentDate {
             logger.info("Day rolled over, resetting usage counters")
             reset()
-            currentDate = today
         }
     }
 }

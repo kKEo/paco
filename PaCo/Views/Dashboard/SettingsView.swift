@@ -21,7 +21,7 @@ struct SettingsView: View {
                     Button("Update PIN") {
                         changePIN()
                     }
-                    .disabled(currentPIN.isEmpty || newPIN.count != 6)
+                    .disabled(currentPIN.isEmpty || newPIN.count != 6 || !newPIN.allSatisfy(\.isNumber))
 
                     if !message.isEmpty {
                         Text(message)

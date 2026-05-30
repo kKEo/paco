@@ -2,8 +2,9 @@ import SwiftUI
 import PaCoShared
 
 struct ChildModeView: View {
+    @EnvironmentObject private var daemonClient: DaemonXPCClient
+    @Environment(AppState.self) private var appState
     @StateObject private var menuBarManager = MenuBarManager()
-    @StateObject private var daemonClient = DaemonXPCClient()
     @State private var showPINPrompt = false
     @State private var pinEntry = ""
     @State private var pinError = ""
@@ -51,7 +52,6 @@ struct ChildModeView: View {
         .frame(width: 350, height: 400)
         .onAppear {
             menuBarManager.setup()
-            daemonClient.connect()
         }
         .onDisappear {
             menuBarManager.tearDown()
@@ -90,7 +90,7 @@ struct ChildModeView: View {
                 showPINPrompt = false
                 pinEntry = ""
                 pinError = ""
-                // Switch to parent mode would go here
+                appState.mode = .parent
             } else {
                 pinError = "Incorrect PIN"
             }
