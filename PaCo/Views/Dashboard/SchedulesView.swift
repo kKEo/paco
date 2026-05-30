@@ -9,41 +9,51 @@ struct SchedulesView: View {
     @State private var showingAddSheet = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            HStack {
-                Text("Schedules")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                Spacer()
-                Button("Add Schedule", systemImage: "plus") {
-                    showingAddSheet = true
-                }
-            }
-
-            if schedules.isEmpty {
-                ContentUnavailableView(
-                    "No Schedules",
-                    systemImage: "clock.badge.questionmark",
-                    description: Text("Create a schedule to automate internet access.")
-                )
-            } else {
-                List {
-                    ForEach(schedules) { schedule in
-                        ScheduleRow(schedule: schedule)
+        ZStack {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    Text("Schedules")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Spacer()
+                    Button("Add Schedule", systemImage: "plus") {
+                        showingAddSheet = true
                     }
-                    .onDelete { offsets in
-                        for index in offsets {
-                            modelContext.delete(schedules[index])
+                }
+
+                if schedules.isEmpty {
+                    ContentUnavailableView(
+                        "No Schedules",
+                        systemImage: "clock.badge.questionmark",
+                        description: Text("Create a schedule to automate internet access.")
+                    )
+                } else {
+                    List {
+                        ForEach(schedules) { schedule in
+                            ScheduleRow(schedule: schedule)
+                        }
+                        .onDelete { offsets in
+                            for index in offsets {
+                                modelContext.delete(schedules[index])
+                            }
                         }
                     }
                 }
             }
-        }
-        .padding(24)
-        .sheet(isPresented: $showingAddSheet) {
-            AddScheduleSheet(profiles: profiles) { schedule in
-                modelContext.insert(schedule)
-                showingAddSheet = false
+            .padding(24)
+
+            if showingAddSheet {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                AddScheduleSheet(profiles: profiles) { schedule in
+                    modelContext.insert(schedule)
+                    showingAddSheet = false
+                } onCancel: {
+                    showingAddSheet = false
+                }
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
             }
         }
     }
@@ -88,6 +98,7 @@ struct ScheduleRow: View {
 struct AddScheduleSheet: View {
     let profiles: [ChildProfile]
     let onSave: (Schedule) -> Void
+    let onCancel: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     @State private var label = ""
@@ -151,7 +162,7 @@ struct AddScheduleSheet: View {
             Stepper("Grace period: \(gracePeriod) min", value: $gracePeriod, in: 0...15)
 
             HStack(spacing: 16) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { onCancel() }
                 Button("Create") {
                     let schedule = Schedule(
                         label: label,

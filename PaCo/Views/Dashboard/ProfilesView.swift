@@ -9,40 +9,68 @@ struct ProfilesView: View {
     @State private var newProfileName = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            HStack {
-                Text("Profiles")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                Spacer()
-                Button("Add Profile", systemImage: "plus") {
-                    showingAddSheet = true
+        ZStack {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    Text("Profiles")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Spacer()
+                    Button("Add Profile", systemImage: "plus") {
+                        showingAddSheet = true
+                    }
                 }
-            }
 
-            if profiles.isEmpty {
-                ContentUnavailableView(
-                    "No Profiles",
-                    systemImage: "person.crop.circle.badge.plus",
-                    description: Text("Add a child profile to get started.")
-                )
-            } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
-                    ForEach(profiles) { profile in
-                        ProfileCard(profile: profile, onDelete: {
-                            modelContext.delete(profile)
-                        })
+                if profiles.isEmpty {
+                    ContentUnavailableView(
+                        "No Profiles",
+                        systemImage: "person.crop.circle.badge.plus",
+                        description: Text("Add a child profile to get started.")
+                    )
+                } else {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
+                        ForEach(profiles) { profile in
+                            ProfileCard(profile: profile, onDelete: {
+                                modelContext.delete(profile)
+                            })
+                        }
                     }
                 }
             }
-        }
-        .padding(24)
-        .sheet(isPresented: $showingAddSheet) {
-            AddProfileSheet(name: $newProfileName) {
-                let profile = ChildProfile(name: newProfileName)
-                modelContext.insert(profile)
-                newProfileName = ""
-                showingAddSheet = false
+            .padding(24)
+
+            if showingAddSheet {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                VStack(spacing: 20) {
+                    Text("New Child Profile")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    TextField("Child's name", text: $newProfileName)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 250)
+
+                    HStack(spacing: 16) {
+                        Button("Cancel") {
+                            showingAddSheet = false
+                            newProfileName = ""
+                        }
+                        Button("Create") {
+                            let profile = ChildProfile(name: newProfileName)
+                            modelContext.insert(profile)
+                            newProfileName = ""
+                            showingAddSheet = false
+                        }
+                        .disabled(newProfileName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+                .padding(30)
+                .frame(width: 350)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
             }
         }
     }
@@ -71,32 +99,5 @@ struct ProfileCard: View {
         .contextMenu {
             Button("Delete", role: .destructive, action: onDelete)
         }
-    }
-}
-
-struct AddProfileSheet: View {
-    @Binding var name: String
-    let onSave: () -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("New Child Profile")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            TextField("Child's name", text: $name)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 250)
-
-            HStack(spacing: 16) {
-                Button("Cancel") { dismiss() }
-                Button("Create") { onSave() }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .buttonStyle(.borderedProminent)
-            }
-        }
-        .padding(30)
-        .frame(width: 350)
     }
 }

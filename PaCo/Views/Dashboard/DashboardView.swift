@@ -34,6 +34,16 @@ struct DashboardView: View {
                     .tag(tab)
             }
             .navigationTitle("PaCo")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        NSApplication.shared.terminate(nil)
+                    } label: {
+                        Label("Quit PaCo", systemImage: "power")
+                    }
+                    .help("Quit PaCo")
+                }
+            }
         } detail: {
             switch selectedTab {
             case .home:

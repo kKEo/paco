@@ -7,44 +7,52 @@ struct RoleSelectionView: View {
     @State private var showParentPINSetup = false
 
     var body: some View {
-        VStack(spacing: 40) {
-            Text("Welcome to PaCo")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        ZStack {
+            VStack(spacing: 40) {
+                Text("Welcome to PaCo")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
 
-            Text("Parental Control for macOS")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+                Text("Parental Control for macOS")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
 
-            HStack(spacing: 30) {
-                RoleCard(
-                    title: "Set up as Parent",
-                    description: "Manage schedules, app rules, and monitor usage.",
-                    systemImage: "person.badge.shield.checkmark",
-                    action: { showParentPINSetup = true }
-                )
+                HStack(spacing: 30) {
+                    RoleCard(
+                        title: "Set up as Parent",
+                        description: "Manage schedules, app rules, and monitor usage.",
+                        systemImage: "person.badge.shield.checkmark",
+                        action: { showParentPINSetup = true }
+                    )
 
-                RoleCard(
-                    title: "Set up as Child",
-                    description: "This Mac will be monitored and controlled by a parent.",
-                    systemImage: "person.crop.circle",
-                    action: { appState.completeSetup(role: .child, context: modelContext) }
-                )
+                    RoleCard(
+                        title: "Set up as Child",
+                        description: "This Mac will be monitored and controlled by a parent.",
+                        systemImage: "person.crop.circle",
+                        action: { appState.completeSetup(role: .child, context: modelContext) }
+                    )
+                }
             }
-        }
-        .padding(60)
-        .frame(minWidth: 600, minHeight: 400)
-        .sheet(isPresented: $showParentPINSetup) {
-            ParentPINSetupView {
-                appState.completeSetup(role: .parent, context: modelContext)
+            .padding(60)
+            .frame(minWidth: 600, minHeight: 400)
+
+            if showParentPINSetup {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                ParentPINSetupView(onCancel: { showParentPINSetup = false }) {
+                    appState.completeSetup(role: .parent, context: modelContext)
+                }
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
             }
         }
     }
 }
 
 struct ParentPINSetupView: View {
+    let onCancel: () -> Void
     let onComplete: () -> Void
-    @Environment(\.dismiss) private var dismiss
     @State private var pin = ""
     @State private var confirmPIN = ""
     @State private var error = ""
@@ -71,7 +79,7 @@ struct ParentPINSetupView: View {
             }
 
             HStack(spacing: 16) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { onCancel() }
                 Button("Create") { createPIN() }
                     .disabled(pin.count != 6 || confirmPIN.count != 6)
                     .buttonStyle(.borderedProminent)
