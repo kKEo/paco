@@ -33,4 +33,17 @@ final class AppState {
         mode = role == .parent ? .parent : .child
         logger.info("Setup complete as \(role.rawValue)")
     }
+
+    func setActiveProfile(id: UUID?, context: ModelContext) {
+        let descriptor = FetchDescriptor<DeviceConfig>()
+        guard let config = try? context.fetch(descriptor).first else { return }
+        config.childProfileId = id
+        try? context.save()
+        SyncManager.shared.syncDeviceConfig(activeProfileId: id)
+    }
+
+    func activeProfileId(context: ModelContext) -> UUID? {
+        let descriptor = FetchDescriptor<DeviceConfig>()
+        return (try? context.fetch(descriptor).first)?.childProfileId
+    }
 }
