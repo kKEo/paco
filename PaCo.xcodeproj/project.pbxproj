@@ -7,10 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12326CAFB6145194B5027D2C /* ProcessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89DC53EAD68770A0E809CBD /* ProcessManager.swift */; };
 		21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */; };
+		363634CD7804D60FB408E387 /* FirewallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF884EB7B81070A6A2D0FC0D /* FirewallManager.swift */; };
 		3A817E73202D3228B3AD23C6 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 5AB457726F930B154447800C /* PaCoShared */; };
+		3EEE196AF072FE35A3D3F84C /* FirewallRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875304C90123CD124DB6D365 /* FirewallRuleTests.swift */; };
+		4106C0185C69540E2605768E /* DaemonDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C808F38F55FA111815D46089 /* DaemonDelegate.swift */; };
+		438AFFA3635021AC562514AE /* AgentDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A5D00B3338BDEB47367F883 /* AgentDelegate.swift */; };
+		50EB524C29460BCE88D73634 /* ScheduleEvaluatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B101F956C4B8F0BC99CF3B67 /* ScheduleEvaluatorTests.swift */; };
 		52EB976CAF7727AF158783F3 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = F9E5EA8401130A15CFA4B2FE /* PaCoShared */; };
 		5BAC3A5F1E6FAD5111F2689A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD3C23B81FF5E9538899939 /* main.swift */; };
+		61E643DF7782262E33139FF3 /* UsageTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E059DFF01C8251F25952D1 /* UsageTracker.swift */; };
+		667871199FDA02879133B99E /* DaemonXPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4EF5F065E3320C10CDE4A2 /* DaemonXPCClient.swift */; };
 		8222981FC902A79FCB7FF6E3 /* PaCoDaemon in Resources */ = {isa = PBXBuildFile; fileRef = AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		88CA1B375DDC9EE88FE8D6A1 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 3CD2C335F027037535B4A313 /* PaCoShared */; };
 		AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */ = {isa = PBXBuildFile; fileRef = CB7661AD36BD006657E4F3AF /* PaCoAgent */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -18,6 +26,7 @@
 		B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */; };
 		BBDBFBD2174DD468760A1D3B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCAF4EC892D63060DA886D /* main.swift */; };
 		DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */; };
+		E36CCF33DD37EFF73402C821 /* AppMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE1F7B277138CE8A919AB8 /* AppMonitor.swift */; };
 		E3FFB3EB2ABEB397C7AB874F /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61045659EE0AA299C210FD6E /* PaCoShared */; };
 /* End PBXBuildFile section */
 
@@ -39,18 +48,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0A4EF5F065E3320C10CDE4A2 /* DaemonXPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonXPCClient.swift; sourceTree = "<group>"; };
+		2A5D00B3338BDEB47367F883 /* AgentDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentDelegate.swift; sourceTree = "<group>"; };
 		2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINManagerTests.swift; sourceTree = "<group>"; };
+		33BE1F7B277138CE8A919AB8 /* AppMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMonitor.swift; sourceTree = "<group>"; };
 		47FCAF4EC892D63060DA886D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
+		875304C90123CD124DB6D365 /* FirewallRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirewallRuleTests.swift; sourceTree = "<group>"; };
 		97A9911EFF8E1908510B6E7F /* PaCoShared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PaCoShared; path = PaCoShared; sourceTree = SOURCE_ROOT; };
 		9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoApp.swift; sourceTree = "<group>"; };
 		AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoDaemon; sourceTree = BUILT_PRODUCTS_DIR; };
+		B101F956C4B8F0BC99CF3B67 /* ScheduleEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleEvaluatorTests.swift; sourceTree = "<group>"; };
 		C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoTests.swift; sourceTree = "<group>"; };
+		C808F38F55FA111815D46089 /* DaemonDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonDelegate.swift; sourceTree = "<group>"; };
 		CB7661AD36BD006657E4F3AF /* PaCoAgent */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoAgent; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAD3C23B81FF5E9538899939 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		DE5B54309B207129D9CCBC75 /* PaCoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaCoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0E059DFF01C8251F25952D1 /* UsageTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageTracker.swift; sourceTree = "<group>"; };
+		E89DC53EAD68770A0E809CBD /* ProcessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessManager.swift; sourceTree = "<group>"; };
 		F0BDBF00BC260688300D663F /* PaCo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaCo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5DE65DFC44EE6AE788855E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FF884EB7B81070A6A2D0FC0D /* FirewallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirewallManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,10 +118,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		29C8CEFE1CB550E7CEEE1C57 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				0A4EF5F065E3320C10CDE4A2 /* DaemonXPCClient.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		693E11A448E481EAA97FE642 /* PaCoDaemon */ = {
 			isa = PBXGroup;
 			children = (
+				C808F38F55FA111815D46089 /* DaemonDelegate.swift */,
+				FF884EB7B81070A6A2D0FC0D /* FirewallManager.swift */,
 				47FCAF4EC892D63060DA886D /* main.swift */,
+				E89DC53EAD68770A0E809CBD /* ProcessManager.swift */,
 			);
 			path = PaCoDaemon;
 			sourceTree = "<group>";
@@ -111,9 +140,11 @@
 		6F08D22C820222B0246CD373 /* PaCoTests */ = {
 			isa = PBXGroup;
 			children = (
+				875304C90123CD124DB6D365 /* FirewallRuleTests.swift */,
 				7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */,
 				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
 				2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */,
+				B101F956C4B8F0BC99CF3B67 /* ScheduleEvaluatorTests.swift */,
 			);
 			path = PaCoTests;
 			sourceTree = "<group>";
@@ -141,7 +172,10 @@
 		9BFF23F115C8AE7843925186 /* PaCoAgent */ = {
 			isa = PBXGroup;
 			children = (
+				2A5D00B3338BDEB47367F883 /* AgentDelegate.swift */,
+				33BE1F7B277138CE8A919AB8 /* AppMonitor.swift */,
 				DAD3C23B81FF5E9538899939 /* main.swift */,
+				E0E059DFF01C8251F25952D1 /* UsageTracker.swift */,
 			);
 			path = PaCoAgent;
 			sourceTree = "<group>";
@@ -151,6 +185,7 @@
 			children = (
 				F5DE65DFC44EE6AE788855E5 /* Info.plist */,
 				9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */,
+				29C8CEFE1CB550E7CEEE1C57 /* Services */,
 			);
 			path = PaCo;
 			sourceTree = "<group>";
@@ -290,9 +325,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3EEE196AF072FE35A3D3F84C /* FirewallRuleTests.swift in Sources */,
 				DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */,
 				B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */,
 				21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */,
+				50EB524C29460BCE88D73634 /* ScheduleEvaluatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,6 +337,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				438AFFA3635021AC562514AE /* AgentDelegate.swift in Sources */,
+				E36CCF33DD37EFF73402C821 /* AppMonitor.swift in Sources */,
+				61E643DF7782262E33139FF3 /* UsageTracker.swift in Sources */,
 				5BAC3A5F1E6FAD5111F2689A /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -308,6 +348,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4106C0185C69540E2605768E /* DaemonDelegate.swift in Sources */,
+				363634CD7804D60FB408E387 /* FirewallManager.swift in Sources */,
+				12326CAFB6145194B5027D2C /* ProcessManager.swift in Sources */,
 				BBDBFBD2174DD468760A1D3B /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -316,6 +359,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				667871199FDA02879133B99E /* DaemonXPCClient.swift in Sources */,
 				B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
