@@ -1,9 +1,11 @@
+// PaCoAgent/AppMonitor.swift
 import AppKit
 import Foundation
 import PaCoShared
 
 protocol AppMonitorDelegate: AnyObject {
     func appMonitor(_ monitor: AppMonitor, didDetectBlockedApp bundleId: String, pid: Int32, appName: String)
+    func appMonitor(_ monitor: AppMonitor, checkScheduledApp bundleId: String, pid: Int32, appName: String, allowedScheduleId: UUID?)
     func appMonitor(_ monitor: AppMonitor, didLaunchApp bundleId: String, appName: String)
     func appMonitor(_ monitor: AppMonitor, didTerminateApp bundleId: String, appName: String)
 }
@@ -12,8 +14,7 @@ final class AppMonitor {
 
     weak var delegate: AppMonitorDelegate?
     private let logger = PaCoLogger.agent
-    private var restrictions: [AppRestriction] = []
-    private var schedules: [Schedule] = []
+    private var restrictions: [AppRestrictionTransfer] = []
     private var pollingTimer: Timer?
 
     func start() {
@@ -44,10 +45,8 @@ final class AppMonitor {
         logger.info("AppMonitor stopped")
     }
 
-    func updateRestrictions(_ restrictions: [AppRestriction], schedules: [Schedule]) {
+    func updateRestrictions(_ restrictions: [AppRestrictionTransfer]) {
         self.restrictions = restrictions
-        self.schedules = schedules
-        // Re-check currently running apps against new restrictions
         checkRunningApps()
     }
 
@@ -91,15 +90,8 @@ final class AppMonitor {
             delegate?.appMonitor(self, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
 
         case .scheduledOnly:
-            // Check if we're in the allowed schedule
-            if let scheduleId = restriction.allowedScheduleId,
-               let schedule = schedules.first(where: { $0.id == scheduleId }) {
-                let action = ScheduleEvaluator.evaluate(schedules: [schedule], at: Date())
-                if action != .allowed {
-                    logger.info("App outside schedule: \(appName) (\(bundleId))")
-                    delegate?.appMonitor(self, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
-                }
-            }
+            delegate?.appMonitor(self, checkScheduledApp: bundleId, pid: pid, appName: appName,
+                                 allowedScheduleId: restriction.allowedScheduleId)
         }
     }
 }

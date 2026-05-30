@@ -1,3 +1,4 @@
+// PaCoAgent/AgentDelegate.swift
 import Foundation
 import PaCoShared
 
@@ -8,6 +9,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private var scheduleTimer: DispatchSourceTimer?
     private var daemonConnection: NSXPCConnection?
     private let logger = PaCoLogger.agent
+    private var currentSchedules: [ScheduleTransfer] = []
 
     func start() {
         appMonitor.delegate = self
@@ -24,9 +26,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         connection.remoteObjectInterface = NSXPCInterface(with: DaemonXPCProtocol.self)
         connection.invalidationHandler = { [weak self] in
             self?.logger.warning("Daemon XPC connection invalidated, reconnecting...")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                self?.connectToDaemon()
-            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.connectToDaemon() }
         }
         connection.resume()
         daemonConnection = connection
@@ -39,24 +39,61 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         } as? DaemonXPCProtocol
     }
 
-    // MARK: - Schedule timer
+    // MARK: - Shared file URLs
+
+    private var baseURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("com.paco")
+    }
+    private var schedulesFileURL: URL { baseURL.appendingPathComponent("schedules.json") }
+    private var restrictionsFileURL: URL { baseURL.appendingPathComponent("restrictions.json") }
+    private var configFileURL: URL { baseURL.appendingPathComponent("config.json") }
+
+    // MARK: - Schedule + restriction timer
 
     private func startScheduleTimer() {
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now(), repeating: 30)
-        timer.setEventHandler { [weak self] in
-            self?.evaluateSchedules()
-        }
+        timer.setEventHandler { [weak self] in self?.tick() }
         timer.resume()
         scheduleTimer = timer
     }
 
-    private func evaluateSchedules() {
+    private func tick() {
+        let schedules = loadSchedules()
+        let restrictions = loadRestrictions()
+        currentSchedules = schedules
+        appMonitor.updateRestrictions(restrictions)
+        evaluateSchedules(schedules)
+    }
+
+    private func loadSchedules() -> [ScheduleTransfer] {
         guard let data = try? Data(contentsOf: schedulesFileURL),
-              let schedules = try? JSONDecoder().decode([ScheduleTransfer].self, from: data) else {
-            return
+              let schedules = try? JSONDecoder().decode([ScheduleTransfer].self, from: data)
+        else { return [] }
+        return schedules
+    }
+
+    private func loadRestrictions() -> [AppRestrictionTransfer] {
+        // Load active profile ID from config.json
+        let activeProfileId: UUID?
+        if let data = try? Data(contentsOf: configFileURL),
+           let config = try? JSONDecoder().decode(DeviceConfigTransfer.self, from: data) {
+            activeProfileId = config.activeProfileId
+        } else {
+            activeProfileId = nil
         }
 
+        guard let data = try? Data(contentsOf: restrictionsFileURL),
+              let all = try? JSONDecoder().decode([AppRestrictionTransfer].self, from: data)
+        else { return [] }
+
+        // If no active profile configured, enforce all restrictions
+        guard let pid = activeProfileId else { return all }
+        return all.filter { $0.profileId == pid }
+    }
+
+    private func evaluateSchedules(_ schedules: [ScheduleTransfer]) {
         let action = ScheduleEvaluator.evaluate(schedules: schedules, at: Date())
         switch action {
         case .allowed:
@@ -65,14 +102,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             setInternet(enabled: false)
         case .gracePeriod(let remaining):
             logger.info("Grace period: \(remaining)s remaining")
-            // Internet stays on during grace period
         }
-    }
-
-    private var schedulesFileURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("com.paco")
-            .appendingPathComponent("schedules.json")
     }
 
     // MARK: - Internet control
@@ -112,6 +142,21 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         }
     }
 
+    func appMonitor(_ monitor: AppMonitor, checkScheduledApp bundleId: String, pid: Int32, appName: String, allowedScheduleId: UUID?) {
+        guard let scheduleId = allowedScheduleId,
+              let schedule = currentSchedules.first(where: { $0.id == scheduleId })
+        else {
+            // No schedule configured — block it
+            appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
+            return
+        }
+        let action = ScheduleEvaluator.evaluate(schedules: [schedule], at: Date())
+        if action != .allowed {
+            logger.info("App outside schedule: \(appName) (\(bundleId))")
+            appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
+        }
+    }
+
     func appMonitor(_ monitor: AppMonitor, didLaunchApp bundleId: String, appName: String) {
         usageTracker.appDidLaunch(bundleId: bundleId, appName: appName)
     }
@@ -123,7 +168,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     // MARK: - Notifications
     // NOTE: UNUserNotificationCenter requires an .app bundle proxy and cannot be used
     // in a LaunchAgent CLI tool. Blocked-app events are logged here; user-facing
-    // notifications will be delivered by the PaCo.app in V1.1 via the Bonjour channel.
+    // notifications will be delivered by PaCo.app in V1.1 via Bonjour.
 
     private func sendNotification(title: String, body: String) {
         logger.info("Notification (not delivered — agent has no bundle): \(title): \(body)")
