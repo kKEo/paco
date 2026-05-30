@@ -1,6 +1,0 @@
-Target dependency graph (3 targets)
-Target 'PaCoDaemon' in project 'PaCo'
-➜ Explicit dependency on target 'PaCoShared' in project 'PaCoShared'
-Target 'PaCoShared' in project 'PaCoShared'
-➜ Explicit dependency on target 'PaCoShared' in project 'PaCoShared'
-Target 'PaCoShared' in project 'PaCoShared' (no dependencies)
