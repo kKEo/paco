@@ -21,7 +21,6 @@ targets:
       - target: PaCoAgent
     settings:
       base:
-        INFOPLIST_KEY_LSUIElement: false
         PRODUCT_BUNDLE_IDENTIFIER: com.paco.app
         SWIFT_STRICT_CONCURRENCY: minimal
     info:
@@ -32,6 +31,7 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
 
   PaCoDaemon:
     type: tool

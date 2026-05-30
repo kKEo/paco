@@ -4,7 +4,6 @@ import PaCoShared
 struct ChildModeView: View {
     @EnvironmentObject private var daemonClient: DaemonXPCClient
     @Environment(AppState.self) private var appState
-    @StateObject private var menuBarManager = MenuBarManager()
     @State private var showPINPrompt = false
     @State private var pinEntry = ""
     @State private var pinError = ""
@@ -50,15 +49,7 @@ struct ChildModeView: View {
         }
         .padding(30)
         .frame(width: 350, height: 400)
-        .onAppear {
-            menuBarManager.setup()
-        }
-        .onDisappear {
-            menuBarManager.tearDown()
-        }
-        .onChange(of: daemonClient.isInternetEnabled) { _, newValue in
-            menuBarManager.updateStatus(internetEnabled: newValue)
-        }
+        .onAppear { }
         .sheet(isPresented: $showPINPrompt) {
             VStack(spacing: 16) {
                 Text("Enter Parent PIN").font(.headline)

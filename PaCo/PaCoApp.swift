@@ -3,39 +3,9 @@ import SwiftUI
 import SwiftData
 import PaCoShared
 
-/// Ensures the main window is always visible:
-/// - On launch, if no visible windows exist (closed last session), opens the window.
-/// - When Dock icon is clicked with no visible windows, opens the window.
-final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        makeWindowVisible()
-    }
-
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
-        if !hasVisibleWindows {
-            makeWindowVisible()
-        }
-        return true
-    }
-
-    private func makeWindowVisible() {
-        // Give SwiftUI a chance to create its window first
-        DispatchQueue.main.async {
-            if let window = NSApplication.shared.windows.first(where: { !$0.isMiniaturized }) {
-                window.makeKeyAndOrderFront(nil)
-                NSApplication.shared.activate(ignoringOtherApps: true)
-            } else if let window = NSApplication.shared.windows.first {
-                window.makeKeyAndOrderFront(nil)
-                NSApplication.shared.activate(ignoringOtherApps: true)
-            }
-        }
-    }
-}
-
 @main
 struct PaCoApp: App {
 
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
     @StateObject private var daemonClient = DaemonXPCClient()
 
@@ -57,7 +27,7 @@ struct PaCoApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup {
+        MenuBarExtra {
             ContentView()
                 .environment(appState)
                 .environmentObject(daemonClient)
@@ -66,9 +36,35 @@ struct PaCoApp: App {
                     appState.determineMode(context: context)
                     daemonClient.connect()
                 }
+        } label: {
+            MenuBarIcon(
+                isInternetEnabled: daemonClient.isInternetEnabled,
+                isConnected: daemonClient.isConnected
+            )
         }
+        .menuBarExtraStyle(.window)
         .modelContainer(sharedModelContainer)
-        .defaultSize(width: 900, height: 700)
+    }
+}
+
+/// The menu bar icon — updates color/symbol based on internet state.
+struct MenuBarIcon: View {
+    let isInternetEnabled: Bool
+    let isConnected: Bool
+
+    var body: some View {
+        Image(systemName: symbolName)
+            .foregroundStyle(iconColor)
+    }
+
+    private var symbolName: String {
+        if !isConnected { return "shield.slash" }
+        return isInternetEnabled ? "shield.checkered" : "shield.slash"
+    }
+
+    private var iconColor: Color {
+        if !isConnected { return .secondary }
+        return isInternetEnabled ? .green : .red
     }
 }
 
