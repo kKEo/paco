@@ -67,4 +67,5 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.paco.tests
+        GENERATE_INFOPLIST_FILE: true
         SWIFT_STRICT_CONCURRENCY: minimal

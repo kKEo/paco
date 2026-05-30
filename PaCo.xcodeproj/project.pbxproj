@@ -16,6 +16,7 @@
 		AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */ = {isa = PBXBuildFile; fileRef = CB7661AD36BD006657E4F3AF /* PaCoAgent */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */; };
 		BBDBFBD2174DD468760A1D3B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCAF4EC892D63060DA886D /* main.swift */; };
+		DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */; };
 		E3FFB3EB2ABEB397C7AB874F /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61045659EE0AA299C210FD6E /* PaCoShared */; };
 /* End PBXBuildFile section */
 
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		47FCAF4EC892D63060DA886D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		97A9911EFF8E1908510B6E7F /* PaCoShared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PaCoShared; path = PaCoShared; sourceTree = SOURCE_ROOT; };
 		9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoApp.swift; sourceTree = "<group>"; };
 		AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoDaemon; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,6 +109,7 @@
 		6F08D22C820222B0246CD373 /* PaCoTests */ = {
 			isa = PBXGroup;
 			children = (
+				7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */,
 				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
 			);
 			path = PaCoTests;
@@ -284,6 +287,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */,
 				21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -350,6 +354,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -396,6 +401,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
