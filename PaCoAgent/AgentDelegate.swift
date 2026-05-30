@@ -39,17 +39,6 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         } as? DaemonXPCProtocol
     }
 
-    // MARK: - Shared file URLs
-
-    private var baseURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("com.paco")
-    }
-    private var schedulesFileURL: URL { baseURL.appendingPathComponent("schedules.json") }
-    private var restrictionsFileURL: URL { baseURL.appendingPathComponent("restrictions.json") }
-    private var configFileURL: URL { baseURL.appendingPathComponent("config.json") }
-    private var usageFileURL: URL { baseURL.appendingPathComponent("usage.json") }
-
     // MARK: - Schedule + restriction timer
 
     private func startScheduleTimer() {
@@ -61,9 +50,9 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     private func tick() {
-        let schedules = loadSchedules()
-        let restrictions = loadRestrictions()
         let config = loadConfig()
+        let schedules = loadSchedules()
+        let restrictions = loadRestrictions(activeProfileId: config?.activeProfileId)
         currentSchedules = schedules
         appMonitor.updateRestrictions(restrictions)
         evaluateSchedules(schedules)
@@ -71,7 +60,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     private func loadConfig() -> DeviceConfigTransfer? {
-        guard let data = try? Data(contentsOf: configFileURL),
+        guard let data = try? Data(contentsOf: PaCoFiles.configFileURL),
               let config = try? JSONDecoder().decode(DeviceConfigTransfer.self, from: data)
         else { return nil }
         return config
@@ -85,21 +74,19 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             appUsage: usageTracker.currentAppUsage()
         )
         guard let data = try? JSONEncoder().encode(transfer) else { return }
-        try? FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
-        try? data.write(to: usageFileURL, options: .atomic)
+        try? FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
+        try? data.write(to: PaCoFiles.usageFileURL, options: .atomic)
     }
 
     private func loadSchedules() -> [ScheduleTransfer] {
-        guard let data = try? Data(contentsOf: schedulesFileURL),
+        guard let data = try? Data(contentsOf: PaCoFiles.schedulesFileURL),
               let schedules = try? JSONDecoder().decode([ScheduleTransfer].self, from: data)
         else { return [] }
         return schedules
     }
 
-    private func loadRestrictions() -> [AppRestrictionTransfer] {
-        let activeProfileId = loadConfig()?.activeProfileId
-
-        guard let data = try? Data(contentsOf: restrictionsFileURL),
+    private func loadRestrictions(activeProfileId: UUID?) -> [AppRestrictionTransfer] {
+        guard let data = try? Data(contentsOf: PaCoFiles.restrictionsFileURL),
               let all = try? JSONDecoder().decode([AppRestrictionTransfer].self, from: data)
         else { return [] }
 

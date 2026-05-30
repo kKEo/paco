@@ -10,15 +10,10 @@ final class SyncManager {
 
     private let logger = PaCoLogger.app
 
-    private var baseURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("com.paco")
-    }
-
-    var usageFileURL: URL { baseURL.appendingPathComponent("usage.json") }
+    var usageFileURL: URL { PaCoFiles.usageFileURL }
 
     private func prepare() throws {
-        try FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
     }
 
     // MARK: - Schedules
@@ -28,7 +23,7 @@ final class SyncManager {
             try prepare()
             let transfers = schedules.filter(\.isActive).map(ScheduleTransfer.init(from:))
             let data = try JSONEncoder().encode(transfers)
-            try data.write(to: baseURL.appendingPathComponent("schedules.json"), options: .atomic)
+            try data.write(to: PaCoFiles.schedulesFileURL, options: .atomic)
             logger.info("Synced \(transfers.count) schedules")
         } catch {
             logger.error("Failed to sync schedules: \(error)")
@@ -42,7 +37,7 @@ final class SyncManager {
             try prepare()
             let transfers = restrictions.map(AppRestrictionTransfer.init(from:))
             let data = try JSONEncoder().encode(transfers)
-            try data.write(to: baseURL.appendingPathComponent("restrictions.json"), options: .atomic)
+            try data.write(to: PaCoFiles.restrictionsFileURL, options: .atomic)
             logger.info("Synced \(transfers.count) app restrictions")
         } catch {
             logger.error("Failed to sync restrictions: \(error)")
@@ -56,7 +51,7 @@ final class SyncManager {
             try prepare()
             let transfer = DeviceConfigTransfer(activeProfileId: activeProfileId)
             let data = try JSONEncoder().encode(transfer)
-            try data.write(to: baseURL.appendingPathComponent("config.json"), options: .atomic)
+            try data.write(to: PaCoFiles.configFileURL, options: .atomic)
             logger.info("Synced device config, activeProfileId=\(activeProfileId?.uuidString ?? "nil")")
         } catch {
             logger.error("Failed to sync device config: \(error)")
