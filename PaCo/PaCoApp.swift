@@ -35,6 +35,13 @@ struct PaCoApp: App {
                     let context = sharedModelContainer.mainContext
                     appState.determineMode(context: context)
                     daemonClient.connect()
+                    // Sync all data to shared JSON files so the agent always has current data
+                    let allSchedules = (try? context.fetch(FetchDescriptor<Schedule>())) ?? []
+                    let allRestrictions = (try? context.fetch(FetchDescriptor<AppRestriction>())) ?? []
+                    let config = (try? context.fetch(FetchDescriptor<DeviceConfig>()))?.first
+                    SyncManager.shared.syncSchedules(allSchedules)
+                    SyncManager.shared.syncRestrictions(allRestrictions)
+                    SyncManager.shared.syncDeviceConfig(activeProfileId: config?.childProfileId)
                 }
         } label: {
             MenuBarIcon(
