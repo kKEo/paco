@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import Network
-import AppKit
 import PaCoShared
 
 struct DevicesView: View {
@@ -56,7 +55,7 @@ struct DevicesView: View {
                             .font(.headline)
                             .foregroundStyle(.secondary)
 
-                        ForEach(Array(unpaired.enumerated()), id: \.offset) { _, result in
+                        ForEach(unpaired, id: \.self) { result in
                             DiscoveredDeviceRow(result: result) {
                                 let name = deviceName(from: result)
                                 let info = PairingInfo(

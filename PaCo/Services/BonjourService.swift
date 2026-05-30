@@ -49,6 +49,7 @@ final class BonjourService: ObservableObject {
     // MARK: - Browse (parent mode)
 
     func startBrowsing() {
+        guard browser == nil else { return }
         let browser = NWBrowser(for: .bonjour(type: serviceType, domain: serviceDomain), using: .tcp)
 
         browser.stateUpdateHandler = { [weak self] state in
