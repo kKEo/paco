@@ -1,0 +1,70 @@
+name: PaCo
+options:
+  bundleIdPrefix: com.paco
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  PaCoShared:
+    path: PaCoShared
+
+targets:
+  PaCo:
+    type: application
+    platform: macOS
+    sources: [PaCo]
+    dependencies:
+      - package: PaCoShared
+      - target: PaCoDaemon
+      - target: PaCoAgent
+    settings:
+      base:
+        INFOPLIST_KEY_LSUIElement: false
+        PRODUCT_BUNDLE_IDENTIFIER: com.paco.app
+        SWIFT_STRICT_CONCURRENCY: minimal
+    info:
+      path: PaCo/Info.plist
+      properties:
+        CFBundleName: PaCo
+        CFBundleDisplayName: PaCo
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        NSMainStoryboardFile: ""
+
+  PaCoDaemon:
+    type: tool
+    platform: macOS
+    sources: [PaCoDaemon]
+    dependencies:
+      - package: PaCoShared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.paco.daemon
+        SKIP_INSTALL: true
+        SWIFT_STRICT_CONCURRENCY: minimal
+
+  PaCoAgent:
+    type: tool
+    platform: macOS
+    sources: [PaCoAgent]
+    dependencies:
+      - package: PaCoShared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.paco.agent
+        SKIP_INSTALL: true
+        SWIFT_STRICT_CONCURRENCY: minimal
+
+  PaCoTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [PaCoTests]
+    dependencies:
+      - package: PaCoShared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.paco.tests
+        SWIFT_STRICT_CONCURRENCY: minimal

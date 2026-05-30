@@ -1,0 +1,653 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */; };
+		3A817E73202D3228B3AD23C6 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 5AB457726F930B154447800C /* PaCoShared */; };
+		52EB976CAF7727AF158783F3 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = F9E5EA8401130A15CFA4B2FE /* PaCoShared */; };
+		5BAC3A5F1E6FAD5111F2689A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD3C23B81FF5E9538899939 /* main.swift */; };
+		8222981FC902A79FCB7FF6E3 /* PaCoDaemon in Resources */ = {isa = PBXBuildFile; fileRef = AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		88CA1B375DDC9EE88FE8D6A1 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 3CD2C335F027037535B4A313 /* PaCoShared */; };
+		AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */ = {isa = PBXBuildFile; fileRef = CB7661AD36BD006657E4F3AF /* PaCoAgent */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */; };
+		BBDBFBD2174DD468760A1D3B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCAF4EC892D63060DA886D /* main.swift */; };
+		E3FFB3EB2ABEB397C7AB874F /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61045659EE0AA299C210FD6E /* PaCoShared */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		451B10EA8A81D8BC1618B65F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DA96402DF61535AD3F0C6606 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 52A2AA60FEA835D11405D0EC;
+			remoteInfo = PaCoDaemon;
+		};
+		B613A6BC36D8A12C4BE98833 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DA96402DF61535AD3F0C6606 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 779714DE6613AFF3B7EA7F99;
+			remoteInfo = PaCoAgent;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		47FCAF4EC892D63060DA886D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		97A9911EFF8E1908510B6E7F /* PaCoShared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PaCoShared; path = PaCoShared; sourceTree = SOURCE_ROOT; };
+		9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoApp.swift; sourceTree = "<group>"; };
+		AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoDaemon; sourceTree = BUILT_PRODUCTS_DIR; };
+		C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoTests.swift; sourceTree = "<group>"; };
+		CB7661AD36BD006657E4F3AF /* PaCoAgent */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoAgent; sourceTree = BUILT_PRODUCTS_DIR; };
+		DAD3C23B81FF5E9538899939 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DE5B54309B207129D9CCBC75 /* PaCoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaCoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0BDBF00BC260688300D663F /* PaCo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaCo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5DE65DFC44EE6AE788855E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		23B677459EBFACEF1E69BE73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52EB976CAF7727AF158783F3 /* PaCoShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9542FBD4AF9DAAFDE701F61D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				88CA1B375DDC9EE88FE8D6A1 /* PaCoShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B92B393441C3B7D9E0AB210 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E3FFB3EB2ABEB397C7AB874F /* PaCoShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6021F5A7C88C95731805DFB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A817E73202D3228B3AD23C6 /* PaCoShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		228C08710F29B8B0321236D6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F0BDBF00BC260688300D663F /* PaCo.app */,
+				CB7661AD36BD006657E4F3AF /* PaCoAgent */,
+				AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */,
+				DE5B54309B207129D9CCBC75 /* PaCoTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		693E11A448E481EAA97FE642 /* PaCoDaemon */ = {
+			isa = PBXGroup;
+			children = (
+				47FCAF4EC892D63060DA886D /* main.swift */,
+			);
+			path = PaCoDaemon;
+			sourceTree = "<group>";
+		};
+		6F08D22C820222B0246CD373 /* PaCoTests */ = {
+			isa = PBXGroup;
+			children = (
+				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
+			);
+			path = PaCoTests;
+			sourceTree = "<group>";
+		};
+		74D8F00E1782E43E47DF73BF = {
+			isa = PBXGroup;
+			children = (
+				942B0B75748771D080A85EA6 /* Packages */,
+				A65EFAE26EF99075B78DADBE /* PaCo */,
+				9BFF23F115C8AE7843925186 /* PaCoAgent */,
+				693E11A448E481EAA97FE642 /* PaCoDaemon */,
+				6F08D22C820222B0246CD373 /* PaCoTests */,
+				228C08710F29B8B0321236D6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		942B0B75748771D080A85EA6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				97A9911EFF8E1908510B6E7F /* PaCoShared */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		9BFF23F115C8AE7843925186 /* PaCoAgent */ = {
+			isa = PBXGroup;
+			children = (
+				DAD3C23B81FF5E9538899939 /* main.swift */,
+			);
+			path = PaCoAgent;
+			sourceTree = "<group>";
+		};
+		A65EFAE26EF99075B78DADBE /* PaCo */ = {
+			isa = PBXGroup;
+			children = (
+				F5DE65DFC44EE6AE788855E5 /* Info.plist */,
+				9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */,
+			);
+			path = PaCo;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		52A2AA60FEA835D11405D0EC /* PaCoDaemon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05FB9B851D4EBEBD55E79913 /* Build configuration list for PBXNativeTarget "PaCoDaemon" */;
+			buildPhases = (
+				E9106D0BD993D54510B3CDA2 /* Sources */,
+				23B677459EBFACEF1E69BE73 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PaCoDaemon;
+			packageProductDependencies = (
+				F9E5EA8401130A15CFA4B2FE /* PaCoShared */,
+			);
+			productName = PaCoDaemon;
+			productReference = AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */;
+			productType = "com.apple.product-type.tool";
+		};
+		779714DE6613AFF3B7EA7F99 /* PaCoAgent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 742FCB0FD0D5B234EB925577 /* Build configuration list for PBXNativeTarget "PaCoAgent" */;
+			buildPhases = (
+				8B03D4806FDF77F54792DF1C /* Sources */,
+				9B92B393441C3B7D9E0AB210 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PaCoAgent;
+			packageProductDependencies = (
+				61045659EE0AA299C210FD6E /* PaCoShared */,
+			);
+			productName = PaCoAgent;
+			productReference = CB7661AD36BD006657E4F3AF /* PaCoAgent */;
+			productType = "com.apple.product-type.tool";
+		};
+		A956DD6C78716C163938CB46 /* PaCoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8D3C79EE5E2AED8626B6AF9C /* Build configuration list for PBXNativeTarget "PaCoTests" */;
+			buildPhases = (
+				07C248992AFE50FDC7EBC880 /* Sources */,
+				9542FBD4AF9DAAFDE701F61D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PaCoTests;
+			packageProductDependencies = (
+				3CD2C335F027037535B4A313 /* PaCoShared */,
+			);
+			productName = PaCoTests;
+			productReference = DE5B54309B207129D9CCBC75 /* PaCoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FCB198ED1B939D9FC3C99570 /* PaCo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 355E2E99F27A9725AD01ECCC /* Build configuration list for PBXNativeTarget "PaCo" */;
+			buildPhases = (
+				FACB9F342B9C7F8A1499819D /* Sources */,
+				118EBAD1F0EA6EE3A9FD58CF /* Resources */,
+				D6021F5A7C88C95731805DFB /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				338992F0601BCBD089F55F35 /* PBXTargetDependency */,
+				E7C80803505B2F5C892136C7 /* PBXTargetDependency */,
+			);
+			name = PaCo;
+			packageProductDependencies = (
+				5AB457726F930B154447800C /* PaCoShared */,
+			);
+			productName = PaCo;
+			productReference = F0BDBF00BC260688300D663F /* PaCo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DA96402DF61535AD3F0C6606 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 0BC547A2E61C2ED0593D9028 /* Build configuration list for PBXProject "PaCo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 74D8F00E1782E43E47DF73BF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				ABADBE4AC67D2E2EC9ED5939 /* XCLocalSwiftPackageReference "PaCoShared" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 228C08710F29B8B0321236D6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FCB198ED1B939D9FC3C99570 /* PaCo */,
+				779714DE6613AFF3B7EA7F99 /* PaCoAgent */,
+				52A2AA60FEA835D11405D0EC /* PaCoDaemon */,
+				A956DD6C78716C163938CB46 /* PaCoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		118EBAD1F0EA6EE3A9FD58CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8222981FC902A79FCB7FF6E3 /* PaCoDaemon in Resources */,
+				AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		07C248992AFE50FDC7EBC880 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8B03D4806FDF77F54792DF1C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BAC3A5F1E6FAD5111F2689A /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9106D0BD993D54510B3CDA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BBDBFBD2174DD468760A1D3B /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FACB9F342B9C7F8A1499819D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		338992F0601BCBD089F55F35 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 52A2AA60FEA835D11405D0EC /* PaCoDaemon */;
+			targetProxy = 451B10EA8A81D8BC1618B65F /* PBXContainerItemProxy */;
+		};
+		E7C80803505B2F5C892136C7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 779714DE6613AFF3B7EA7F99 /* PaCoAgent */;
+			targetProxy = B613A6BC36D8A12C4BE98833 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		02DD5CEEC28A19FB442466BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = PaCo/Info.plist;
+				INFOPLIST_KEY_LSUIElement = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.app;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Release;
+		};
+		084CD25B82C6D2945D8C60F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.tests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Release;
+		};
+		36B45CEC587E74413C6D8F92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.daemon;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Release;
+		};
+		5A24E3FC6DDA6E0C049D2CC4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.daemon;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Debug;
+		};
+		7C886FF0046C052F9DAC6023 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.tests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Debug;
+		};
+		8B91206FF4992061C82570DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.agent;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Release;
+		};
+		97C5F63534DFBAFE8C0460EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C17514FABBEA48AFD3E9B537 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.agent;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Debug;
+		};
+		D37A5D5807AE7C22D1DE5F49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FD09746E007E27052946F7F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = PaCo/Info.plist;
+				INFOPLIST_KEY_LSUIElement = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.paco.app;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05FB9B851D4EBEBD55E79913 /* Build configuration list for PBXNativeTarget "PaCoDaemon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A24E3FC6DDA6E0C049D2CC4 /* Debug */,
+				36B45CEC587E74413C6D8F92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		0BC547A2E61C2ED0593D9028 /* Build configuration list for PBXProject "PaCo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D37A5D5807AE7C22D1DE5F49 /* Debug */,
+				97C5F63534DFBAFE8C0460EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		355E2E99F27A9725AD01ECCC /* Build configuration list for PBXNativeTarget "PaCo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FD09746E007E27052946F7F1 /* Debug */,
+				02DD5CEEC28A19FB442466BF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		742FCB0FD0D5B234EB925577 /* Build configuration list for PBXNativeTarget "PaCoAgent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C17514FABBEA48AFD3E9B537 /* Debug */,
+				8B91206FF4992061C82570DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8D3C79EE5E2AED8626B6AF9C /* Build configuration list for PBXNativeTarget "PaCoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C886FF0046C052F9DAC6023 /* Debug */,
+				084CD25B82C6D2945D8C60F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		ABADBE4AC67D2E2EC9ED5939 /* XCLocalSwiftPackageReference "PaCoShared" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = PaCoShared;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3CD2C335F027037535B4A313 /* PaCoShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PaCoShared;
+		};
+		5AB457726F930B154447800C /* PaCoShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PaCoShared;
+		};
+		61045659EE0AA299C210FD6E /* PaCoShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PaCoShared;
+		};
+		F9E5EA8401130A15CFA4B2FE /* PaCoShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PaCoShared;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DA96402DF61535AD3F0C6606 /* Project object */;
+}
