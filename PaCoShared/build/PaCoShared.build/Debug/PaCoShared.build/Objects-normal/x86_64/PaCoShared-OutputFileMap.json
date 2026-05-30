@@ -1,0 +1,179 @@
+{
+  "" : {
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared-primary.dia",
+    "emit-module-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared-primary-emit-module.dia",
+    "pch" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared-primary.swiftdeps"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Firewall/FirewallRuleBuilder.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Logging/PaCoLogger.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/AppRestriction.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/AppUsageEntry.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppUsageEntry~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/ChildProfile.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ChildProfile~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/DayOfWeek.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DayOfWeek~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/DeviceConfig.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DeviceConfig~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/PairingInfo.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PairingInfo~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/Schedule.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/Schedule~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/UsageRecord.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/UsageRecord~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Network/MessageTypes.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/MessageTypes~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Network/ScheduleTransfer.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleTransfer~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/PaCoShared.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoShared~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Schedule/ScheduleEvaluator.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/ScheduleEvaluator~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Security/KeychainManager.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/KeychainManager~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Security/PINManager.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PINManager~partial.swiftmodule"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/XPC/DaemonXPCProtocol.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.dia",
+    "index-unit-output-path" : "/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.o",
+    "llvm-bc" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.bc",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol.swiftdeps",
+    "swiftmodule" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/DaemonXPCProtocol~partial.swiftmodule"
+  }
+}

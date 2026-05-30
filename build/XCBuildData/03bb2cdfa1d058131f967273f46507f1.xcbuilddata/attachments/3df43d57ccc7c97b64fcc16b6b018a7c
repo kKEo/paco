@@ -1,0 +1,4 @@
+module PaCoShared {
+header "PaCoShared-Swift.h"
+export *
+}

@@ -1,0 +1,23 @@
+{
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Firewall/FirewallRuleBuilder.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.dia",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/FirewallRuleBuilder.swiftdeps"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Logging/PaCoLogger.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.dia",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/PaCoLogger.swiftdeps"
+  },
+  "/Users/krma/Work/PaCo/PaCoShared/Sources/PaCoShared/Models/AppRestriction.swift" : {
+    "const-values" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.swiftconstvalues",
+    "dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.d",
+    "diagnostics" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.dia",
+    "object" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.o",
+    "swift-dependencies" : "/Users/krma/Work/PaCo/PaCoShared/build/PaCoShared.build/Debug/PaCoShared.build/Objects-normal/x86_64/AppRestriction.swiftdeps"
+  }
+}
