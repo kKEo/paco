@@ -62,4 +62,12 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(decoded.internetOnDuration, 3600)
         XCTAssertEqual(decoded.appUsage[0].bundleIdentifier, "com.apple.Safari")
     }
+
+    func testTimeExtensionRequestStatus() {
+        let req = TimeExtensionRequest(childDeviceName: "Alice's Mac", requestedMinutes: 30)
+        XCTAssertEqual(req.status, .pending)
+        req.status = .approved
+        XCTAssertEqual(req.statusRaw, "approved")
+        XCTAssertEqual(req.status, .approved)
+    }
 }

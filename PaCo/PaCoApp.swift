@@ -18,6 +18,7 @@ struct PaCoApp: App {
             UsageRecord.self,
             PairingInfo.self,
             DeviceConfig.self,
+            TimeExtensionRequest.self,
         ])
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
         do {

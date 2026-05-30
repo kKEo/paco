@@ -9,6 +9,9 @@ public enum PaCoCommand: String, Codable, Sendable {
     case getUsageData
     case pair
     case ping
+    case requestExtension
+    case approveExtension
+    case denyExtension
 }
 
 public struct PaCoMessage: Codable, Sendable {
@@ -55,6 +58,32 @@ public struct PaCoResponse: Codable, Sendable {
         var framed = Data(bytes: &length, count: 4)
         framed.append(data)
         return framed
+    }
+}
+
+public struct ExtensionRequestPayload: Codable, Sendable {
+    public var requestId: UUID
+    public var childDeviceName: String
+    public var profileId: UUID?
+    public var requestedMinutes: Int
+    public var reason: String
+
+    public init(requestId: UUID, childDeviceName: String, profileId: UUID? = nil, requestedMinutes: Int, reason: String = "") {
+        self.requestId = requestId
+        self.childDeviceName = childDeviceName
+        self.profileId = profileId
+        self.requestedMinutes = requestedMinutes
+        self.reason = reason
+    }
+}
+
+public struct ExtensionResponsePayload: Codable, Sendable {
+    public var requestId: UUID
+    public var approved: Bool
+
+    public init(requestId: UUID, approved: Bool) {
+        self.requestId = requestId
+        self.approved = approved
     }
 }
 
