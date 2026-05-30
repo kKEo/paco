@@ -8,6 +8,7 @@ struct PaCoApp: App {
 
     @State private var appState = AppState()
     @StateObject private var daemonClient = DaemonXPCClient()
+    @State private var usageWatcher: DispatchSourceFileSystemObject?
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -42,6 +43,8 @@ struct PaCoApp: App {
                     SyncManager.shared.syncSchedules(allSchedules)
                     SyncManager.shared.syncRestrictions(allRestrictions)
                     SyncManager.shared.syncDeviceConfig(activeProfileId: config?.childProfileId)
+                    startUsageWatcher(context: context)
+                    SyncManager.shared.readUsage(context: context)
                 }
         } label: {
             MenuBarIcon(
@@ -51,6 +54,24 @@ struct PaCoApp: App {
         }
         .menuBarExtraStyle(.window)
         .modelContainer(sharedModelContainer)
+    }
+
+    private func startUsageWatcher(context: ModelContext) {
+        let url = SyncManager.shared.usageFileURL
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if !FileManager.default.fileExists(atPath: url.path) {
+            FileManager.default.createFile(atPath: url.path, contents: nil)
+        }
+        let fd = open(url.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
+        source.setEventHandler {
+            SyncManager.shared.readUsage(context: context)
+        }
+        source.setCancelHandler { close(fd) }
+        source.resume()
+        usageWatcher = source
     }
 }
 

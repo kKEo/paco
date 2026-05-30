@@ -66,6 +66,8 @@ final class UsageTracker {
         return total
     }
 
+    var currentDay: Date { currentDate }
+
     func currentAppUsage() -> [AppUsageEntry] {
         Array(dailyUsage.values)
     }

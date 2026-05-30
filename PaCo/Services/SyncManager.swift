@@ -1,5 +1,6 @@
 // PaCo/Services/SyncManager.swift
 import Foundation
+import SwiftData
 import PaCoShared
 
 final class SyncManager {
@@ -13,6 +14,8 @@ final class SyncManager {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("com.paco")
     }
+
+    var usageFileURL: URL { baseURL.appendingPathComponent("usage.json") }
 
     private func prepare() throws {
         try FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
@@ -58,5 +61,38 @@ final class SyncManager {
         } catch {
             logger.error("Failed to sync device config: \(error)")
         }
+    }
+
+    // MARK: - Usage (read from agent-written file)
+
+    func readUsage(context: ModelContext) {
+        guard let data = try? Data(contentsOf: usageFileURL),
+              let transfer = try? JSONDecoder().decode(UsageTransfer.self, from: data)
+        else { return }
+
+        let today = Calendar.current.startOfDay(for: transfer.date)
+
+        var profile: ChildProfile? = nil
+        if let pid = transfer.profileId {
+            let allProfiles = (try? context.fetch(FetchDescriptor<ChildProfile>())) ?? []
+            profile = allProfiles.first(where: { $0.id == pid })
+        }
+
+        let allRecords = (try? context.fetch(FetchDescriptor<UsageRecord>())) ?? []
+        let existing = allRecords.first { record in
+            Calendar.current.isDate(record.date, inSameDayAs: today)
+            && (transfer.profileId == nil || record.childProfile?.id == transfer.profileId)
+        }
+
+        if let record = existing {
+            record.internetOnDuration = transfer.internetOnDuration
+            record.appUsage = transfer.appUsage
+        } else {
+            let record = UsageRecord(date: today, internetOnDuration: transfer.internetOnDuration, appUsage: transfer.appUsage)
+            record.childProfile = profile
+            context.insert(record)
+        }
+
+        try? context.save()
     }
 }

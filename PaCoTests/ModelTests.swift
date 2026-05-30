@@ -52,4 +52,14 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(restriction.restrictionType, .blocked)
         XCTAssertNil(restriction.allowedScheduleId)
     }
+
+    func testUsageTransferRoundTrip() throws {
+        let entry = AppUsageEntry(bundleIdentifier: "com.apple.Safari", appName: "Safari", duration: 120, launchCount: 3)
+        let transfer = UsageTransfer(date: Date(timeIntervalSince1970: 1000000), profileId: UUID(), internetOnDuration: 3600, appUsage: [entry])
+        let data = try JSONEncoder().encode(transfer)
+        let decoded = try JSONDecoder().decode(UsageTransfer.self, from: data)
+        XCTAssertEqual(decoded.appUsage.count, 1)
+        XCTAssertEqual(decoded.internetOnDuration, 3600)
+        XCTAssertEqual(decoded.appUsage[0].bundleIdentifier, "com.apple.Safari")
+    }
 }

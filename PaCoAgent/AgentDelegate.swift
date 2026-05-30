@@ -48,6 +48,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private var schedulesFileURL: URL { baseURL.appendingPathComponent("schedules.json") }
     private var restrictionsFileURL: URL { baseURL.appendingPathComponent("restrictions.json") }
     private var configFileURL: URL { baseURL.appendingPathComponent("config.json") }
+    private var usageFileURL: URL { baseURL.appendingPathComponent("usage.json") }
 
     // MARK: - Schedule + restriction timer
 
@@ -62,9 +63,30 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private func tick() {
         let schedules = loadSchedules()
         let restrictions = loadRestrictions()
+        let config = loadConfig()
         currentSchedules = schedules
         appMonitor.updateRestrictions(restrictions)
         evaluateSchedules(schedules)
+        writeUsage(profileId: config?.activeProfileId)
+    }
+
+    private func loadConfig() -> DeviceConfigTransfer? {
+        guard let data = try? Data(contentsOf: configFileURL),
+              let config = try? JSONDecoder().decode(DeviceConfigTransfer.self, from: data)
+        else { return nil }
+        return config
+    }
+
+    private func writeUsage(profileId: UUID?) {
+        let transfer = UsageTransfer(
+            date: usageTracker.currentDay,
+            profileId: profileId,
+            internetOnDuration: usageTracker.currentInternetDuration(),
+            appUsage: usageTracker.currentAppUsage()
+        )
+        guard let data = try? JSONEncoder().encode(transfer) else { return }
+        try? FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
+        try? data.write(to: usageFileURL, options: .atomic)
     }
 
     private func loadSchedules() -> [ScheduleTransfer] {
@@ -75,14 +97,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     private func loadRestrictions() -> [AppRestrictionTransfer] {
-        // Load active profile ID from config.json
-        let activeProfileId: UUID?
-        if let data = try? Data(contentsOf: configFileURL),
-           let config = try? JSONDecoder().decode(DeviceConfigTransfer.self, from: data) {
-            activeProfileId = config.activeProfileId
-        } else {
-            activeProfileId = nil
-        }
+        let activeProfileId = loadConfig()?.activeProfileId
 
         guard let data = try? Data(contentsOf: restrictionsFileURL),
               let all = try? JSONDecoder().decode([AppRestrictionTransfer].self, from: data)
