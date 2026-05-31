@@ -173,10 +173,8 @@ final class BonjourService: ObservableObject {
                 if let error { self.logger.error("Child receive body error: \(error)"); return }
                 guard let bodyData, bodyData.count == messageLength else { return }
                 if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
-                    DispatchQueue.main.async {
-                        self.logger.info("Child received command: \(message.command.rawValue)")
-                        self.onIncomingMessage?(message)
-                    }
+                    self.logger.info("Child received command: \(message.command.rawValue)")
+                    self.onIncomingMessage?(message)
                 } else {
                     self.logger.warning("Child could not decode PaCoMessage (\(messageLength) bytes)")
                 }
@@ -205,9 +203,9 @@ final class BonjourService: ObservableObject {
                 guard let bodyData, bodyData.count == messageLength else { return }
                 // Try PaCoMessage first (child-initiated request), then PaCoResponse (reply to our command)
                 if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
-                    DispatchQueue.main.async { messageHandler(message) }
+                    messageHandler(message)
                 } else if let response = try? JSONDecoder().decode(PaCoResponse.self, from: bodyData) {
-                    DispatchQueue.main.async { responseHandler(response) }
+                    responseHandler(response)
                 } else {
                     self.logger.warning("Could not decode frame (\(messageLength) bytes)")
                 }
@@ -220,11 +218,11 @@ final class BonjourService: ObservableObject {
         connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { [weak self] headerData, _, _, error in
             guard let self else { return }
             if let error {
-                self.logger.error("Receive header error: \(error)")
+                self.logger.error("Receive header error (loop stopped): \(error)")
                 return
             }
             guard let headerData, headerData.count == 4 else {
-                self.logger.warning("Incomplete header received")
+                self.logger.warning("Incomplete header received (loop stopped)")
                 return
             }
             handler(headerData)
