@@ -66,6 +66,19 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         return config
     }
 
+    private func appendEvent(_ event: NotificationEvent) {
+        var events: [NotificationEvent] = []
+        if let data = try? Data(contentsOf: PaCoFiles.eventsFileURL),
+           let existing = try? JSONDecoder().decode([NotificationEvent].self, from: data) {
+            events = existing
+        }
+        events.append(event)
+        if events.count > 100 { events = Array(events.suffix(100)) }
+        guard let data = try? JSONEncoder().encode(events) else { return }
+        try? FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
+        try? data.write(to: PaCoFiles.eventsFileURL, options: .atomic)
+    }
+
     private func writeUsage(profileId: UUID?) {
         let transfer = UsageTransfer(
             date: usageTracker.currentDay,
@@ -114,6 +127,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             daemonProxy?.enableInternet { [weak self] success, error in
                 if success {
                     self?.usageTracker.internetDidEnable()
+                    self?.appendEvent(NotificationEvent(kind: .internetEnabled))
                     self?.logger.info("Internet enabled via daemon")
                 } else {
                     self?.logger.error("Failed to enable internet: \(error ?? "unknown")")
@@ -123,6 +137,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             daemonProxy?.disableInternet { [weak self] success, error in
                 if success {
                     self?.usageTracker.internetDidDisable()
+                    self?.appendEvent(NotificationEvent(kind: .internetDisabled))
                     self?.logger.info("Internet disabled via daemon")
                 } else {
                     self?.logger.error("Failed to disable internet: \(error ?? "unknown")")
@@ -137,6 +152,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         daemonProxy?.killProcess(pid: pid) { [weak self] success, error in
             if success {
                 self?.logger.info("Killed blocked app: \(appName)")
+                self?.appendEvent(NotificationEvent(kind: .appBlocked, payload: ["appName": appName, "bundleId": bundleId]))
                 self?.sendNotification(title: "App Blocked", body: "\(appName) is not available right now.")
             } else {
                 self?.logger.error("Failed to kill \(appName): \(error ?? "unknown")")

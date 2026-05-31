@@ -79,11 +79,11 @@ public struct ExtensionRequestPayload: Codable, Sendable {
 
 public struct ExtensionResponsePayload: Codable, Sendable {
     public var requestId: UUID
-    public var approved: Bool
+    public var status: ExtensionStatus
 
-    public init(requestId: UUID, approved: Bool) {
+    public init(requestId: UUID, status: ExtensionStatus) {
         self.requestId = requestId
-        self.approved = approved
+        self.status = status
     }
 }
 
