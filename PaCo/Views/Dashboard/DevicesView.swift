@@ -35,7 +35,8 @@ struct DevicesView: View {
                                 onConnect: { endpoint in
                                     bonjour.connect(
                                         to: endpoint,
-                                        messageHandler: { _ in }
+                                        responseHandler: { _ in },
+                                        incomingMessageHandler: { _ in }
                                     )
                                 },
                                 onRemove: {

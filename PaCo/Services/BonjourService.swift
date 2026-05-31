@@ -13,6 +13,9 @@ final class BonjourService: ObservableObject {
     private var activeConnection: NWConnection?
     private let logger = PaCoLogger.network
 
+    /// Called when this device receives an inbound PaCoMessage (from parent on child side, or from child on parent side).
+    var onIncomingMessage: ((PaCoMessage) -> Void)?
+
     private let serviceType = "_paco._tcp"
     private let serviceDomain = "local."
 
@@ -70,14 +73,21 @@ final class BonjourService: ObservableObject {
 
     // MARK: - Connect (parent to child)
 
-    func connect(to endpoint: NWEndpoint, messageHandler: @escaping (PaCoResponse) -> Void) {
+    /// Connect to a child endpoint.
+    /// - responseHandler: called when a PaCoResponse frame arrives (reply to commands we sent).
+    /// - incomingMessageHandler: called when a PaCoMessage frame arrives (child-initiated, e.g. requestExtension).
+    func connect(
+        to endpoint: NWEndpoint,
+        responseHandler: @escaping (PaCoResponse) -> Void,
+        incomingMessageHandler: @escaping (PaCoMessage) -> Void
+    ) {
         let connection = NWConnection(to: endpoint, using: .tcp)
 
         connection.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
                 self?.logger.info("Connected to child device")
-                self?.receiveMessages(on: connection, handler: messageHandler)
+                self?.receiveFrames(on: connection, responseHandler: responseHandler, messageHandler: incomingMessageHandler)
             case .failed(let error):
                 self?.logger.error("Connection failed: \(error)")
             default:
@@ -89,21 +99,21 @@ final class BonjourService: ObservableObject {
         activeConnection = connection
     }
 
+    // MARK: - Send
+
+    /// Send a PaCoMessage on the active connection.
+    /// Works for both parent (sending commands to child) and child (sending requests to parent).
     func send(message: PaCoMessage) {
         guard let connection = activeConnection else {
             logger.warning("No active connection to send message")
             return
         }
-        do {
-            let data = try message.encoded()
-            connection.send(content: data, completion: .contentProcessed { [weak self] error in
-                if let error {
-                    self?.logger.error("Send failed: \(error)")
-                }
-            })
-        } catch {
-            logger.error("Message encoding failed: \(error)")
-        }
+        sendFrame(message: message, on: connection)
+    }
+
+    /// Alias for send(message:) — used by child side to send on the parent-opened connection.
+    func sendOnActiveConnection(_ message: PaCoMessage) {
+        send(message: message)
     }
 
     // MARK: - Stop
@@ -123,62 +133,101 @@ final class BonjourService: ObservableObject {
 
     // MARK: - Private
 
+    private func sendFrame(message: PaCoMessage, on connection: NWConnection) {
+        do {
+            let data = try message.encoded()
+            connection.send(content: data, completion: .contentProcessed { [weak self] error in
+                if let error {
+                    self?.logger.error("Send failed: \(error)")
+                }
+            })
+        } catch {
+            logger.error("Message encoding failed: \(error)")
+        }
+    }
+
     private func handleIncomingConnection(_ connection: NWConnection) {
         connection.stateUpdateHandler = { [weak self] state in
             if case .ready = state {
-                self?.logger.info("Accepted incoming connection")
+                self?.logger.info("Accepted incoming connection from parent")
+                self?.activeConnection = connection
+                // Child starts receive loop to get commands/messages from parent
+                self?.receiveChildFrames(on: connection)
             }
         }
         connection.start(queue: .main)
-        activeConnection = connection
     }
 
-    private func receiveMessages(on connection: NWConnection, handler: @escaping (PaCoResponse) -> Void) {
-        // Step 1: Read exactly 4 bytes for the length header
+    /// Child-side receive loop: reads PaCoMessage frames sent by parent (e.g. approveExtension).
+    private func receiveChildFrames(on connection: NWConnection) {
+        receiveOneFrame(on: connection) { [weak self] headerData in
+            guard let self else { return }
+            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+            guard length > 0, length < 1_048_576 else {
+                self.logger.warning("Invalid frame length: \(length)")
+                return
+            }
+            let messageLength = Int(length)
+            connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, error in
+                guard let self else { return }
+                if let error { self.logger.error("Child receive body error: \(error)"); return }
+                guard let bodyData, bodyData.count == messageLength else { return }
+                if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
+                    DispatchQueue.main.async {
+                        self.logger.info("Child received command: \(message.command.rawValue)")
+                        self.onIncomingMessage?(message)
+                    }
+                } else {
+                    self.logger.warning("Child could not decode PaCoMessage (\(messageLength) bytes)")
+                }
+                self.receiveChildFrames(on: connection)
+            }
+        }
+    }
+
+    /// Parent-side receive loop: tries PaCoMessage first (child-initiated), then PaCoResponse (reply).
+    private func receiveFrames(
+        on connection: NWConnection,
+        responseHandler: @escaping (PaCoResponse) -> Void,
+        messageHandler: @escaping (PaCoMessage) -> Void
+    ) {
+        receiveOneFrame(on: connection) { [weak self] headerData in
+            guard let self else { return }
+            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+            guard length > 0, length < 1_048_576 else {
+                self.logger.warning("Invalid frame length: \(length)")
+                return
+            }
+            let messageLength = Int(length)
+            connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, error in
+                guard let self else { return }
+                if let error { self.logger.error("Receive body error: \(error)"); return }
+                guard let bodyData, bodyData.count == messageLength else { return }
+                // Try PaCoMessage first (child-initiated request), then PaCoResponse (reply to our command)
+                if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
+                    DispatchQueue.main.async { messageHandler(message) }
+                } else if let response = try? JSONDecoder().decode(PaCoResponse.self, from: bodyData) {
+                    DispatchQueue.main.async { responseHandler(response) }
+                } else {
+                    self.logger.warning("Could not decode frame (\(messageLength) bytes)")
+                }
+                self.receiveFrames(on: connection, responseHandler: responseHandler, messageHandler: messageHandler)
+            }
+        }
+    }
+
+    private func receiveOneFrame(on connection: NWConnection, then handler: @escaping (Data) -> Void) {
         connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { [weak self] headerData, _, _, error in
             guard let self else { return }
-
             if let error {
                 self.logger.error("Receive header error: \(error)")
                 return
             }
-
             guard let headerData, headerData.count == 4 else {
                 self.logger.warning("Incomplete header received")
                 return
             }
-
-            // Parse length from big-endian 4-byte header
-            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-            guard length > 0, length < 1_048_576 else {  // Max 1MB message
-                self.logger.warning("Invalid message length: \(length)")
-                return
-            }
-
-            // Step 2: Read exactly `length` bytes for the message body
-            let messageLength = Int(length)
-            connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, bodyError in
-                guard let self else { return }
-
-                if let bodyError {
-                    self.logger.error("Receive body error: \(bodyError)")
-                    return
-                }
-
-                guard let bodyData, bodyData.count == messageLength else {
-                    self.logger.warning("Incomplete body: expected \(messageLength) bytes")
-                    return
-                }
-
-                if let response = try? JSONDecoder().decode(PaCoResponse.self, from: bodyData) {
-                    handler(response)
-                } else {
-                    self.logger.warning("Failed to decode PaCoResponse from \(messageLength) bytes")
-                }
-
-                // Continue receiving next message
-                self.receiveMessages(on: connection, handler: handler)
-            }
+            handler(headerData)
         }
     }
 }
