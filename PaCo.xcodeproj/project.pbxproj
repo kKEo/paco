@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		06AE627F04308DADC51E55F4 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B6724786CD68F3344A5C72 /* DevicesView.swift */; };
+		AA001122334455667788AABB /* RequestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001122334455667788AABB /* RequestsView.swift */; };
 		12326CAFB6145194B5027D2C /* ProcessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89DC53EAD68770A0E809CBD /* ProcessManager.swift */; };
 		21F0CD45B9007A8A4EEF782F /* PaCoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */; };
 		2A281A5C93B5E2CED0680CB7 /* BonjourService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 591246C73D7B2F955E3BAF2E /* BonjourService.swift */; };
@@ -74,6 +75,7 @@
 		47FCAF4EC892D63060DA886D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		591246C73D7B2F955E3BAF2E /* BonjourService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourService.swift; sourceTree = "<group>"; };
 		69B6724786CD68F3344A5C72 /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesView.swift; sourceTree = "<group>"; };
+		BB001122334455667788AABB /* RequestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestsView.swift; sourceTree = "<group>"; };
 		7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		875304C90123CD124DB6D365 /* FirewallRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirewallRuleTests.swift; sourceTree = "<group>"; };
 		8BB8BB18F315A326C52EC842 /* UsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageView.swift; sourceTree = "<group>"; };
@@ -193,6 +195,7 @@
 				0F799922CF0F809D06EA8568 /* AppRulesView.swift */,
 				99CC0A02FD01BC0A5F5B0802 /* DashboardView.swift */,
 				69B6724786CD68F3344A5C72 /* DevicesView.swift */,
+				BB001122334455667788AABB /* RequestsView.swift */,
 				FD272CD53B8E525406021634 /* HomeView.swift */,
 				BA8048D1F4D410CC1E324DB3 /* ProfilesView.swift */,
 				2956CA2E163B69C1CBF3F4F4 /* SchedulesView.swift */,
@@ -443,6 +446,7 @@
 				667871199FDA02879133B99E /* DaemonXPCClient.swift in Sources */,
 				FFB59107179FC61E0198FEEC /* DashboardView.swift in Sources */,
 				06AE627F04308DADC51E55F4 /* DevicesView.swift in Sources */,
+				AA001122334455667788AABB /* RequestsView.swift in Sources */,
 				911028D7CFCE1B670A7CA156 /* HelperManager.swift in Sources */,
 				4635B89C9EC81AFF7B3D2DC2 /* HomeView.swift in Sources */,
 				9C7461D8A9048BAFA4BCF621 /* MenuBarManager.swift in Sources */,

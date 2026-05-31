@@ -7,6 +7,7 @@ enum DashboardTab: String, CaseIterable, Identifiable {
     case appRules = "App Rules"
     case usage = "Usage"
     case devices = "Devices"
+    case requests = "Requests"
     case settings = "Settings"
 
     var id: String { rawValue }
@@ -19,6 +20,7 @@ enum DashboardTab: String, CaseIterable, Identifiable {
         case .appRules: "app.badge.checkmark"
         case .usage: "chart.bar"
         case .devices: "laptopcomputer"
+        case .requests: "clock.badge.questionmark"
         case .settings: "gear"
         }
     }
@@ -58,6 +60,8 @@ struct DashboardView: View {
                 UsageView()
             case .devices:
                 DevicesView()
+            case .requests:
+                RequestsView()
             case .settings:
                 SettingsView()
             }

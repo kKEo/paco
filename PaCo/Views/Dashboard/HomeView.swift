@@ -6,6 +6,8 @@ struct HomeView: View {
     @EnvironmentObject private var daemonClient: DaemonXPCClient
     @Query private var profiles: [ChildProfile]
     @Query private var pairings: [PairingInfo]
+    @Query(filter: #Predicate<TimeExtensionRequest> { $0.statusRaw == "pending" })
+    private var pendingRequests: [TimeExtensionRequest]
 
     var body: some View {
         ScrollView {
@@ -13,6 +15,20 @@ struct HomeView: View {
                 Text("Home")
                     .font(.largeTitle)
                     .fontWeight(.bold)
+
+                if !pendingRequests.isEmpty {
+                    HStack(spacing: 12) {
+                        Image(systemName: "clock.badge.exclamationmark")
+                            .foregroundStyle(.orange)
+                        Text("\(pendingRequests.count) pending time request\(pendingRequests.count == 1 ? "" : "s")")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Spacer()
+                    }
+                    .padding(14)
+                    .background(.orange.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
 
                 if profiles.isEmpty {
                     ContentUnavailableView(
