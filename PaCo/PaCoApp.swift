@@ -51,7 +51,9 @@ struct PaCoApp: App {
                     startUsageWatcher(context: context)
                     SyncManager.shared.readUsage(context: context)
                     startEventsWatcher(context: context)
-                    // Child mode: start advertising and handle approvals
+                    // NOTE: determineMode(context:) is synchronous — appState.mode is fully resolved
+                    // by the call above. This mode check must remain after determineMode.
+                    // If determineMode ever becomes async, move advertising setup into its completion.
                     if appState.mode == .child {
                         let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
                         bonjour.startAdvertising(name: deviceName)

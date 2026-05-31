@@ -11,6 +11,7 @@ final class SyncManager {
     private let logger = PaCoLogger.app
 
     var usageFileURL: URL { PaCoFiles.usageFileURL }
+    /// Forward to PaCoFiles for callers that hold a SyncManager reference (e.g. ChildModeView).
     var eventsFileURL: URL { PaCoFiles.eventsFileURL }
 
     private func prepare() throws {
