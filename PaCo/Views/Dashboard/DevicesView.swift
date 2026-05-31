@@ -5,7 +5,7 @@ import PaCoShared
 
 struct DevicesView: View {
     @Query private var pairings: [PairingInfo]
-    @StateObject private var bonjour = BonjourService()
+    @EnvironmentObject var bonjour: BonjourService
     @Environment(\.modelContext) private var context
 
     @State private var showPairOverlay = false

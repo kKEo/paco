@@ -11,6 +11,7 @@ final class SyncManager {
     private let logger = PaCoLogger.app
 
     var usageFileURL: URL { PaCoFiles.usageFileURL }
+    var eventsFileURL: URL { PaCoFiles.eventsFileURL }
 
     private func prepare() throws {
         try FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)

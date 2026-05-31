@@ -4,11 +4,15 @@ import PaCoShared
 
 struct ChildModeView: View {
     @EnvironmentObject private var daemonClient: DaemonXPCClient
+    @EnvironmentObject private var bonjour: BonjourService
     @Environment(AppState.self) private var appState
     @State private var showPINPrompt = false
     @State private var pinEntry = ""
     @State private var pinError = ""
     @State private var noPINSet = false
+    @State private var showRequestOverlay = false
+    @State private var requestMinutes = 30
+    @State private var requestReason = ""
 
     var body: some View {
         ZStack {
@@ -41,6 +45,12 @@ struct ChildModeView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Button("Request More Time") {
+                    showRequestOverlay = true
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
+
                 Spacer()
 
                 // Footer: parent access + quit
@@ -68,6 +78,34 @@ struct ChildModeView: View {
             .padding(30)
             .frame(width: 350, height: 400)
             .onAppear { }
+
+            if showRequestOverlay {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Text("Request More Time").font(.headline)
+                    Stepper("\(requestMinutes) minutes", value: $requestMinutes, in: 15...120, step: 15)
+                        .frame(width: 200)
+                    TextField("Reason (optional)", text: $requestReason)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 200)
+                    HStack {
+                        Button("Cancel") {
+                            showRequestOverlay = false
+                            requestReason = ""
+                        }
+                        Button("Send Request") {
+                            sendExtensionRequest()
+                            showRequestOverlay = false
+                            requestReason = ""
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+                .padding(30)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
+            }
 
             if showPINPrompt {
                 Color.black.opacity(0.3)
@@ -126,6 +164,37 @@ struct ChildModeView: View {
             }
         } catch {
             pinError = "Error verifying PIN"
+        }
+    }
+
+    private func sendExtensionRequest() {
+        let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+        let requestId = UUID()
+        let payload = ExtensionRequestPayload(
+            requestId: requestId,
+            childDeviceName: deviceName,
+            requestedMinutes: requestMinutes,
+            reason: requestReason
+        )
+        guard let payloadData = try? JSONEncoder().encode(payload) else { return }
+        let message = PaCoMessage(command: .requestExtension, payload: payloadData)
+        bonjour.sendOnActiveConnection(message)
+
+        // Also write to events.json for local file-based IPC (parent on same Mac)
+        let event = NotificationEvent(kind: .extensionRequested, payload: [
+            "requestId": requestId.uuidString,
+            "childDeviceName": deviceName,
+            "requestedMinutes": String(requestMinutes),
+            "reason": requestReason
+        ])
+        var events: [NotificationEvent] = []
+        if let data = try? Data(contentsOf: PaCoFiles.eventsFileURL),
+           let existing = try? JSONDecoder().decode([NotificationEvent].self, from: data) {
+            events = existing
+        }
+        events.append(event)
+        if let data = try? JSONEncoder().encode(events) {
+            try? data.write(to: PaCoFiles.eventsFileURL, options: .atomic)
         }
     }
 }
