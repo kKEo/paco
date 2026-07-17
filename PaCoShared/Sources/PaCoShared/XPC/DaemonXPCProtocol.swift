@@ -7,4 +7,6 @@ import Foundation
     func killProcess(pid: Int32, reply: @escaping (Bool, String?) -> Void)
     func verifyFirewallIntegrity(reply: @escaping (Bool) -> Void)
     func status(reply: @escaping (String) -> Void)
+    /// Push the set of bundle IDs the daemon is permitted to kill (blocked/scheduled apps).
+    func updateRestrictedApps(bundleIDs: [String], reply: @escaping (Bool) -> Void)
 }

@@ -1,5 +1,22 @@
 import Foundation
 
+/// One-byte tag placed at the start of each frame body so the receiver can
+/// unambiguously distinguish a request/command from a reply (no decode-guessing).
+public enum FrameType: UInt8, Sendable {
+    case message = 1
+    case response = 2
+}
+
+/// Build a length-prefixed frame: [UInt32 big-endian body length][FrameType byte][json].
+func makeFrame(type: FrameType, json: Data) -> Data {
+    var body = Data([type.rawValue])
+    body.append(json)
+    var length = UInt32(body.count).bigEndian
+    var framed = Data(bytes: &length, count: 4)
+    framed.append(body)
+    return framed
+}
+
 public enum PaCoCommand: String, Codable, Sendable {
     case enableInternet
     case disableInternet
@@ -12,6 +29,7 @@ public enum PaCoCommand: String, Codable, Sendable {
     case requestExtension
     case approveExtension
     case denyExtension
+    case provisionPIN
 }
 
 public struct PaCoMessage: Codable, Sendable {
@@ -26,18 +44,7 @@ public struct PaCoMessage: Codable, Sendable {
     }
 
     public func encoded() throws -> Data {
-        let data = try JSONEncoder().encode(self)
-        // Prefix with 4-byte length header for framing
-        var length = UInt32(data.count).bigEndian
-        var framed = Data(bytes: &length, count: 4)
-        framed.append(data)
-        return framed
-    }
-
-    public static func decode(from data: Data) throws -> PaCoMessage {
-        // Skip 4-byte length header
-        let jsonData = data.dropFirst(4)
-        return try JSONDecoder().decode(PaCoMessage.self, from: Data(jsonData))
+        makeFrame(type: .message, json: try JSONEncoder().encode(self))
     }
 }
 
@@ -53,11 +60,7 @@ public struct PaCoResponse: Codable, Sendable {
     }
 
     public func encoded() throws -> Data {
-        let data = try JSONEncoder().encode(self)
-        var length = UInt32(data.count).bigEndian
-        var framed = Data(bytes: &length, count: 4)
-        framed.append(data)
-        return framed
+        makeFrame(type: .response, json: try JSONEncoder().encode(self))
     }
 }
 
@@ -80,10 +83,14 @@ public struct ExtensionRequestPayload: Codable, Sendable {
 public struct ExtensionResponsePayload: Codable, Sendable {
     public var requestId: UUID
     public var status: ExtensionStatus
+    /// Minutes of internet granted (present on approval); the child turns this into
+    /// a temporary override window.
+    public var grantedMinutes: Int?
 
-    public init(requestId: UUID, status: ExtensionStatus) {
+    public init(requestId: UUID, status: ExtensionStatus, grantedMinutes: Int? = nil) {
         self.requestId = requestId
         self.status = status
+        self.grantedMinutes = grantedMinutes
     }
 }
 

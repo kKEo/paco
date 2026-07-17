@@ -1,8 +1,17 @@
 import Foundation
 import Network
+import Security
 import PaCoShared
 
-/// Manages Bonjour discovery and TLS-secured communication between parent and child devices.
+/// Manages Bonjour discovery and TLS-PSK-secured communication between parent and child devices.
+///
+/// Trust model: the parent↔child channel is encrypted and authenticated with a
+/// pre-shared key derived from a one-time pairing code (see `PairingKeyManager`).
+/// An unpaired peer has no matching key and fails the TLS handshake, so it cannot
+/// send commands or requests.
+///
+/// Roles: the **child** advertises an `NWListener` (TLS server); the **parent**
+/// browses and opens one `NWConnection` per paired child (TLS client).
 final class BonjourService: ObservableObject {
 
     @Published var discoveredDevices: [NWBrowser.Result] = []
@@ -10,20 +19,65 @@ final class BonjourService: ObservableObject {
 
     private var browser: NWBrowser?
     private var listener: NWListener?
-    private var activeConnection: NWConnection?
+
+    /// Child side: the single accepted connection from the parent.
+    private var childConnection: NWConnection?
+    /// Parent side: one connection per paired child, keyed by child identity (device name).
+    private var parentConnections: [String: NWConnection] = [:]
+
     private let logger = PaCoLogger.network
 
-    /// Called when this device receives an inbound PaCoMessage (from parent on child side, or from child on parent side).
+    /// Child side: inbound command from the parent (e.g. approveExtension, provisionPIN).
     var onIncomingMessage: ((PaCoMessage) -> Void)?
+    /// Parent side: inbound request from a child, with the child's identity.
+    var onChildRequest: ((PaCoMessage, String) -> Void)?
+    /// Parent side: a connection to a child just became ready (identity).
+    var onParentConnected: ((String) -> Void)?
 
     private let serviceType = "_paco._tcp"
     private let serviceDomain = "local."
+    /// TLS-PSK identity label (sent in the clear; key selection is done by the app).
+    private static let pskIdentity = Data("com.paco".utf8)
+    /// Deterministic key used only so an unpaired child is still discoverable by name.
+    private static let unpairedBootstrapCode = "PACO-UNPAIRED-BOOTSTRAP"
+
+    // MARK: - TLS-PSK parameters
+
+    private func tlsParameters(psk: Data) -> NWParameters {
+        let tlsOptions = NWProtocolTLS.Options()
+        let secOptions = tlsOptions.securityProtocolOptions
+
+        psk.withUnsafeBytes { (pskPtr: UnsafeRawBufferPointer) in
+            Self.pskIdentity.withUnsafeBytes { (idPtr: UnsafeRawBufferPointer) in
+                let pskDD = DispatchData(bytes: pskPtr)
+                let idDD = DispatchData(bytes: idPtr)
+                sec_protocol_options_add_pre_shared_key(
+                    secOptions, pskDD as __DispatchData, idDD as __DispatchData
+                )
+            }
+        }
+        sec_protocol_options_set_min_tls_protocol_version(secOptions, .TLSv12)
+        if let suite = tls_ciphersuite_t(rawValue: 0x00A8) {  // TLS_PSK_WITH_AES_128_GCM_SHA256
+            sec_protocol_options_append_tls_ciphersuite(secOptions, suite)
+        }
+
+        let params = NWParameters(tls: tlsOptions)
+        params.includePeerToPeer = true
+        return params
+    }
+
+    /// The child's PSK: its paired parent's key, or a bootstrap key (discoverable but unconnectable) if unpaired.
+    private func childPSK() -> Data {
+        if let key = PairingKeyManager.allKeys().first?.key { return key }
+        return (try? PairingKeyManager.deriveKey(fromCode: Self.unpairedBootstrapCode)) ?? Data(count: 32)
+    }
 
     // MARK: - Advertise (child mode)
 
     func startAdvertising(name: String) {
+        listener?.cancel()
         do {
-            let listener = try NWListener(using: .tcp)
+            let listener = try NWListener(using: tlsParameters(psk: childPSK()))
             listener.service = NWListener.Service(name: name, type: serviceType, domain: serviceDomain)
 
             listener.stateUpdateHandler = { [weak self] state in
@@ -49,6 +103,11 @@ final class BonjourService: ObservableObject {
         }
     }
 
+    /// Restart the child listener after pairing so the real PSK takes effect.
+    func restartAdvertising(name: String) {
+        startAdvertising(name: name)
+    }
+
     // MARK: - Browse (parent mode)
 
     func startBrowsing() {
@@ -71,49 +130,65 @@ final class BonjourService: ObservableObject {
         self.browser = browser
     }
 
-    // MARK: - Connect (parent to child)
+    // MARK: - Connect (parent to a specific paired child)
 
-    /// Connect to a child endpoint.
-    /// - responseHandler: called when a PaCoResponse frame arrives (reply to commands we sent).
-    /// - incomingMessageHandler: called when a PaCoMessage frame arrives (child-initiated, e.g. requestExtension).
+    /// Connect to a paired child endpoint. Requires a stored pairing key for `identity`.
     func connect(
         to endpoint: NWEndpoint,
+        identity: String,
         responseHandler: @escaping (PaCoResponse) -> Void,
         incomingMessageHandler: @escaping (PaCoMessage) -> Void
     ) {
-        let connection = NWConnection(to: endpoint, using: .tcp)
+        guard let psk = PairingKeyManager.key(for: identity) else {
+            logger.warning("Refusing to connect to '\(identity)': no pairing key (not paired)")
+            return
+        }
+        let connection = NWConnection(to: endpoint, using: tlsParameters(psk: psk))
 
         connection.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
-                self?.logger.info("Connected to child device")
-                self?.receiveFrames(on: connection, responseHandler: responseHandler, messageHandler: incomingMessageHandler)
+                self?.logger.info("Connected (TLS) to child '\(identity)'")
+                self?.receiveParentFrames(on: connection, identity: identity,
+                                          responseHandler: responseHandler,
+                                          messageHandler: incomingMessageHandler)
+                self?.onParentConnected?(identity)
             case .failed(let error):
-                self?.logger.error("Connection failed: \(error)")
+                self?.logger.error("Connection to '\(identity)' failed: \(error)")
+                DispatchQueue.main.async { self?.parentConnections[identity] = nil }
+            case .cancelled:
+                DispatchQueue.main.async { self?.parentConnections[identity] = nil }
             default:
                 break
             }
         }
 
         connection.start(queue: .main)
-        activeConnection = connection
+        parentConnections[identity] = connection
+    }
+
+    func isConnected(to identity: String) -> Bool {
+        parentConnections[identity] != nil
     }
 
     // MARK: - Send
 
-    /// Send a PaCoMessage on the active connection.
-    /// Works for both parent (sending commands to child) and child (sending requests to parent).
-    func send(message: PaCoMessage) {
-        guard let connection = activeConnection else {
-            logger.warning("No active connection to send message")
+    /// Parent → a specific child.
+    func send(_ message: PaCoMessage, to identity: String) {
+        guard let connection = parentConnections[identity] else {
+            logger.warning("No active connection to '\(identity)' to send \(message.command.rawValue)")
             return
         }
         sendFrame(message: message, on: connection)
     }
 
-    /// Alias for send(message:) — used by child side to send on the parent-opened connection.
-    func sendOnActiveConnection(_ message: PaCoMessage) {
-        send(message: message)
+    /// Child → parent, on the accepted connection.
+    func sendToParent(_ message: PaCoMessage) {
+        guard let connection = childConnection else {
+            logger.warning("No active parent connection to send message")
+            return
+        }
+        sendFrame(message: message, on: connection)
     }
 
     // MARK: - Stop
@@ -121,10 +196,12 @@ final class BonjourService: ObservableObject {
     func stop() {
         browser?.cancel()
         listener?.cancel()
-        activeConnection?.cancel()
+        childConnection?.cancel()
+        parentConnections.values.forEach { $0.cancel() }
         browser = nil
         listener = nil
-        activeConnection = nil
+        childConnection = nil
+        parentConnections = [:]
         DispatchQueue.main.async {
             self.discoveredDevices = []
             self.isListening = false
@@ -149,69 +226,83 @@ final class BonjourService: ObservableObject {
     private func handleIncomingConnection(_ connection: NWConnection) {
         connection.stateUpdateHandler = { [weak self] state in
             if case .ready = state {
-                self?.logger.info("Accepted incoming connection from parent")
-                self?.activeConnection = connection
-                // Child starts receive loop to get commands/messages from parent
+                self?.logger.info("Accepted incoming TLS connection from parent")
+                self?.childConnection = connection
                 self?.receiveChildFrames(on: connection)
             }
         }
         connection.start(queue: .main)
     }
 
-    /// Child-side receive loop: reads PaCoMessage frames sent by parent (e.g. approveExtension).
+    /// Child-side receive loop: PaCoMessage frames sent by the parent.
     private func receiveChildFrames(on connection: NWConnection) {
         receiveOneFrame(on: connection) { [weak self] headerData in
             guard let self else { return }
-            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-            guard length > 0, length < 1_048_576 else {
-                self.logger.warning("Invalid frame length: \(length)")
-                return
-            }
-            let messageLength = Int(length)
+            guard let messageLength = self.frameBodyLength(headerData) else { return }
             connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, error in
                 guard let self else { return }
                 if let error { self.logger.error("Child receive body error: \(error)"); return }
                 guard let bodyData, bodyData.count == messageLength else { return }
-                if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
+                let (type, json) = self.splitFrameBody(bodyData)
+                if type == .message, let message = try? JSONDecoder().decode(PaCoMessage.self, from: json) {
                     self.logger.info("Child received command: \(message.command.rawValue)")
                     self.onIncomingMessage?(message)
                 } else {
-                    self.logger.warning("Child could not decode PaCoMessage (\(messageLength) bytes)")
+                    self.logger.warning("Child could not decode frame (\(messageLength) bytes)")
                 }
                 self.receiveChildFrames(on: connection)
             }
         }
     }
 
-    /// Parent-side receive loop: tries PaCoMessage first (child-initiated), then PaCoResponse (reply).
-    private func receiveFrames(
+    /// Parent-side receive loop for one child connection: child-initiated requests + replies.
+    private func receiveParentFrames(
         on connection: NWConnection,
+        identity: String,
         responseHandler: @escaping (PaCoResponse) -> Void,
         messageHandler: @escaping (PaCoMessage) -> Void
     ) {
         receiveOneFrame(on: connection) { [weak self] headerData in
             guard let self else { return }
-            let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-            guard length > 0, length < 1_048_576 else {
-                self.logger.warning("Invalid frame length: \(length)")
-                return
-            }
-            let messageLength = Int(length)
+            guard let messageLength = self.frameBodyLength(headerData) else { return }
             connection.receive(minimumIncompleteLength: messageLength, maximumLength: messageLength) { [weak self] bodyData, _, _, error in
                 guard let self else { return }
                 if let error { self.logger.error("Receive body error: \(error)"); return }
                 guard let bodyData, bodyData.count == messageLength else { return }
-                // Try PaCoMessage first (child-initiated request), then PaCoResponse (reply to our command)
-                if let message = try? JSONDecoder().decode(PaCoMessage.self, from: bodyData) {
-                    messageHandler(message)
-                } else if let response = try? JSONDecoder().decode(PaCoResponse.self, from: bodyData) {
-                    responseHandler(response)
-                } else {
+                let (type, json) = self.splitFrameBody(bodyData)
+                switch type {
+                case .message:
+                    if let message = try? JSONDecoder().decode(PaCoMessage.self, from: json) {
+                        messageHandler(message)
+                        self.onChildRequest?(message, identity)
+                    }
+                case .response:
+                    if let response = try? JSONDecoder().decode(PaCoResponse.self, from: json) {
+                        responseHandler(response)
+                    }
+                case .none:
                     self.logger.warning("Could not decode frame (\(messageLength) bytes)")
                 }
-                self.receiveFrames(on: connection, responseHandler: responseHandler, messageHandler: messageHandler)
+                self.receiveParentFrames(on: connection, identity: identity,
+                                         responseHandler: responseHandler, messageHandler: messageHandler)
             }
         }
+    }
+
+    /// Split a frame body into its type byte and JSON payload.
+    private func splitFrameBody(_ body: Data) -> (FrameType?, Data) {
+        guard let first = body.first else { return (nil, Data()) }
+        return (FrameType(rawValue: first), Data(body.dropFirst()))
+    }
+
+    /// Parse and validate the 4-byte big-endian length header; nil if invalid.
+    private func frameBodyLength(_ headerData: Data) -> Int? {
+        let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        guard length > 0, length < 1_048_576 else {
+            logger.warning("Invalid frame length: \(length)")
+            return nil
+        }
+        return Int(length)
     }
 
     private func receiveOneFrame(on connection: NWConnection, then handler: @escaping (Data) -> Void) {

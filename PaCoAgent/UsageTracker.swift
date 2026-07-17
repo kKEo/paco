@@ -12,6 +12,23 @@ final class UsageTracker {
 
     init() {
         self.currentDate = Calendar.current.startOfDay(for: Date())
+        restoreFromSnapshot()
+    }
+
+    /// Seed in-memory counters from the last usage snapshot on disk so an agent
+    /// restart (crash/reboot/relaunch) mid-day continues accumulating instead of
+    /// resetting to zero. At most one tick (~30s) of activity is lost.
+    private func restoreFromSnapshot() {
+        guard let data = try? Data(contentsOf: PaCoFiles.usageFileURL),
+              let transfer = try? JSONDecoder().decode(UsageTransfer.self, from: data),
+              Calendar.current.isDate(transfer.date, inSameDayAs: currentDate) else {
+            return
+        }
+        totalInternetSeconds = transfer.internetOnDuration
+        for entry in transfer.appUsage {
+            dailyUsage[entry.bundleIdentifier] = entry
+        }
+        logger.info("Restored usage snapshot: \(transfer.appUsage.count) apps, internet \(Int(self.totalInternetSeconds))s")
     }
 
     // MARK: - Internet tracking

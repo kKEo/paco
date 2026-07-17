@@ -168,6 +168,42 @@ final class ScheduleEvaluatorTests: XCTestCase {
         XCTAssertEqual(result, .allowed)
     }
 
+    // MARK: - Override window (approved extensions)
+
+    func testActiveOverrideAllowsDuringBlockedPeriod() {
+        let schedule = Schedule(
+            label: "School nights", days: [.monday],
+            offHour: 21, offMinute: 0, onHour: 7, onMinute: 0
+        )
+        let monday22 = makeDate(weekday: 2, hour: 22, minute: 0)
+        // Grant expires 30 min after the evaluation instant → allowed.
+        let overrideUntil = monday22.addingTimeInterval(30 * 60)
+        let result = ScheduleEvaluator.evaluate(schedules: [schedule], at: monday22, overrideUntil: overrideUntil)
+        XCTAssertEqual(result, .allowed)
+    }
+
+    func testExpiredOverrideDoesNotAllow() {
+        let schedule = Schedule(
+            label: "School nights", days: [.monday],
+            offHour: 21, offMinute: 0, onHour: 7, onMinute: 0
+        )
+        let monday22 = makeDate(weekday: 2, hour: 22, minute: 0)
+        // Grant already expired one minute ago → schedule block resumes.
+        let overrideUntil = monday22.addingTimeInterval(-60)
+        let result = ScheduleEvaluator.evaluate(schedules: [schedule], at: monday22, overrideUntil: overrideUntil)
+        XCTAssertEqual(result, .blocked)
+    }
+
+    func testNilOverrideBehavesAsBefore() {
+        let schedule = Schedule(
+            label: "School nights", days: [.monday],
+            offHour: 21, offMinute: 0, onHour: 7, onMinute: 0
+        )
+        let monday22 = makeDate(weekday: 2, hour: 22, minute: 0)
+        let result = ScheduleEvaluator.evaluate(schedules: [schedule], at: monday22, overrideUntil: nil)
+        XCTAssertEqual(result, .blocked)
+    }
+
     // MARK: - Helpers
 
     private func makeDate(weekday: Int, hour: Int, minute: Int) -> Date {

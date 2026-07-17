@@ -53,15 +53,13 @@ struct RequestsView: View {
         req.respondedAt = Date()
         try? context.save()
 
-        // Send approval via Bonjour if connected
-        let payload = ExtensionResponsePayload(requestId: req.id, status: .approved)
+        // Grant the requested minutes to the specific child that asked. The child
+        // turns this into a temporary override window that its own agent enforces.
+        let payload = ExtensionResponsePayload(
+            requestId: req.id, status: .approved, grantedMinutes: req.requestedMinutes
+        )
         if let data = try? JSONEncoder().encode(payload) {
-            bonjour.send(message: PaCoMessage(command: .approveExtension, payload: data))
-        }
-
-        // Enable internet directly (handles same-Mac case)
-        if !daemonClient.isInternetEnabled {
-            daemonClient.toggleInternet()
+            bonjour.send(PaCoMessage(command: .approveExtension, payload: data), to: req.childDeviceName)
         }
     }
 
@@ -72,7 +70,7 @@ struct RequestsView: View {
 
         let payload = ExtensionResponsePayload(requestId: req.id, status: .denied)
         if let data = try? JSONEncoder().encode(payload) {
-            bonjour.send(message: PaCoMessage(command: .denyExtension, payload: data))
+            bonjour.send(PaCoMessage(command: .denyExtension, payload: data), to: req.childDeviceName)
         }
     }
 }

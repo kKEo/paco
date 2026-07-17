@@ -22,7 +22,19 @@ public enum ScheduleEvaluator {
 
     /// Evaluate all active schedules at a given time.
     /// Most restrictive wins: if any schedule says blocked, result is blocked.
-    public static func evaluate<S: Schedulable>(schedules: [S], at date: Date) -> InternetAction {
+    ///
+    /// - Parameter overrideUntil: when non-nil and in the future, a temporary grant
+    ///   (an approved time extension) that supersedes schedule blocking.
+    public static func evaluate<S: Schedulable>(
+        schedules: [S],
+        at date: Date,
+        overrideUntil: Date? = nil
+    ) -> InternetAction {
+        // An active override wins over everything: approved extra time.
+        if let overrideUntil, overrideUntil > date {
+            return .allowed
+        }
+
         let activeSchedules = schedules.filter(\.isActive)
         guard !activeSchedules.isEmpty else { return .allowed }
 

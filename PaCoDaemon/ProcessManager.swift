@@ -6,11 +6,19 @@ final class ProcessManager {
     private let logger = PaCoLogger.daemon
 
     /// Set of bundle IDs that are allowed to be killed.
-    /// Updated by the agent when restriction rules change.
-    private(set) var restrictedBundleIDs: Set<String> = []
+    /// Updated by the agent (via XPC) when restriction rules change.
+    private var _restrictedBundleIDs: Set<String> = []
+    private let lock = NSLock()
+
+    private var restrictedBundleIDs: Set<String> {
+        lock.lock(); defer { lock.unlock() }
+        return _restrictedBundleIDs
+    }
 
     func updateRestrictedApps(_ bundleIDs: Set<String>) {
-        restrictedBundleIDs = bundleIDs
+        lock.lock()
+        _restrictedBundleIDs = bundleIDs
+        lock.unlock()
         logger.info("Updated restricted apps: \(bundleIDs.count) entries")
     }
 

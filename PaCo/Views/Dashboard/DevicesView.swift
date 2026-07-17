@@ -10,6 +10,8 @@ struct DevicesView: View {
 
     @State private var showPairOverlay = false
     @State private var newDeviceName = ""
+    @State private var generatedCode: String?
+    @State private var pairingForName = ""
 
     var body: some View {
         ZStack {
@@ -35,6 +37,7 @@ struct DevicesView: View {
                                 onConnect: { endpoint in
                                     bonjour.connect(
                                         to: endpoint,
+                                        identity: pairing.childDeviceName,
                                         responseHandler: { _ in },
                                         incomingMessageHandler: { _ in }
                                     )
@@ -58,13 +61,7 @@ struct DevicesView: View {
 
                         ForEach(unpaired, id: \.self) { result in
                             DiscoveredDeviceRow(result: result) {
-                                let name = deviceName(from: result)
-                                let info = PairingInfo(
-                                    parentDeviceName: Host.current().localizedName ?? "Parent",
-                                    childDeviceName: name
-                                )
-                                context.insert(info)
-                                try? context.save()
+                                beginPairing(name: deviceName(from: result))
                             }
                         }
                     }
@@ -84,6 +81,8 @@ struct DevicesView: View {
                 Color.black.opacity(0.3).ignoresSafeArea()
                 VStack(spacing: 16) {
                     Text("Pair New Device").font(.headline)
+                    Text("Enter the child device's name, then share the pairing code with it.")
+                        .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     TextField("Child device name", text: $newDeviceName)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 220)
@@ -92,17 +91,12 @@ struct DevicesView: View {
                             showPairOverlay = false
                             newDeviceName = ""
                         }
-                        Button("Pair") {
+                        Button("Generate Code") {
                             let name = newDeviceName.trimmingCharacters(in: .whitespaces)
                             guard !name.isEmpty else { return }
-                            let info = PairingInfo(
-                                parentDeviceName: Host.current().localizedName ?? "Parent",
-                                childDeviceName: name
-                            )
-                            context.insert(info)
-                            try? context.save()
                             showPairOverlay = false
                             newDeviceName = ""
+                            beginPairing(name: name)
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(newDeviceName.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -113,8 +107,64 @@ struct DevicesView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(radius: 12)
             }
+
+            if let code = generatedCode {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Text("Pairing Code").font(.headline)
+                    Text("On \(pairingForName), tap “Pair with Parent” and enter:")
+                        .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Text(code)
+                        .font(.system(.largeTitle, design: .monospaced))
+                        .fontWeight(.bold)
+                        .textSelection(.enabled)
+                    Text("This code is valid for this pairing only.")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                    Button("Done") { generatedCode = nil }
+                        .buttonStyle(.borderedProminent)
+                }
+                .padding(30)
+                .frame(width: 360)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
+            }
         }
         .onAppear { bonjour.startBrowsing() }
+        .onChange(of: bonjour.discoveredDevices) { _, _ in autoConnectPairedDevices() }
+    }
+
+    /// Generate a one-time code, derive & store the pairing key under the child's
+    /// name, and record the pairing. The user reads the code aloud / types it on
+    /// the child, which derives the same key.
+    private func beginPairing(name: String) {
+        let code = PairingKeyManager.generateCode()
+        try? PairingKeyManager.pair(code: code, identity: name)
+        if !pairings.contains(where: { $0.childDeviceName == name }) {
+            let info = PairingInfo(
+                parentDeviceName: Host.current().localizedName ?? "Parent",
+                childDeviceName: name
+            )
+            context.insert(info)
+            try? context.save()
+        }
+        pairingForName = name
+        generatedCode = code
+    }
+
+    /// Auto-connect to any paired, online device we're not already connected to,
+    /// so child requests arrive without the parent clicking Connect.
+    private func autoConnectPairedDevices() {
+        for pairing in pairings {
+            guard !bonjour.isConnected(to: pairing.childDeviceName),
+                  let endpoint = onlineEndpoint(for: pairing) else { continue }
+            bonjour.connect(
+                to: endpoint,
+                identity: pairing.childDeviceName,
+                responseHandler: { _ in },
+                incomingMessageHandler: { _ in }
+            )
+        }
     }
 
     private func deviceName(from result: NWBrowser.Result) -> String {

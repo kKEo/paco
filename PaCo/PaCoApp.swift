@@ -58,8 +58,20 @@ struct PaCoApp: App {
                         let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
                         bonjour.startAdvertising(name: deviceName)
                         bonjour.onIncomingMessage = { message in
-                            if message.command == .approveExtension {
-                                daemonClient.toggleInternet()
+                            handleChildIncoming(message)
+                        }
+                    } else if appState.mode == .parent {
+                        // Handle time-extension requests arriving from any paired child.
+                        bonjour.onChildRequest = { message, identity in
+                            handleParentIncoming(message, from: identity, context: context)
+                        }
+                        // On connect, provision the parent PIN to the child so its
+                        // "Parent Access" can be verified locally.
+                        bonjour.onParentConnected = { identity in
+                            guard let pin = try? PINManager.exportPIN() else { return }
+                            let payload = PINProvisionTransfer(hash: pin.hash, salt: pin.salt)
+                            if let data = try? JSONEncoder().encode(payload) {
+                                bonjour.send(PaCoMessage(command: .provisionPIN, payload: data), to: identity)
                             }
                         }
                     }
@@ -107,6 +119,61 @@ struct PaCoApp: App {
         source.setCancelHandler { close(fd) }
         source.resume()
         eventsWatcher = source
+    }
+
+    /// Parent-side handling of child-initiated messages (cross-Mac requests).
+    private func handleParentIncoming(_ message: PaCoMessage, from identity: String, context: ModelContext) {
+        guard message.command == .requestExtension,
+              let data = message.payload,
+              let payload = try? JSONDecoder().decode(ExtensionRequestPayload.self, from: data) else { return }
+        DispatchQueue.main.async {
+            let requestId = payload.requestId
+            let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
+            guard existing == nil else { return }
+            let req = TimeExtensionRequest(
+                id: requestId,
+                childDeviceName: payload.childDeviceName.isEmpty ? identity : payload.childDeviceName,
+                requestedMinutes: payload.requestedMinutes,
+                reason: payload.reason
+            )
+            context.insert(req)
+            try? context.save()
+        }
+    }
+
+    /// Child-side handling of parent-initiated messages over the authenticated channel.
+    private func handleChildIncoming(_ message: PaCoMessage) {
+        switch message.command {
+        case .approveExtension:
+            guard let data = message.payload,
+                  let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data),
+                  ChildRequestLog.shared.consume(payload.requestId) else {
+                PaCoLogger.app.warning("Ignoring approveExtension: unknown or replayed request id")
+                return
+            }
+            let minutes = payload.grantedMinutes ?? 30
+            OverrideStore.write(InternetOverride(
+                requestId: payload.requestId,
+                grantedUntil: Date().addingTimeInterval(TimeInterval(minutes * 60))
+            ))
+            PaCoLogger.app.info("Extension approved: granted \(minutes) min (agent will enable)")
+
+        case .denyExtension:
+            if let data = message.payload,
+               let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data) {
+                _ = ChildRequestLog.shared.consume(payload.requestId)
+            }
+            PaCoLogger.app.info("Extension denied by parent")
+
+        case .provisionPIN:
+            guard let data = message.payload,
+                  let payload = try? JSONDecoder().decode(PINProvisionTransfer.self, from: data) else { return }
+            try? PINManager.storeProvisionedPIN(hash: payload.hash, salt: payload.salt)
+            PaCoLogger.app.info("Parent PIN provisioned to this child")
+
+        default:
+            break
+        }
     }
 
     private func processNewEvents(context: ModelContext) {

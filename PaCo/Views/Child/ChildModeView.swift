@@ -13,6 +13,11 @@ struct ChildModeView: View {
     @State private var showRequestOverlay = false
     @State private var requestMinutes = 30
     @State private var requestReason = ""
+    @State private var showPairingPrompt = false
+    @State private var pairingCode = ""
+    @State private var pairingError = ""
+    @State private var todayUsage: UsageTransfer?
+    @State private var usageRefreshTimer: Timer?
 
     var body: some View {
         ZStack {
@@ -40,9 +45,19 @@ struct ChildModeView: View {
                 VStack(spacing: 8) {
                     Text("Today's Usage")
                         .font(.headline)
-                    Text("Usage data will appear here")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if let usage = todayUsage {
+                        Text("Internet: \(formatDuration(usage.internetOnDuration))")
+                            .font(.subheadline)
+                        ForEach(topApps(usage), id: \.bundleIdentifier) { app in
+                            Text("\(app.appName): \(formatDuration(app.duration))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text("No usage recorded yet today")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Button("Request More Time") {
@@ -53,31 +68,40 @@ struct ChildModeView: View {
 
                 Spacer()
 
-                // Footer: parent access + quit
+                // Footer: pairing + parent access.
+                // Note: no Quit button in child mode — the monitored user should
+                // not be able to stop PaCo from the UI.
                 HStack {
-                    Button("Parent Access") {
-                        noPINSet = (try? !PINManager.hasPIN()) ?? false
-                        showPINPrompt = true
+                    Button("Pair with Parent") {
+                        pairingCode = ""
+                        pairingError = ""
+                        showPairingPrompt = true
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                     Spacer()
 
-                    Button {
-                        NSApplication.shared.terminate(nil)
-                    } label: {
-                        Label("Quit", systemImage: "power")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    Button("Parent Access") {
+                        noPINSet = (try? !PINManager.hasPIN()) ?? false
+                        showPINPrompt = true
                     }
-                    .buttonStyle(.plain)
-                    .help("Quit PaCo")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             }
             .padding(30)
             .frame(width: 350, height: 400)
-            .onAppear { }
+            .onAppear {
+                loadUsage()
+                usageRefreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+                    loadUsage()
+                }
+            }
+            .onDisappear {
+                usageRefreshTimer?.invalidate()
+                usageRefreshTimer = nil
+            }
 
             if showRequestOverlay {
                 Color.black.opacity(0.3).ignoresSafeArea()
@@ -99,6 +123,38 @@ struct ChildModeView: View {
                             requestReason = ""
                         }
                         .buttonStyle(.borderedProminent)
+                    }
+                }
+                .padding(30)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
+            }
+
+            if showPairingPrompt {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Text("Pair with Parent").font(.headline)
+                    Text("Enter the pairing code shown on the parent's Mac.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    TextField("Pairing code", text: $pairingCode)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 200)
+                        .autocorrectionDisabled()
+                    if !pairingError.isEmpty {
+                        Text(pairingError).foregroundStyle(.red).font(.caption)
+                    }
+                    HStack {
+                        Button("Cancel") {
+                            showPairingPrompt = false
+                            pairingCode = ""
+                            pairingError = ""
+                        }
+                        Button("Pair") { completePairing() }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(pairingCode.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                 }
                 .padding(30)
@@ -145,25 +201,70 @@ struct ChildModeView: View {
     }
 
     private func verifyPIN() {
+        // A child device with no provisioned parent PIN cannot be unlocked locally —
+        // this closes the "tap Unlock with no PIN" escalation. Pair with a parent first.
+        guard (try? PINManager.hasPIN()) == true else {
+            pinError = "No parent PIN on this device. Pair with a parent first."
+            return
+        }
+        if let until = PINManager.lockedOutUntil() {
+            pinError = "Too many attempts. Try again \(until.formatted(date: .omitted, time: .shortened))."
+            return
+        }
         do {
-            // If no PIN has been set yet, unlock directly
-            guard try PINManager.hasPIN() else {
-                showPINPrompt = false
-                pinEntry = ""
-                pinError = ""
-                appState.mode = .parent
-                return
-            }
             if try PINManager.verifyStoredPIN(pinEntry) {
+                try? PINManager.resetAttempts()
                 showPINPrompt = false
                 pinEntry = ""
                 pinError = ""
                 appState.mode = .parent
             } else {
-                pinError = "Incorrect PIN"
+                if let until = PINManager.recordFailedAttempt() {
+                    pinError = "Too many attempts. Locked until \(until.formatted(date: .omitted, time: .shortened))."
+                } else {
+                    pinError = "Incorrect PIN"
+                }
             }
         } catch {
             pinError = "Error verifying PIN"
+        }
+    }
+
+    private func loadUsage() {
+        guard let data = try? Data(contentsOf: PaCoFiles.usageFileURL),
+              let transfer = try? JSONDecoder().decode(UsageTransfer.self, from: data),
+              Calendar.current.isDate(transfer.date, inSameDayAs: Date()) else {
+            todayUsage = nil
+            return
+        }
+        todayUsage = transfer
+    }
+
+    private func topApps(_ usage: UsageTransfer) -> [AppUsageEntry] {
+        Array(usage.appUsage.sorted { $0.duration > $1.duration }.prefix(3))
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        let h = total / 3600, m = (total % 3600) / 60
+        if h > 0 { return "\(h)h \(m)m" }
+        if m > 0 { return "\(m)m" }
+        return "\(total)s"
+    }
+
+    private func completePairing() {
+        let code = pairingCode.trimmingCharacters(in: .whitespaces)
+        do {
+            // Child stores a single parent key; restart advertising so the TLS-PSK
+            // listener uses the real key and the parent can connect.
+            try PairingKeyManager.pair(code: code, identity: "parent")
+            let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+            bonjour.restartAdvertising(name: deviceName)
+            showPairingPrompt = false
+            pairingCode = ""
+            pairingError = ""
+        } catch {
+            pairingError = "Could not pair. Check the code and try again."
         }
     }
 
@@ -177,24 +278,9 @@ struct ChildModeView: View {
             reason: requestReason
         )
         guard let payloadData = try? JSONEncoder().encode(payload) else { return }
-        let message = PaCoMessage(command: .requestExtension, payload: payloadData)
-        bonjour.sendOnActiveConnection(message)
-
-        // Also write to events.json for local file-based IPC (parent on same Mac)
-        let event = NotificationEvent(kind: .extensionRequested, payload: [
-            "requestId": requestId.uuidString,
-            "childDeviceName": deviceName,
-            "requestedMinutes": String(requestMinutes),
-            "reason": requestReason
-        ])
-        var events: [NotificationEvent] = []
-        if let data = try? Data(contentsOf: PaCoFiles.eventsFileURL),
-           let existing = try? JSONDecoder().decode([NotificationEvent].self, from: data) {
-            events = existing
-        }
-        events.append(event)
-        if let data = try? JSONEncoder().encode(events) {
-            try? data.write(to: PaCoFiles.eventsFileURL, options: .atomic)
-        }
+        // Record so the matching approval can be correlated, then send over the
+        // authenticated channel to the parent.
+        ChildRequestLog.shared.record(requestId)
+        bonjour.sendToParent(PaCoMessage(command: .requestExtension, payload: payloadData))
     }
 }

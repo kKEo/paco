@@ -1,4 +1,5 @@
 import Foundation
+import SystemConfiguration
 import PaCoShared
 
 final class DaemonService: NSObject, DaemonXPCProtocol {
@@ -7,6 +8,8 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
     private let firewallManager = FirewallManager()
     private let processManager = ProcessManager()
     private let logger = PaCoLogger.daemon
+    private var integrityTimer: DispatchSourceTimer?
+    private let integrityQueue = DispatchQueue(label: "com.paco.daemon.integrity")
 
     private override init() {
         super.init()
@@ -45,21 +48,68 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
         reply(firewallManager.verifyIntegrity())
     }
 
+    func updateRestrictedApps(bundleIDs: [String], reply: @escaping (Bool) -> Void) {
+        processManager.updateRestrictedApps(Set(bundleIDs))
+        reply(true)
+    }
+
     func status(reply: @escaping (String) -> Void) {
         let blocking = firewallManager.isBlocking
         reply("daemon running, internet \(blocking ? "blocked" : "allowed")")
+    }
+
+    /// Called once at launch: reconcile persisted block state and start the
+    /// self-driven integrity check so tamper detection runs without the app open.
+    func startup() {
+        firewallManager.reconcileOnStartup()
+        let timer = DispatchSource.makeTimerSource(queue: integrityQueue)
+        timer.schedule(deadline: .now() + 15, repeating: 15)
+        timer.setEventHandler { [weak self] in
+            _ = self?.firewallManager.verifyIntegrity()
+            self?.ensureAgentRunning()
+        }
+        timer.resume()
+        integrityTimer = timer
+    }
+
+    /// Best-effort watchdog: re-bootstrap the LaunchAgent into the console user's
+    /// GUI domain if the monitored user has unloaded it. `KeepAlive` handles
+    /// crashes; this counters a deliberate `launchctl bootout`.
+    private func ensureAgentRunning() {
+        var uid: uid_t = 0
+        let store = SCDynamicStoreCreate(nil, "com.paco.daemon" as CFString, nil, nil)
+        let user = SCDynamicStoreCopyConsoleUser(store, &uid, nil)
+        guard user != nil, uid != 0 else { return }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["bootstrap", "gui/\(uid)", "/Library/LaunchAgents/com.paco.agent.plist"]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
     }
 }
 
 final class DaemonDelegate: NSObject, NSXPCListenerDelegate {
     private let logger = PaCoLogger.daemon
 
-    /// Allowed signing identifiers for XPC connections.
-    /// In production, replace with your Developer ID team identifier.
-    private let allowedSigningTeam = "com.paco"
+    /// Developer ID Team Identifier that legitimate PaCo binaries are signed with.
+    /// TODO: set to your real 10-char Team ID before shipping a Release build.
+    private static let teamIdentifier = "REPLACE_WITH_TEAMID"
+
+    /// Designated requirement the connecting process must satisfy: Apple-issued
+    /// Developer ID chain, our team, and a com.paco.* identifier. Pinning the
+    /// Team ID (not just the identifier) prevents a self-signed binary that merely
+    /// claims a com.paco.* identifier from being accepted.
+    private static var designatedRequirement: SecRequirement? = {
+        let text = "anchor apple generic "
+            + "and identifier \"com.paco.*\" "
+            + "and certificate leaf[subject.OU] = \"\(teamIdentifier)\""
+        var requirement: SecRequirement?
+        let status = SecRequirementCreateWithString(text as CFString, [], &requirement)
+        return status == errSecSuccess ? requirement : nil
+    }()
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        // Validate the connecting process
         let connectingPID = newConnection.processIdentifier
         guard validateConnection(pid: connectingPID) else {
             logger.warning("Rejected XPC connection from PID \(connectingPID): failed validation")
@@ -76,57 +126,46 @@ final class DaemonDelegate: NSObject, NSXPCListenerDelegate {
         return true
     }
 
-    /// Validate that the connecting process is signed by us.
-    /// Uses SecCode to verify the code signature of the calling process.
+    /// Validate that the connecting process satisfies our designated requirement
+    /// (Apple anchor + our Team ID + com.paco.* identifier).
     private func validateConnection(pid: Int32) -> Bool {
         var code: SecCode?
         let attrs = [kSecGuestAttributePid: pid] as CFDictionary
-        let status = SecCodeCopyGuestWithAttributes(nil, attrs, [], &code)
-
-        guard status == errSecSuccess, let code else {
+        guard SecCodeCopyGuestWithAttributes(nil, attrs, [], &code) == errSecSuccess,
+              let code else {
             logger.warning("Cannot obtain SecCode for PID \(pid)")
-            // Allow in development (unsigned builds); deny in production
-            #if DEBUG
-            return true
-            #else
-            return false
-            #endif
+            return devFallbackAllow()
         }
 
-        // Verify code signature is valid
-        let verifyStatus = SecCodeCheckValidity(code, [], nil)
-        guard verifyStatus == errSecSuccess else {
-            logger.warning("Invalid code signature for PID \(pid)")
-            return false
-        }
-
-        // Convert to static code for signing information
         var staticCode: SecStaticCode?
         guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess,
               let staticCode else {
-            #if DEBUG
-            return true
-            #else
-            return false
-            #endif
+            return devFallbackAllow()
         }
 
-        // Check that the signing identifier starts with our prefix
-        var info: CFDictionary?
-        let infoStatus = SecCodeCopySigningInformation(staticCode, [], &info)
-        guard infoStatus == errSecSuccess, let signingInfo = info as? [String: Any],
-              let identifier = signingInfo[kSecCodeInfoIdentifier as String] as? String else {
-            #if DEBUG
-            return true
-            #else
-            return false
-            #endif
+        guard let requirement = Self.designatedRequirement else {
+            logger.error("Designated requirement unavailable; refusing connection")
+            return devFallbackAllow()
         }
 
-        let isAllowed = identifier.hasPrefix(allowedSigningTeam)
-        if !isAllowed {
-            logger.warning("Rejected connection from '\(identifier)' (not in allowed signers)")
+        let status = SecStaticCodeCheckValidity(staticCode, [], requirement)
+        if status != errSecSuccess {
+            logger.warning("Connection from PID \(pid) failed designated requirement (status \(status))")
+            return false
         }
-        return isAllowed
+        return true
+    }
+
+    /// In DEBUG builds only, and only when explicitly opted in via the
+    /// `PACO_ALLOW_UNSIGNED_XPC` environment variable, allow unsigned callers so
+    /// local development works. Never compiled into Release.
+    private func devFallbackAllow() -> Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["PACO_ALLOW_UNSIGNED_XPC"] == "1" {
+            logger.warning("DEBUG: allowing unsigned XPC caller (PACO_ALLOW_UNSIGNED_XPC=1)")
+            return true
+        }
+        #endif
+        return false
     }
 }

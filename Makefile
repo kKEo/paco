@@ -54,8 +54,13 @@ pkg: build-release
 'install -o root -g wheel -m 755 \\\n'\
 '    /Applications/PaCo.app/Contents/Resources/PaCoAgent \\\n'\
 '    /Library/Application\ Support/PaCo/PaCoAgent\n\n'\
-'# Load daemon (requires restart or manual launchctl load)\n'\
+'# Load daemon (system domain)\n'\
 'launchctl bootstrap system /Library/LaunchDaemons/com.paco.daemon.plist 2>/dev/null || true\n\n'\
+'# Load agent into the console user'"'"'s GUI domain so it runs without waiting for a re-login\n'\
+'CONSOLE_UID=$$(stat -f %u /dev/console)\n'\
+'if [ -n "$$CONSOLE_UID" ] && [ "$$CONSOLE_UID" != "0" ]; then\n'\
+'    launchctl bootstrap gui/$$CONSOLE_UID /Library/LaunchAgents/com.paco.agent.plist 2>/dev/null || true\n'\
+'fi\n\n'\
 'exit 0\n' > "$(PKG_SCRIPTS)/postinstall"
 	chmod +x "$(PKG_SCRIPTS)/postinstall"
 

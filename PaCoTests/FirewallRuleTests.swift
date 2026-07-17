@@ -5,7 +5,7 @@ final class FirewallRuleTests: XCTestCase {
     func testBlockRuleContent() {
         let rules = FirewallRuleBuilder.blockInternetRules()
         XCTAssertTrue(rules.contains("block drop out"))
-        XCTAssertTrue(rules.contains("proto { tcp udp }"))
+        XCTAssertTrue(rules.contains("proto { tcp udp icmp icmp6 }"))
     }
     func testBlockRulePreservesLAN() {
         let rules = FirewallRuleBuilder.blockInternetRules()

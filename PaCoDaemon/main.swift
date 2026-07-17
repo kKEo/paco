@@ -9,5 +9,8 @@ let listener = NSXPCListener(machServiceName: "com.paco.daemon")
 listener.delegate = delegate
 listener.resume()
 
+// Reconcile persisted block state and start the self-driven integrity check.
+DaemonService.shared.startup()
+
 logger.info("PaCo Daemon listening on com.paco.daemon")
 RunLoop.main.run()

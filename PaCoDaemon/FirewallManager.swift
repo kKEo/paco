@@ -6,10 +6,26 @@ final class FirewallManager {
     private let lock = NSLock()
     private let logger = PaCoLogger.firewall
 
+    /// Persisted intended state so a daemon restart/reboot can't create an open window.
+    private static let stateFilePath = "/Library/Application Support/PaCo/daemon-state.json"
+
     var isBlocking: Bool {
         lock.lock()
         defer { lock.unlock() }
         return _isBlocking
+    }
+
+    /// Re-apply the persisted intended state on daemon startup. Called once at launch.
+    func reconcileOnStartup() {
+        let shouldBlock = readPersistedBlocking()
+        logger.info("Startup reconcile: persisted intended state = \(shouldBlock ? "blocked" : "allowed")")
+        guard shouldBlock else { return }
+        do {
+            try disableInternet()
+            logger.info("Startup reconcile: re-applied internet block")
+        } catch {
+            logger.error("Startup reconcile failed: \(error.localizedDescription)")
+        }
     }
 
     func disableInternet() throws {
@@ -20,8 +36,11 @@ final class FirewallManager {
         try runPfctl(["-e"])
         try ensureAnchorInMainRuleset()
         try runPfctl(["-a", FirewallRuleBuilder.anchorName, "-f", FirewallRuleBuilder.anchorFilePath])
+        // Sever existing connections so a block affects in-progress streams, not just new ones.
+        try? runPfctl(["-F", "states"])
         _isBlocking = true
-        logger.info("Internet disabled: pf anchor rules loaded")
+        persistBlocking(true)
+        logger.info("Internet disabled: pf anchor rules loaded, states flushed")
     }
 
     func enableInternet() throws {
@@ -30,7 +49,28 @@ final class FirewallManager {
         try runPfctl(["-a", FirewallRuleBuilder.anchorName, "-F", "rules"])
         try? FileManager.default.removeItem(atPath: FirewallRuleBuilder.anchorFilePath)
         _isBlocking = false
+        persistBlocking(false)
         logger.info("Internet enabled: pf anchor rules flushed")
+    }
+
+    // MARK: - Intended-state persistence
+
+    private func persistBlocking(_ blocking: Bool) {
+        let url = URL(fileURLWithPath: Self.stateFilePath)
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let payload = ["blocking": blocking]
+        if let data = try? JSONSerialization.data(withJSONObject: payload) {
+            try? data.write(to: url, options: .atomic)
+        }
+    }
+
+    private func readPersistedBlocking() -> Bool {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: Self.stateFilePath)),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Bool] else {
+            return false
+        }
+        return obj["blocking"] ?? false
     }
 
     func verifyIntegrity() -> Bool {

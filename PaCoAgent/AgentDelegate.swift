@@ -10,6 +10,10 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private var daemonConnection: NSXPCConnection?
     private let logger = PaCoLogger.agent
     private var currentSchedules: [ScheduleTransfer] = []
+    /// Last internet state we asked the daemon for, so we only act on changes (edge-trigger).
+    private var lastAppliedInternetEnabled: Bool?
+    /// Last restricted-app set pushed to the daemon, to avoid redundant XPC calls.
+    private var lastPushedRestrictedApps: Set<String> = []
 
     func start() {
         appMonitor.delegate = self
@@ -55,8 +59,19 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         let restrictions = loadRestrictions(activeProfileId: config?.activeProfileId)
         currentSchedules = schedules
         appMonitor.updateRestrictions(restrictions)
+        pushRestrictedApps(restrictions)
         evaluateSchedules(schedules)
         writeUsage(profileId: config?.activeProfileId)
+    }
+
+    /// Push the set of bundle IDs the daemon may kill (all restricted apps).
+    /// Without this the daemon's kill allowlist stays empty and blocking never works.
+    private func pushRestrictedApps(_ restrictions: [AppRestrictionTransfer]) {
+        let bundleIDs = Set(restrictions.map(\.bundleIdentifier))
+        guard bundleIDs != lastPushedRestrictedApps else { return }
+        daemonProxy?.updateRestrictedApps(bundleIDs: Array(bundleIDs)) { [weak self] success in
+            if success { self?.lastPushedRestrictedApps = bundleIDs }
+        }
     }
 
     private func loadConfig() -> DeviceConfigTransfer? {
@@ -109,15 +124,24 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     private func evaluateSchedules(_ schedules: [ScheduleTransfer]) {
-        let action = ScheduleEvaluator.evaluate(schedules: schedules, at: Date())
+        let overrideUntil = OverrideStore.activeUntil()
+        let action = ScheduleEvaluator.evaluate(schedules: schedules, at: Date(), overrideUntil: overrideUntil)
         switch action {
         case .allowed:
-            setInternet(enabled: true)
+            applyInternet(enabled: true)
         case .blocked:
-            setInternet(enabled: false)
+            applyInternet(enabled: false)
         case .gracePeriod(let remaining):
             logger.info("Grace period: \(remaining)s remaining")
         }
+    }
+
+    /// Edge-triggered: only call the daemon when the desired state changes,
+    /// avoiding a pfctl rewrite every 30-second tick.
+    private func applyInternet(enabled: Bool) {
+        guard lastAppliedInternetEnabled != enabled else { return }
+        lastAppliedInternetEnabled = enabled
+        setInternet(enabled: enabled)
     }
 
     // MARK: - Internet control
@@ -168,7 +192,7 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
             appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
             return
         }
-        let action = ScheduleEvaluator.evaluate(schedules: [schedule], at: Date())
+        let action = ScheduleEvaluator.evaluate(schedules: [schedule], at: Date(), overrideUntil: OverrideStore.activeUntil())
         if action != .allowed {
             logger.info("App outside schedule: \(appName) (\(bundleId))")
             appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
