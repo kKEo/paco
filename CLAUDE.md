@@ -41,15 +41,18 @@ One Xcode project, four targets:
 ### Communication (three distinct channels)
 
 1. **App ↔ Daemon:** XPC (internet toggle, kill process). Connection is validated by bundle identifier.
-2. **App ↔ Agent:** JSON files in `~/Library/Application Support/com.paco/` (`schedules.json`, `restrictions.json`, `config.json` written by app; `usage.json`, `events.json` written by agent/child app). The app watches `usage.json` and `events.json` with `DispatchSource` file watchers set up in `PaCoApp.swift`; `SyncManager` handles serialization.
+2. **App ↔ Agent:** JSON files in `~/Library/Application Support/com.paco/` (`schedules.json`, `restrictions.json`, `config.json` written by app; `usage.json`, `events.json` written by agent/child app). The app watches `usage.json` and `events.json` with `DispatchSource` file watchers set up in `AppDelegate.swift`; `SyncManager` handles serialization and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind).
 3. **Parent Mac ↔ Child Mac:** Bonjour/TCP (`BonjourService`) carrying `PaCoMessage` commands (e.g. `.requestExtension`, `.approveExtension`).
 
 The time-extension flow crosses all of these: child writes a `NotificationEvent` to `events.json` + sends Bonjour message → parent's events watcher inserts a `TimeExtensionRequest` into SwiftData (deduped by event id via `EventTracker` and by request id) → approval toggles internet via XPC and replies over Bonjour.
 
 ### Things that are easy to get wrong
 
-- **New SwiftData model?** It must be added to the `Schema([...])` list in `PaCoApp.swift`, and models live in `PaCoShared/Sources/PaCoShared/Models/`.
+- **New SwiftData model?** It must be added to the `Schema([...])` list in `AppDelegate.swift`, and models live in `PaCoShared/Sources/PaCoShared/Models/`.
 - **PaCoTests links only PaCoShared** (see `project.yml`) — logic that needs unit tests must live in the PaCoShared package, not in the app/daemon/agent targets.
-- In `PaCoApp.onAppear`, `determineMode(context:)` must run before the child-mode Bonjour advertising check — ordering is documented in a comment there.
+- All startup (mode detection, daemon XPC connect, file sync, watchers, Bonjour role setup) runs once in `AppDelegate.applicationDidFinishLaunching`, never in a view's `onAppear` — with `MenuBarExtra(.window)` that only fires when the popover opens and re-fires on every open. Network role keys off `AppState.role` (persisted `DeviceConfig`), not `AppState.mode` (what the UI shows).
+- The parent dashboard is PIN-gated via `AppState.isUnlocked`; `AppState.lock()` is called when the dashboard disappears and when the app resigns active. PIN verification + lockout live in `AppState.attemptUnlock`, shared by `ParentUnlockView` and the child-device "Parent Access" prompt.
+- `pf` evaluates every rule and the *last* match wins; pass rules in `FirewallRuleBuilder` must stay `quick` and precede the block rule (`FirewallRuleTests` enforces this).
+- `FirewallManager` uses a non-recursive `NSLock`; code that already holds it must call `applyBlockLocked()`, not `disableInternet()`.
 - `SWIFT_STRICT_CONCURRENCY` is `minimal` on all targets.
 - Full end-to-end daemon/agent testing requires Developer ID signing (`SMAppService`/XPC mach services enforce it); unsigned builds run the UI but daemon/agent connections fail.

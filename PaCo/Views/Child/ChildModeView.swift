@@ -201,31 +201,21 @@ struct ChildModeView: View {
     }
 
     private func verifyPIN() {
-        // A child device with no provisioned parent PIN cannot be unlocked locally —
-        // this closes the "tap Unlock with no PIN" escalation. Pair with a parent first.
-        guard (try? PINManager.hasPIN()) == true else {
+        // Verification + lockout live in AppState so the child-device unlock and the
+        // parent dashboard gate behave identically. A child device with no
+        // provisioned parent PIN cannot be unlocked locally; pair with a parent first.
+        switch appState.attemptUnlock(pin: pinEntry) {
+        case .success:
+            showPINPrompt = false
+            pinEntry = ""
+            pinError = ""
+        case .noPIN:
             pinError = "No parent PIN on this device. Pair with a parent first."
-            return
-        }
-        if let until = PINManager.lockedOutUntil() {
+        case .lockedOut(let until):
             pinError = "Too many attempts. Try again \(until.formatted(date: .omitted, time: .shortened))."
-            return
-        }
-        do {
-            if try PINManager.verifyStoredPIN(pinEntry) {
-                try? PINManager.resetAttempts()
-                showPINPrompt = false
-                pinEntry = ""
-                pinError = ""
-                appState.mode = .parent
-            } else {
-                if let until = PINManager.recordFailedAttempt() {
-                    pinError = "Too many attempts. Locked until \(until.formatted(date: .omitted, time: .shortened))."
-                } else {
-                    pinError = "Incorrect PIN"
-                }
-            }
-        } catch {
+        case .incorrect:
+            pinError = "Incorrect PIN"
+        case .error:
             pinError = "Error verifying PIN"
         }
     }

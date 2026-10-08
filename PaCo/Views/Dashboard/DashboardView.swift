@@ -27,6 +27,7 @@ enum DashboardTab: String, CaseIterable, Identifiable {
 }
 
 struct DashboardView: View {
+    @Environment(AppState.self) private var appState
     @State private var selectedTab: DashboardTab = .home
 
     var body: some View {
@@ -67,5 +68,7 @@ struct DashboardView: View {
             }
         }
         .frame(minWidth: 800, minHeight: 600)
+        // Popover closed (or child device leaving parent mode): require the PIN again.
+        .onDisappear { appState.lock() }
     }
 }

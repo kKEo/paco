@@ -3,6 +3,12 @@ import Foundation
 import SwiftData
 import PaCoShared
 
+/// Writes the parent's policy (schedules, restrictions, active profile) to the shared
+/// JSON files the agent reads, and imports the agent's usage snapshot.
+///
+/// Sync methods always fetch fresh from the `ModelContext` rather than taking an
+/// array from a view: a `@Query` array captured in a button action still reflects
+/// the state *before* the insert/delete, which left the agent one change behind.
 final class SyncManager {
 
     static let shared = SyncManager()
@@ -18,11 +24,20 @@ final class SyncManager {
         try FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
     }
 
+    /// Write every policy file from the current persisted state.
+    func syncAll(context: ModelContext) {
+        syncSchedules(context: context)
+        syncRestrictions(context: context)
+        let config = (try? context.fetch(FetchDescriptor<DeviceConfig>()))?.first
+        syncDeviceConfig(activeProfileId: config?.childProfileId)
+    }
+
     // MARK: - Schedules
 
-    func syncSchedules(_ schedules: [Schedule]) {
+    func syncSchedules(context: ModelContext) {
         do {
             try prepare()
+            let schedules = try context.fetch(FetchDescriptor<Schedule>())
             let transfers = schedules.filter(\.isActive).map(ScheduleTransfer.init(from:))
             let data = try JSONEncoder().encode(transfers)
             try data.write(to: PaCoFiles.schedulesFileURL, options: .atomic)
@@ -34,9 +49,10 @@ final class SyncManager {
 
     // MARK: - App Restrictions
 
-    func syncRestrictions(_ restrictions: [AppRestriction]) {
+    func syncRestrictions(context: ModelContext) {
         do {
             try prepare()
+            let restrictions = try context.fetch(FetchDescriptor<AppRestriction>())
             let transfers = restrictions.map(AppRestrictionTransfer.init(from:))
             let data = try JSONEncoder().encode(transfers)
             try data.write(to: PaCoFiles.restrictionsFileURL, options: .atomic)

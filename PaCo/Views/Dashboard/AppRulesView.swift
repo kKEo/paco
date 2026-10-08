@@ -62,7 +62,7 @@ struct AppRulesView: View {
                         .onDelete { offsets in
                             for index in offsets { modelContext.delete(restrictions[index]) }
                             try? modelContext.save()
-                            SyncManager.shared.syncRestrictions(restrictions)
+                            SyncManager.shared.syncRestrictions(context: modelContext)
                         }
                     }
                 }
@@ -120,7 +120,7 @@ struct AppRulesView: View {
                             r.childProfile = newProfile
                             modelContext.insert(r)
                             try? modelContext.save()
-                            SyncManager.shared.syncRestrictions(restrictions)
+                            SyncManager.shared.syncRestrictions(context: modelContext)
                             newBundleId = ""; newAppName = ""
                             showingAddSheet = false
                         }

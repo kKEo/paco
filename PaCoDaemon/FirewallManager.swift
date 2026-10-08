@@ -31,6 +31,12 @@ final class FirewallManager {
     func disableInternet() throws {
         lock.lock()
         defer { lock.unlock() }
+        try applyBlockLocked()
+    }
+
+    /// Write and load the block anchor. Caller must hold `lock` (NSLock is not
+    /// recursive, so `verifyIntegrity` calls this rather than `disableInternet`).
+    private func applyBlockLocked() throws {
         let rules = FirewallRuleBuilder.blockInternetRules()
         try rules.write(toFile: FirewallRuleBuilder.anchorFilePath, atomically: true, encoding: .utf8)
         try runPfctl(["-e"])
@@ -83,7 +89,7 @@ final class FirewallManager {
             if !hasBlockRule {
                 logger.warning("Tamper detected: pf anchor rules are missing, re-applying...")
                 do {
-                    try disableInternet()
+                    try applyBlockLocked()
                     logger.info("Tamper recovery: rules re-applied successfully")
                 } catch {
                     logger.error("Tamper recovery FAILED: \(error.localizedDescription)")

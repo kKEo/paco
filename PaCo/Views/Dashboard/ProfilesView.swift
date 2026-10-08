@@ -48,6 +48,9 @@ struct ProfilesView: View {
                                     }
                                     modelContext.delete(profile)
                                     try? modelContext.save()
+                                    // Cascade removed the profile's schedules/rules; keep the agent in step.
+                                    SyncManager.shared.syncSchedules(context: modelContext)
+                                    SyncManager.shared.syncRestrictions(context: modelContext)
                                 }
                             )
                         }

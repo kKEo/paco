@@ -36,7 +36,7 @@ struct SchedulesView: View {
                             ScheduleRow(schedule: schedule, onToggleActive: {
                                 schedule.isActive.toggle()
                                 try? modelContext.save()
-                                SyncManager.shared.syncSchedules(schedules)
+                                SyncManager.shared.syncSchedules(context: modelContext)
                             })
                         }
                         .onDelete { offsets in
@@ -44,7 +44,7 @@ struct SchedulesView: View {
                                 modelContext.delete(schedules[index])
                             }
                             try? modelContext.save()
-                            SyncManager.shared.syncSchedules(schedules)
+                            SyncManager.shared.syncSchedules(context: modelContext)
                         }
                     }
                 }
@@ -57,7 +57,7 @@ struct SchedulesView: View {
                 AddScheduleSheet(profiles: profiles) { schedule in
                     modelContext.insert(schedule)
                     try? modelContext.save()
-                    SyncManager.shared.syncSchedules(schedules)
+                    SyncManager.shared.syncSchedules(context: modelContext)
                     showingAddSheet = false
                 } onCancel: {
                     showingAddSheet = false

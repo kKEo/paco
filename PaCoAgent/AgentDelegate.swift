@@ -28,13 +28,27 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private func connectToDaemon() {
         let connection = NSXPCConnection(machServiceName: "com.paco.daemon", options: .privileged)
         connection.remoteObjectInterface = NSXPCInterface(with: DaemonXPCProtocol.self)
+        connection.interruptionHandler = { [weak self] in
+            // Daemon crashed/restarted: its in-memory state (kill allowlist) is gone and
+            // the mach connection will transparently reconnect on next use.
+            self?.logger.warning("Daemon XPC connection interrupted; will re-sync state")
+            DispatchQueue.main.async { self?.forgetDaemonState() }
+        }
         connection.invalidationHandler = { [weak self] in
             self?.logger.warning("Daemon XPC connection invalidated, reconnecting...")
+            DispatchQueue.main.async { self?.forgetDaemonState() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.connectToDaemon() }
         }
         connection.resume()
         daemonConnection = connection
         logger.info("Connected to daemon via XPC")
+    }
+
+    /// Drop the edge-trigger markers so the next tick re-pushes the restricted-app
+    /// set and re-asserts the desired internet state to a (re)started daemon.
+    private func forgetDaemonState() {
+        lastAppliedInternetEnabled = nil
+        lastPushedRestrictedApps = []
     }
 
     private var daemonProxy: DaemonXPCProtocol? {
@@ -70,7 +84,9 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         let bundleIDs = Set(restrictions.map(\.bundleIdentifier))
         guard bundleIDs != lastPushedRestrictedApps else { return }
         daemonProxy?.updateRestrictedApps(bundleIDs: Array(bundleIDs)) { [weak self] success in
-            if success { self?.lastPushedRestrictedApps = bundleIDs }
+            DispatchQueue.main.async {
+                if success { self?.lastPushedRestrictedApps = bundleIDs }
+            }
         }
     }
 
@@ -137,36 +153,41 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     /// Edge-triggered: only call the daemon when the desired state changes,
-    /// avoiding a pfctl rewrite every 30-second tick.
+    /// avoiding a pfctl rewrite every 30-second tick. The marker is set only once
+    /// the daemon confirms, so a failed call (daemon not up yet, connection
+    /// interrupted) is retried on the next tick instead of being silently lost.
     private func applyInternet(enabled: Bool) {
         guard lastAppliedInternetEnabled != enabled else { return }
-        lastAppliedInternetEnabled = enabled
         setInternet(enabled: enabled)
     }
 
     // MARK: - Internet control
 
     func setInternet(enabled: Bool) {
+        let completion: (Bool, String?) -> Void = { [weak self] success, error in
+            // XPC replies arrive on an arbitrary queue; all agent state lives on main.
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard success else {
+                    self.logger.error("Failed to \(enabled ? "enable" : "disable") internet: \(error ?? "unknown")")
+                    return
+                }
+                self.lastAppliedInternetEnabled = enabled
+                if enabled {
+                    self.usageTracker.internetDidEnable()
+                    self.appendEvent(NotificationEvent(kind: .internetEnabled))
+                    self.logger.info("Internet enabled via daemon")
+                } else {
+                    self.usageTracker.internetDidDisable()
+                    self.appendEvent(NotificationEvent(kind: .internetDisabled))
+                    self.logger.info("Internet disabled via daemon")
+                }
+            }
+        }
         if enabled {
-            daemonProxy?.enableInternet { [weak self] success, error in
-                if success {
-                    self?.usageTracker.internetDidEnable()
-                    self?.appendEvent(NotificationEvent(kind: .internetEnabled))
-                    self?.logger.info("Internet enabled via daemon")
-                } else {
-                    self?.logger.error("Failed to enable internet: \(error ?? "unknown")")
-                }
-            }
+            daemonProxy?.enableInternet(reply: completion)
         } else {
-            daemonProxy?.disableInternet { [weak self] success, error in
-                if success {
-                    self?.usageTracker.internetDidDisable()
-                    self?.appendEvent(NotificationEvent(kind: .internetDisabled))
-                    self?.logger.info("Internet disabled via daemon")
-                } else {
-                    self?.logger.error("Failed to disable internet: \(error ?? "unknown")")
-                }
-            }
+            daemonProxy?.disableInternet(reply: completion)
         }
     }
 
@@ -174,12 +195,14 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
 
     func appMonitor(_ monitor: AppMonitor, didDetectBlockedApp bundleId: String, pid: Int32, appName: String) {
         daemonProxy?.killProcess(pid: pid) { [weak self] success, error in
-            if success {
-                self?.logger.info("Killed blocked app: \(appName)")
-                self?.appendEvent(NotificationEvent(kind: .appBlocked, payload: ["appName": appName, "bundleId": bundleId]))
-                self?.sendNotification(title: "App Blocked", body: "\(appName) is not available right now.")
-            } else {
-                self?.logger.error("Failed to kill \(appName): \(error ?? "unknown")")
+            DispatchQueue.main.async {
+                if success {
+                    self?.logger.info("Killed blocked app: \(appName)")
+                    self?.appendEvent(NotificationEvent(kind: .appBlocked, payload: ["appName": appName, "bundleId": bundleId]))
+                    self?.sendNotification(title: "App Blocked", body: "\(appName) is not available right now.")
+                } else {
+                    self?.logger.error("Failed to kill \(appName): \(error ?? "unknown")")
+                }
             }
         }
     }
