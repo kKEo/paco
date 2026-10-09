@@ -40,6 +40,8 @@ final class BonjourService: ObservableObject {
 
     /// Child side: inbound command from the parent (e.g. approveExtension, updatePolicy).
     var onIncomingMessage: ((PaCoMessage) -> Void)?
+    /// Child side: the parent's reply to a request we sent (e.g. verifyPIN).
+    var onIncomingResponse: ((PaCoResponse) -> Void)?
     /// Parent side: inbound request from a child, with the identity it arrived on.
     var onChildRequest: ((PaCoMessage, String) -> Void)?
     /// Parent side: a reply from a child to a command we sent.
@@ -51,8 +53,6 @@ final class BonjourService: ObservableObject {
     private let serviceDomain = "local."
     /// TLS-PSK identity label (sent in the clear; key selection is done by the app).
     private static let pskIdentity = Data("com.paco".utf8)
-    /// Deterministic key used only so an unpaired child is still discoverable by name.
-    private static let unpairedBootstrapCode = "PACO-UNPAIRED-BOOTSTRAP"
     /// How long a parent→child connection may sit in `.preparing`/`.waiting` before we give up and retry later.
     private static let connectTimeout: TimeInterval = 20
     private static let retryInterval: TimeInterval = 30
@@ -82,18 +82,17 @@ final class BonjourService: ObservableObject {
         return params
     }
 
-    /// The child's PSK: its paired parent's key, or a bootstrap key (discoverable but unconnectable) if unpaired.
-    private func childPSK() -> Data {
-        if let key = PairingKeyManager.allKeys().first?.key { return key }
-        return (try? PairingKeyManager.deriveKey(fromCode: Self.unpairedBootstrapCode)) ?? Data(count: 32)
-    }
-
     // MARK: - Advertise (child mode)
 
+    /// Advertise this child. Paired: a TLS-PSK listener keyed with the parent's
+    /// key. Unpaired: a plain listener that exists only so the parent can see the
+    /// name in "Nearby Devices"; every connection to it is dropped immediately, so
+    /// nothing on the LAN can send commands to an unpaired child.
     func startAdvertising(name: String) {
         listener?.cancel()
+        let pairedKey = PairingKeyManager.allKeys().first?.key
         do {
-            let listener = try NWListener(using: tlsParameters(psk: childPSK()))
+            let listener = try NWListener(using: pairedKey.map(tlsParameters(psk:)) ?? .tcp)
             listener.service = NWListener.Service(name: name, type: serviceType, domain: serviceDomain)
 
             listener.stateUpdateHandler = { [weak self] state in
@@ -112,11 +111,19 @@ final class BonjourService: ObservableObject {
             }
 
             listener.newConnectionHandler = { [weak self] connection in
+                guard pairedKey != nil else {
+                    self?.logger.warning("Dropping connection: this child is not paired")
+                    connection.cancel()
+                    return
+                }
                 self?.handleIncomingConnection(connection)
             }
 
             listener.start(queue: .main)
             self.listener = listener
+            if pairedKey == nil {
+                logger.info("Bonjour: advertising unpaired (discovery only, connections refused)")
+            }
         } catch {
             logger.error("Failed to start Bonjour listener: \(error)")
         }
@@ -277,6 +284,13 @@ final class BonjourService: ObservableObject {
         return sendFrame(try? response.encoded(), on: connection)
     }
 
+    /// Parent → child reply to a child's request.
+    @discardableResult
+    func reply(_ response: PaCoResponse, to identity: String) -> Bool {
+        guard connectedIdentities.contains(identity), let connection = parentConnections[identity] else { return false }
+        return sendFrame(try? response.encoded(), on: connection)
+    }
+
     // MARK: - Stop
 
     func stop() {
@@ -344,14 +358,21 @@ final class BonjourService: ObservableObject {
         logger.info("Parent disconnected")
     }
 
-    /// Child-side receive loop: PaCoMessage frames sent by the parent.
+    /// Child-side receive loop: commands and replies sent by the parent.
     private func receiveChildFrames(on connection: NWConnection) {
         receiveFrame(on: connection) { [weak self] type, json in
             guard let self else { return }
-            if type == .message, let message = try? JSONDecoder().decode(PaCoMessage.self, from: json) {
-                self.logger.info("Child received command: \(message.command.rawValue)")
-                self.onIncomingMessage?(message)
-            } else {
+            switch type {
+            case .message:
+                if let message = try? JSONDecoder().decode(PaCoMessage.self, from: json) {
+                    self.logger.info("Child received command: \(message.command.rawValue)")
+                    self.onIncomingMessage?(message)
+                }
+            case .response:
+                if let response = try? JSONDecoder().decode(PaCoResponse.self, from: json) {
+                    self.onIncomingResponse?(response)
+                }
+            case .none:
                 self.logger.warning("Child could not decode frame (\(json.count) bytes)")
             }
             self.receiveChildFrames(on: connection)

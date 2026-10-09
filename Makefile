@@ -5,7 +5,7 @@ PKG_ROOT     := build/pkg-root
 PKG_SCRIPTS  := build/pkg-scripts
 PKG_OUT      := build/PaCo-$(VERSION).pkg
 
-.PHONY: build build-release pkg clean clear-pin
+.PHONY: build build-release pkg clean clear-pin clear-policy
 
 build:
 	xcodebuild -project PaCo.xcodeproj -scheme PaCo -destination "platform=macOS" build
@@ -82,3 +82,6 @@ clean:
 clear-pin:
 	security delete-generic-password -s "com.paco.pin.hash" 2>/dev/null; true
 	security delete-generic-password -s "com.paco.pin.salt" 2>/dev/null; true
+
+clear-policy:
+	sudo rm -f "/Library/Application Support/PaCo/policy.json" "/Library/Application Support/PaCo/daemon-state.json"

@@ -2,6 +2,12 @@
 import Foundation
 import PaCoShared
 
+/// The user-level agent is a *reporter*: it watches the user's running apps,
+/// asks the daemon to kill restricted ones, and keeps the usage snapshot. It no
+/// longer decides anything about the internet: the root daemon owns the policy
+/// and evaluates it itself (see `PolicyEngine`), so nothing the monitored user
+/// can edit influences enforcement. The agent reads that policy over XPC each
+/// tick to know which apps to watch.
 final class AgentDelegate: NSObject, AppMonitorDelegate {
 
     private let appMonitor = AppMonitor()
@@ -9,17 +15,16 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     private var scheduleTimer: DispatchSourceTimer?
     private var daemonConnection: NSXPCConnection?
     private let logger = PaCoLogger.agent
-    private var currentSchedules: [ScheduleTransfer] = []
-    /// Last internet state we asked the daemon for, so we only act on changes (edge-trigger).
-    private var lastAppliedInternetEnabled: Bool?
-    /// Last restricted-app set pushed to the daemon, to avoid redundant XPC calls.
-    private var lastPushedRestrictedApps: Set<String> = []
+    private var currentPolicy: DaemonPolicy = .empty
+    /// Last internet state observed from the daemon, so usage tracking and events
+    /// react only to changes (edge-trigger).
+    private var lastObservedInternetEnabled: Bool?
 
     func start() {
         appMonitor.delegate = self
         appMonitor.start()
         connectToDaemon()
-        startScheduleTimer()
+        startTickTimer()
         logger.info("AgentDelegate started")
     }
 
@@ -29,26 +34,17 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         let connection = NSXPCConnection(machServiceName: "com.paco.daemon", options: .privileged)
         connection.remoteObjectInterface = NSXPCInterface(with: DaemonXPCProtocol.self)
         connection.interruptionHandler = { [weak self] in
-            // Daemon crashed/restarted: its in-memory state (kill allowlist) is gone and
-            // the mach connection will transparently reconnect on next use.
-            self?.logger.warning("Daemon XPC connection interrupted; will re-sync state")
-            DispatchQueue.main.async { self?.forgetDaemonState() }
+            self?.logger.warning("Daemon XPC connection interrupted; will re-sync on next tick")
+            DispatchQueue.main.async { self?.lastObservedInternetEnabled = nil }
         }
         connection.invalidationHandler = { [weak self] in
             self?.logger.warning("Daemon XPC connection invalidated, reconnecting...")
-            DispatchQueue.main.async { self?.forgetDaemonState() }
+            DispatchQueue.main.async { self?.lastObservedInternetEnabled = nil }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.connectToDaemon() }
         }
         connection.resume()
         daemonConnection = connection
         logger.info("Connected to daemon via XPC")
-    }
-
-    /// Drop the edge-trigger markers so the next tick re-pushes the restricted-app
-    /// set and re-asserts the desired internet state to a (re)started daemon.
-    private func forgetDaemonState() {
-        lastAppliedInternetEnabled = nil
-        lastPushedRestrictedApps = []
     }
 
     private var daemonProxy: DaemonXPCProtocol? {
@@ -57,9 +53,9 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         } as? DaemonXPCProtocol
     }
 
-    // MARK: - Schedule + restriction timer
+    // MARK: - Tick
 
-    private func startScheduleTimer() {
+    private func startTickTimer() {
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now(), repeating: 30)
         timer.setEventHandler { [weak self] in self?.tick() }
@@ -68,33 +64,33 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     private func tick() {
-        let config = loadConfig()
-        let schedules = loadSchedules()
-        let restrictions = loadRestrictions(activeProfileId: config?.activeProfileId)
-        currentSchedules = schedules
-        appMonitor.updateRestrictions(restrictions)
-        pushRestrictedApps(restrictions)
-        evaluateSchedules(schedules)
-        writeUsage(profileId: config?.activeProfileId)
-    }
-
-    /// Push the set of bundle IDs the daemon may kill (all restricted apps).
-    /// Without this the daemon's kill allowlist stays empty and blocking never works.
-    private func pushRestrictedApps(_ restrictions: [AppRestrictionTransfer]) {
-        let bundleIDs = Set(restrictions.map(\.bundleIdentifier))
-        guard bundleIDs != lastPushedRestrictedApps else { return }
-        daemonProxy?.updateRestrictedApps(bundleIDs: Array(bundleIDs)) { [weak self] success in
+        daemonProxy?.fetchPolicy { [weak self] data in
             DispatchQueue.main.async {
-                if success { self?.lastPushedRestrictedApps = bundleIDs }
+                guard let self else { return }
+                if let data, let policy = try? JSONDecoder().decode(DaemonPolicy.self, from: data) {
+                    self.currentPolicy = policy
+                    self.appMonitor.updateRestrictions(policy.activeRestrictions)
+                }
+                self.writeUsage(profileId: self.currentPolicy.activeProfileId)
             }
+        }
+        daemonProxy?.isInternetEnabled { [weak self] enabled in
+            DispatchQueue.main.async { self?.observeInternet(enabled: enabled) }
         }
     }
 
-    private func loadConfig() -> DeviceConfigTransfer? {
-        guard let data = try? Data(contentsOf: PaCoFiles.configFileURL),
-              let config = try? JSONDecoder().decode(DeviceConfigTransfer.self, from: data)
-        else { return nil }
-        return config
+    /// Track internet on/off time and emit events when the daemon's state changes.
+    private func observeInternet(enabled: Bool) {
+        guard lastObservedInternetEnabled != enabled else { return }
+        lastObservedInternetEnabled = enabled
+        if enabled {
+            usageTracker.internetDidEnable()
+            appendEvent(NotificationEvent(kind: .internetEnabled))
+        } else {
+            usageTracker.internetDidDisable()
+            appendEvent(NotificationEvent(kind: .internetDisabled))
+        }
+        logger.info("Observed internet \(enabled ? "enabled" : "disabled")")
     }
 
     private func appendEvent(_ event: NotificationEvent) {
@@ -122,75 +118,6 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         try? data.write(to: PaCoFiles.usageFileURL, options: .atomic)
     }
 
-    private func loadSchedules() -> [ScheduleTransfer] {
-        guard let data = try? Data(contentsOf: PaCoFiles.schedulesFileURL),
-              let schedules = try? JSONDecoder().decode([ScheduleTransfer].self, from: data)
-        else { return [] }
-        return schedules
-    }
-
-    private func loadRestrictions(activeProfileId: UUID?) -> [AppRestrictionTransfer] {
-        guard let data = try? Data(contentsOf: PaCoFiles.restrictionsFileURL),
-              let all = try? JSONDecoder().decode([AppRestrictionTransfer].self, from: data)
-        else { return [] }
-
-        // If no active profile configured, enforce all restrictions
-        guard let pid = activeProfileId else { return all }
-        return all.filter { $0.profileId == pid }
-    }
-
-    private func evaluateSchedules(_ schedules: [ScheduleTransfer]) {
-        let overrideUntil = OverrideStore.activeUntil()
-        let action = ScheduleEvaluator.evaluate(schedules: schedules, at: Date(), overrideUntil: overrideUntil)
-        switch action {
-        case .allowed:
-            applyInternet(enabled: true)
-        case .blocked:
-            applyInternet(enabled: false)
-        case .gracePeriod(let remaining):
-            logger.info("Grace period: \(remaining)s remaining")
-        }
-    }
-
-    /// Edge-triggered: only call the daemon when the desired state changes,
-    /// avoiding a pfctl rewrite every 30-second tick. The marker is set only once
-    /// the daemon confirms, so a failed call (daemon not up yet, connection
-    /// interrupted) is retried on the next tick instead of being silently lost.
-    private func applyInternet(enabled: Bool) {
-        guard lastAppliedInternetEnabled != enabled else { return }
-        setInternet(enabled: enabled)
-    }
-
-    // MARK: - Internet control
-
-    func setInternet(enabled: Bool) {
-        let completion: (Bool, String?) -> Void = { [weak self] success, error in
-            // XPC replies arrive on an arbitrary queue; all agent state lives on main.
-            DispatchQueue.main.async {
-                guard let self else { return }
-                guard success else {
-                    self.logger.error("Failed to \(enabled ? "enable" : "disable") internet: \(error ?? "unknown")")
-                    return
-                }
-                self.lastAppliedInternetEnabled = enabled
-                if enabled {
-                    self.usageTracker.internetDidEnable()
-                    self.appendEvent(NotificationEvent(kind: .internetEnabled))
-                    self.logger.info("Internet enabled via daemon")
-                } else {
-                    self.usageTracker.internetDidDisable()
-                    self.appendEvent(NotificationEvent(kind: .internetDisabled))
-                    self.logger.info("Internet disabled via daemon")
-                }
-            }
-        }
-        if enabled {
-            daemonProxy?.enableInternet(reply: completion)
-        } else {
-            daemonProxy?.disableInternet(reply: completion)
-        }
-    }
-
     // MARK: - AppMonitorDelegate
 
     func appMonitor(_ monitor: AppMonitor, didDetectBlockedApp bundleId: String, pid: Int32, appName: String) {
@@ -208,18 +135,9 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
     }
 
     func appMonitor(_ monitor: AppMonitor, checkScheduledApp bundleId: String, pid: Int32, appName: String, allowedScheduleId: UUID?) {
-        guard let scheduleId = allowedScheduleId,
-              let schedule = currentSchedules.first(where: { $0.id == scheduleId })
-        else {
-            // No schedule configured — block it
-            appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
-            return
-        }
-        let action = ScheduleEvaluator.evaluate(schedules: [schedule], at: Date(), overrideUntil: OverrideStore.activeUntil())
-        if action != .allowed {
-            logger.info("App outside schedule: \(appName) (\(bundleId))")
-            appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
-        }
+        guard !currentPolicy.isScheduledAppAllowed(scheduleId: allowedScheduleId) else { return }
+        logger.info("App outside schedule: \(appName) (\(bundleId))")
+        appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
     }
 
     func appMonitor(_ monitor: AppMonitor, didLaunchApp bundleId: String, appName: String) {

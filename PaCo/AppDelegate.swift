@@ -23,11 +23,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var statusTimer: DispatchSourceTimer?
     private var seenEventIds: Set<UUID> = []
     private var configuredRole: DeviceRole?
+    /// Child side: outstanding PIN checks sent to the parent, keyed by nonce.
+    private var pendingPINChecks: [UUID: (UnlockResult) -> Void] = [:]
     private let logger = PaCoLogger.app
 
-    /// Matches the agent's schedule tick, so the menu bar icon and status views
-    /// follow what the agent actually did rather than the last manual toggle.
+    /// Matches the daemon's policy tick, so the menu bar icon and status views
+    /// follow what the daemon actually did rather than the last manual toggle.
     private static let statusRefreshInterval: TimeInterval = 30
+    private static let pinCheckTimeout: TimeInterval = 10
 
     override init() {
         let schema = Schema([
@@ -60,9 +63,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         appState.determineMode(context: context)
         daemonClient.connect()
         startStatusTimer()
-        SyncManager.shared.onPolicyChanged = { [weak self] in
-            self?.pushPolicyToConnectedChildren()
+        SyncManager.shared.onPolicyChanged = { [weak self] policy in
+            self?.publishPolicy(policy)
         }
+        appState.onActiveProfileChanged = { [weak self] id in
+            self?.daemonClient.setActiveProfile(id)
+        }
+        appState.remotePINVerifier = { [weak self] pin, completion in
+            self?.verifyPINWithParent(pin, completion: completion)
+        }
+        // The daemon keeps policy across restarts; the active profile is the one
+        // device-local piece, so re-assert it from SwiftData at every launch.
+        daemonClient.setActiveProfile(appState.activeProfileId(context: context))
         startUsageWatcher()
         SyncManager.shared.readUsage(context: context)
         startEventsWatcher()
@@ -94,17 +106,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         configuredRole = role
         switch role {
         case .child:
-            // Policy files on a child are owned by the parent's pushes; only the
-            // device-local config is written from this Mac's own state.
-            SyncManager.shared.syncDeviceConfig(activeProfileId: appState.activeProfileId(context: context))
+            // Policy on a child comes only from the parent's pushes (into the
+            // local daemon); nothing is derived from this Mac's own SwiftData.
             bonjour.onIncomingMessage = { [weak self] message in
                 self?.handleChildIncoming(message)
             }
+            bonjour.onIncomingResponse = { [weak self] response in
+                self?.handleChildResponse(response)
+            }
             bonjour.startAdvertising(name: Self.deviceName)
         case .parent:
-            // The parent's own agent enforces the same policy locally (single-Mac use).
+            // The parent's own daemon enforces the same policy locally (single-Mac use).
             SyncManager.shared.syncAll(context: context)
-            // Handle time-extension requests arriving from any paired child.
+            // Handle requests arriving from any paired child.
             bonjour.onChildRequest = { [weak self] message, identity in
                 self?.handleParentIncoming(message, from: identity)
             }
@@ -115,11 +129,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     self?.logger.warning("Child '\(identity)' rejected command: \(response.error ?? "unknown")")
                 }
             }
-            // On connect, push the current policy and provision the parent PIN so
-            // the child's "Parent Access" can be verified locally.
+            // On connect, push the current policy so the child enforces it.
             bonjour.onParentConnected = { [weak self] identity in
                 self?.pushPolicy(to: identity)
-                self?.provisionPIN(to: identity)
             }
             bonjour.startBrowsing()
         }
@@ -136,7 +148,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    // MARK: - Parent → child pushes
+    // MARK: - Policy distribution
+
+    /// Parent: a policy change goes to the local daemon and to every connected child.
+    /// Offline children receive it when they next connect.
+    private func publishPolicy(_ policy: PolicyTransfer) {
+        guard configuredRole == .parent else { return }
+        daemonClient.pushPolicy(policy)
+        guard let data = try? JSONEncoder().encode(policy) else { return }
+        for identity in bonjour.connectedIdentities {
+            if bonjour.send(PaCoMessage(command: .updatePolicy, payload: data), to: identity) {
+                logger.info("Pushed policy to '\(identity)': \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+            }
+        }
+    }
 
     /// Send the full policy to one connected child.
     private func pushPolicy(to identity: String) {
@@ -144,23 +169,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         guard let data = try? JSONEncoder().encode(policy) else { return }
         if bonjour.send(PaCoMessage(command: .updatePolicy, payload: data), to: identity) {
             logger.info("Pushed policy to '\(identity)': \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
-        }
-    }
-
-    /// Re-push after any local policy change so connected children stay in sync.
-    /// Offline children receive the policy when they next connect.
-    private func pushPolicyToConnectedChildren() {
-        guard configuredRole == .parent else { return }
-        for identity in bonjour.connectedIdentities {
-            pushPolicy(to: identity)
-        }
-    }
-
-    private func provisionPIN(to identity: String) {
-        guard let pin = try? PINManager.exportPIN() else { return }
-        let payload = PINProvisionTransfer(hash: pin.hash, salt: pin.salt)
-        if let data = try? JSONEncoder().encode(payload) {
-            bonjour.send(PaCoMessage(command: .provisionPIN, payload: data), to: identity)
         }
     }
 
@@ -196,37 +204,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    // MARK: - Message handling
+    // MARK: - Parent: messages from children
 
-    /// Parent-side handling of child-initiated messages (cross-Mac requests).
-    ///
     /// The request is attributed to the *connection identity* (the paired name the
     /// TLS session was opened under), never to the name the child wrote into the
     /// payload: the reply is routed by that identity, so using anything else can
     /// leave an approval undeliverable.
     private func handleParentIncoming(_ message: PaCoMessage, from identity: String) {
-        guard message.command == .requestExtension,
-              let data = message.payload,
-              let payload = try? JSONDecoder().decode(ExtensionRequestPayload.self, from: data) else { return }
-        if !payload.childDeviceName.isEmpty, payload.childDeviceName != identity {
-            logger.info("Request from '\(identity)' self-reports as '\(payload.childDeviceName)'; using pairing identity")
+        switch message.command {
+        case .requestExtension:
+            guard let data = message.payload,
+                  let payload = try? JSONDecoder().decode(ExtensionRequestPayload.self, from: data) else { return }
+            if !payload.childDeviceName.isEmpty, payload.childDeviceName != identity {
+                logger.info("Request from '\(identity)' self-reports as '\(payload.childDeviceName)'; using pairing identity")
+            }
+            let requestId = payload.requestId
+            let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
+            guard existing == nil else { return }
+            let req = TimeExtensionRequest(
+                id: requestId,
+                profileId: payload.profileId,
+                childDeviceName: identity,
+                requestedMinutes: payload.requestedMinutes,
+                reason: payload.reason
+            )
+            context.insert(req)
+            try? context.save()
+            logger.info("Extension request from '\(identity)': \(payload.requestedMinutes) min")
+
+        case .verifyPIN:
+            guard let data = message.payload,
+                  let request = try? JSONDecoder().decode(PINVerifyRequest.self, from: data) else { return }
+            let result = PINVerifyResult(nonce: request.nonce, outcome: .incorrect)
+            var reply = result
+            switch appState.attemptUnlock(pin: request.pin, unlockOnSuccess: false) {
+            case .success: reply.outcome = .success
+            case .incorrect, .error: reply.outcome = .incorrect
+            case .noPIN: reply.outcome = .noPIN
+            case .lockedOut(let until):
+                reply.outcome = .lockedOut
+                reply.lockedOutUntil = until
+            case .parentUnavailable: reply.outcome = .incorrect
+            }
+            logger.info("PIN check from '\(identity)': \(reply.outcome.rawValue)")
+            if let payload = try? JSONEncoder().encode(reply) {
+                bonjour.reply(PaCoResponse(success: reply.outcome == .success, payload: payload), to: identity)
+            }
+
+        default:
+            break
         }
-        let requestId = payload.requestId
-        let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
-        guard existing == nil else { return }
-        let req = TimeExtensionRequest(
-            id: requestId,
-            profileId: payload.profileId,
-            childDeviceName: identity,
-            requestedMinutes: payload.requestedMinutes,
-            reason: payload.reason
-        )
-        context.insert(req)
-        try? context.save()
-        logger.info("Extension request from '\(identity)': \(payload.requestedMinutes) min")
     }
 
-    /// Child-side handling of parent-initiated messages over the authenticated channel.
+    // MARK: - Child: messages from the parent
+
     private func handleChildIncoming(_ message: PaCoMessage) {
         switch message.command {
         case .updatePolicy:
@@ -235,10 +266,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 bonjour.replyToParent(PaCoResponse(success: false, error: "bad policy payload"))
                 return
             }
-            let ok = SyncManager.shared.applyRemotePolicy(policy)
-            bonjour.replyToParent(PaCoResponse(success: ok, error: ok ? nil : "could not write policy"))
-            if ok {
-                logger.info("Applied policy from parent: \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+            // Into the root daemon, which persists and enforces it.
+            daemonClient.pushPolicy(policy) { [weak self] ok in
+                self?.bonjour.replyToParent(PaCoResponse(success: ok, error: ok ? nil : "daemon rejected policy"))
+                if ok {
+                    self?.logger.info("Applied policy from parent: \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+                }
             }
 
         case .approveExtension:
@@ -250,8 +283,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 logger.warning("Ignoring approveExtension: unknown or already-resolved request id")
                 return
             }
-            OverrideStore.write(InternetOverride(requestId: payload.requestId, grantedUntil: until))
-            logger.info("Extension approved: granted \(minutes) min (agent will enable)")
+            daemonClient.grantOverride(requestId: payload.requestId, until: until) { [weak self] ok in
+                if ok {
+                    self?.logger.info("Extension approved: granted \(minutes) min (daemon will enable)")
+                } else {
+                    self?.logger.error("Extension approved but the daemon refused the override")
+                }
+            }
 
         case .denyExtension:
             guard let data = message.payload,
@@ -262,14 +300,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
             logger.info("Extension denied by parent")
 
-        case .provisionPIN:
-            guard let data = message.payload,
-                  let payload = try? JSONDecoder().decode(PINProvisionTransfer.self, from: data) else { return }
-            try? PINManager.storeProvisionedPIN(hash: payload.hash, salt: payload.salt)
-            logger.info("Parent PIN provisioned to this child")
-
         default:
             break
+        }
+    }
+
+    private func handleChildResponse(_ response: PaCoResponse) {
+        guard let data = response.payload,
+              let result = try? JSONDecoder().decode(PINVerifyResult.self, from: data),
+              let completion = pendingPINChecks.removeValue(forKey: result.nonce) else { return }
+        switch result.outcome {
+        case .success: completion(.success)
+        case .incorrect: completion(.incorrect)
+        case .noPIN: completion(.noPIN)
+        case .lockedOut: completion(.lockedOut(until: result.lockedOutUntil ?? Date().addingTimeInterval(300)))
+        }
+    }
+
+    /// Child: send the typed PIN to the parent over the TLS-PSK channel and wait
+    /// (bounded) for its verdict. The parent applies its own lockout.
+    private func verifyPINWithParent(_ pin: String, completion: @escaping (UnlockResult) -> Void) {
+        let nonce = UUID()
+        guard let data = try? JSONEncoder().encode(PINVerifyRequest(nonce: nonce, pin: pin)),
+              bonjour.sendToParent(PaCoMessage(command: .verifyPIN, payload: data)) else {
+            completion(.parentUnavailable)
+            return
+        }
+        pendingPINChecks[nonce] = completion
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pinCheckTimeout) { [weak self] in
+            if let pending = self?.pendingPINChecks.removeValue(forKey: nonce) {
+                pending(.parentUnavailable)
+            }
         }
     }
 

@@ -48,23 +48,6 @@ public enum PINManager {
         try? resetAttempts()
     }
 
-    /// Store a parent PIN provisioned from another device (hash + salt only, no plaintext).
-    /// Used by the child after pairing so "Parent Access" can be verified locally.
-    public static func storeProvisionedPIN(hash: Data, salt: Data) throws {
-        try KeychainManager.save(key: pinHashKey, data: hash)
-        try KeychainManager.save(key: pinSaltKey, data: salt)
-        try? resetAttempts()
-    }
-
-    /// Read the stored hash+salt (for provisioning to a paired child).
-    public static func exportPIN() throws -> (hash: Data, salt: Data)? {
-        guard let hash = try KeychainManager.load(key: pinHashKey),
-              let salt = try KeychainManager.load(key: pinSaltKey) else {
-            return nil
-        }
-        return (hash, salt)
-    }
-
     public static func verifyStoredPIN(_ pin: String) throws -> Bool {
         guard let hash = try KeychainManager.load(key: pinHashKey),
               let salt = try KeychainManager.load(key: pinSaltKey) else {

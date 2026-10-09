@@ -11,6 +11,22 @@ public struct AppRestrictionTransfer: Codable, Sendable, Equatable {
     public var allowedScheduleId: UUID?
     public var profileId: UUID?
 
+    public init(
+        id: UUID = UUID(),
+        bundleIdentifier: String,
+        appName: String,
+        restrictionType: RestrictionType,
+        allowedScheduleId: UUID? = nil,
+        profileId: UUID? = nil
+    ) {
+        self.id = id
+        self.bundleIdentifier = bundleIdentifier
+        self.appName = appName
+        self.restrictionType = restrictionType
+        self.allowedScheduleId = allowedScheduleId
+        self.profileId = profileId
+    }
+
     public init(from r: AppRestriction) {
         self.id = r.id
         self.bundleIdentifier = r.bundleIdentifier

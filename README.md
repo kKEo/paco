@@ -36,11 +36,15 @@ PaCo/
 ### Communication Paths
 
 ```
-PaCo.app ←──── XPC ────→ PaCoDaemon   (internet on/off, kill process)
-PaCo.app ←── JSON files ─→ PaCoAgent  (schedules.json, restrictions.json, config.json,
-                                        usage.json, events.json — via ~/Library/Application Support/com.paco/)
-Parent Mac ←── Bonjour/TCP ──→ Child Mac  (policy push, PIN provisioning, time-extension requests/approvals)
+PaCo.app ←──── XPC ────→ PaCoDaemon   (policy push, active profile, override grant, internet on/off, kill process)
+PaCoAgent ←─── XPC ────→ PaCoDaemon   (fetch policy, internet status, kill process)
+PaCo.app ←── JSON files ─→ PaCoAgent  (usage.json, events.json — via ~/Library/Application Support/com.paco/)
+Parent Mac ←── Bonjour/TCP ──→ Child Mac  (policy push, PIN verification, time-extension requests/approvals)
 ```
+
+### Where the policy lives
+
+The enforcement policy (schedules, app restrictions, active profile, approved override) is owned by the **root daemon**: it is pushed in over XPC, persisted to `/Library/Application Support/PaCo/policy.json` (root-owned), and evaluated by the daemon itself every 30 seconds. Nothing in the monitored user's home directory influences enforcement. The agent is a reporter: it reads the policy back over XPC to know which apps to watch, asks the daemon to kill restricted ones, and keeps the usage snapshot.
 
 ### Shared JSON Files
 
@@ -48,17 +52,13 @@ All JSON files live in `~/Library/Application Support/com.paco/` on each Mac:
 
 | File | Written by | Read by |
 |------|-----------|---------|
-| `schedules.json` | PaCo.app — from SwiftData on a parent, from the parent's Bonjour push on a child | PaCoAgent |
-| `restrictions.json` | PaCo.app — same as above | PaCoAgent |
-| `config.json` | PaCo.app (device-local active profile) | PaCoAgent |
-| `override.json` | PaCo.app (child, on an approved extension) | PaCoAgent |
 | `usage.json` | PaCoAgent | PaCo.app |
 | `events.json` | PaCoAgent | PaCo.app (parent, via DispatchSource watcher) |
 | `child-requests.json` | PaCo.app (child) | PaCo.app (child) — sent requests and their outcomes, survives relaunch |
 
 ### Policy Push (parent → child)
 
-The parent app keeps one TLS-PSK connection per paired child open app-wide: it browses from launch and auto-connects whenever a discovered service has a stored pairing key (retrying every 30 s and giving up on a connection stuck for 20 s). On every connect, and after every schedule or app-rule change, the parent sends a `PaCoMessage(.updatePolicy)` carrying a `PolicyTransfer` (active schedules + all restrictions). The child writes it to its own `schedules.json` / `restrictions.json`, acknowledges with a `PaCoResponse`, and its agent enforces it on the next tick. A child that is offline receives the current policy when it next connects. On the parent Mac the same policy is also written locally, so a single Mac can be both parent and child for testing.
+The parent app keeps one TLS-PSK connection per paired child open app-wide: it browses from launch and auto-connects whenever a discovered service has a stored pairing key (retrying every 30 s and giving up on a connection stuck for 20 s). On every connect, and after every schedule or app-rule change, the parent sends a `PaCoMessage(.updatePolicy)` carrying a `PolicyTransfer` (active schedules + all restrictions). The child app hands it to its local root daemon over XPC, acknowledges with a `PaCoResponse`, and the daemon enforces it at once. A child that is offline receives the current policy when it next connects. On the parent Mac the same policy is also pushed to the parent's own daemon, so a single Mac can be both parent and child for testing.
 
 ### Internet Control
 
@@ -66,19 +66,25 @@ PaCo uses a `pf` anchor named `com.paco`. When internet is blocked, the daemon w
 
 ### Schedule Evaluation
 
-The agent evaluates all active schedules every 30 seconds. Most-restrictive-wins: if any active schedule says blocked, internet is disabled. A configurable grace period (0–15 min) gives a warning window after the off-time before enforcement.
+The daemon evaluates all active schedules every 30 seconds (`PolicyEngine`). Most-restrictive-wins: if any active schedule says blocked, internet is disabled. A configurable grace period (0–15 min) gives a warning window after the off-time before enforcement. The decision is edge-triggered, so a manual toggle from the dashboard persists until the next schedule transition.
 
 ### Request/Approve Workflow
 
 1. Child taps **Request More Time** (enabled only while the parent is connected) → sends a `PaCoMessage(.requestExtension)` over Bonjour and records the request in `child-requests.json`. The child view shows "waiting for parent…".
 2. Parent's app receives it on the paired connection and inserts a `TimeExtensionRequest` into SwiftData, attributed to the *pairing identity* the request arrived on (not the name in the payload), which is also how the reply is routed.
 3. Parent sees the request in **Requests** tab or the **Home** banner, and taps Approve or Deny. Approve is disabled while that child is offline; the request stays pending until the grant was actually sent.
-4. The child receives `.approveExtension`, matches it against its persisted request (each id resolves once — replay guard), writes `override.json`, and shows "Approved — internet on until HH:MM". Its agent enables internet on the next 30-second tick. A denial shows "Request denied".
+4. The child receives `.approveExtension`, matches it against its persisted request (each id resolves once — replay guard), grants the override to its daemon over XPC, and shows "Approved — internet on until HH:MM". The daemon enables internet immediately. A denial shows "Request denied".
+
+### Parent Access on a child Mac
+
+The parent PIN hash never leaves the parent Mac. When a parent types the PIN on a child Mac, the child sends it to the parent over the TLS-PSK channel (`.verifyPIN`) and the parent answers with the verdict, applying the same brute-force lockout as its own dashboard. The child must be connected to the parent for this to work.
 
 ### Security
 
-- Parent PIN stored in Keychain using PBKDF2/SHA-256 (10,000 iterations, 16-byte random salt).
-- XPC connection validated: only connections from the expected bundle identifier are accepted.
+- Parent PIN stored in the parent's Keychain using PBKDF2/SHA-256 (210,000 iterations, 16-byte random salt); it is never copied to a child.
+- XPC: the daemon attaches a code-signing requirement to every connection (`anchor apple generic`, identifier `com.paco.app` or `com.paco.agent`, and the daemon's own Team ID read from its signature). An unsigned daemon refuses every peer unless a Debug build is run with `PACO_ALLOW_UNSIGNED_XPC=1`.
+- Policy is root-owned (`/Library/Application Support/PaCo/policy.json`) and only changeable through the daemon's XPC interface.
+- Parent ↔ child traffic is TLS-PSK with a key derived from the one-time pairing code. An unpaired child advertises for discovery only and drops every incoming connection.
 - `pf` tamper detection: daemon re-applies rules if anchor rules are missing while blocking is active.
 
 ---
@@ -121,7 +127,7 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug
 
 ## Installation (Development / Local)
 
-> **Note:** Full end-to-end testing of the daemon and agent requires a Developer ID certificate because `SMAppService` and XPC mach services enforce code signing. Without signing, the app UI works but the daemon/agent connections will fail.
+> **Note:** Full end-to-end testing of the daemon and agent requires a Developer ID certificate: the daemon derives its XPC code-signing requirement from its own Team ID, so all four targets must be signed by the same team (set `DEVELOPMENT_TEAM` in `project.yml` or Xcode's Signing settings). Without signing, the app UI works but the daemon refuses every connection; for local Debug runs you can add `PACO_ALLOW_UNSIGNED_XPC=1` to the daemon's `EnvironmentVariables` in its launchd plist.
 
 ### Manual install for local testing
 
@@ -193,6 +199,9 @@ defaults delete com.paco.app
 
 # Remove shared JSON data
 rm -rf ~/Library/Application\ Support/com.paco/
+
+# Remove the daemon's policy and block state (root-owned)
+make clear-policy
 ```
 
 ---

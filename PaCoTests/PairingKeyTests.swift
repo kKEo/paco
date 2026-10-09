@@ -20,6 +20,13 @@ final class PairingKeyTests: XCTestCase {
         XCTAssertFalse(PairingKeyManager.generateCode().isEmpty)
     }
 
+    func testEmptySaltIsRejectedInsteadOfCrashing() {
+        XCTAssertThrowsError(try CryptoKDF.deriveKey(password: "x", salt: Data(), iterations: 1, keyLength: 32))
+        XCTAssertThrowsError(try CryptoKDF.deriveKey(password: "", salt: Data([1]), iterations: 1, keyLength: 32))
+        XCTAssertThrowsError(try CryptoKDF.deriveKey(password: "x", salt: Data([1]), iterations: 1, keyLength: 0))
+        XCTAssertThrowsError(try PINManager.verify(pin: "1234", hash: Data([1, 2]), salt: Data()))
+    }
+
     func testConstantTimeEquals() {
         let a = Data([1, 2, 3, 4])
         XCTAssertTrue(CryptoKDF.constantTimeEquals(a, Data([1, 2, 3, 4])))

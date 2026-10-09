@@ -13,6 +13,8 @@ enum UnlockResult: Equatable {
     case incorrect
     case noPIN
     case lockedOut(until: Date)
+    /// Child device only: the parent Mac is not connected, so the PIN cannot be checked.
+    case parentUnavailable
     case error
 }
 
@@ -27,6 +29,13 @@ final class AppState {
     /// The parent dashboard is shown only while unlocked. Cleared by `lock()`
     /// whenever the dashboard goes away so the PIN is required on every open.
     var isUnlocked = false
+
+    /// Child device: verifies a PIN against the connected parent (set by AppDelegate).
+    /// The parent PIN hash is never stored on a child, so this is the only way to
+    /// check it there.
+    @ObservationIgnored var remotePINVerifier: ((String, @escaping (UnlockResult) -> Void) -> Void)?
+    /// Called after the active profile changes so the daemon can be told.
+    @ObservationIgnored var onActiveProfileChanged: ((UUID?) -> Void)?
 
     private let logger = PaCoLogger.app
 
@@ -56,20 +65,32 @@ final class AppState {
 
     // MARK: - PIN gate
 
-    /// Verify the parent PIN with brute-force lockout; on success unlock the dashboard.
-    func attemptUnlock(pin: String) -> UnlockResult {
+    /// Verify the parent PIN with brute-force lockout; on success unlock the
+    /// dashboard (unless `unlockOnSuccess` is false, as when answering a child
+    /// Mac's remote check — the same lockout counter protects both paths).
+    func attemptUnlock(pin: String, unlockOnSuccess: Bool = true) -> UnlockResult {
         guard (try? PINManager.hasPIN()) == true else { return .noPIN }
         if let until = PINManager.lockedOutUntil() { return .lockedOut(until: until) }
         do {
             if try PINManager.verifyStoredPIN(pin) {
                 try? PINManager.resetAttempts()
-                unlock()
+                if unlockOnSuccess { unlock() }
                 return .success
             }
             if let until = PINManager.recordFailedAttempt() { return .lockedOut(until: until) }
             return .incorrect
         } catch {
             return .error
+        }
+    }
+
+    /// Child device: ask the connected parent to verify the PIN. Completion runs on main.
+    func attemptRemoteUnlock(pin: String, completion: @escaping (UnlockResult) -> Void) {
+        guard !pin.isEmpty else { completion(.incorrect); return }
+        guard let verifier = remotePINVerifier else { completion(.parentUnavailable); return }
+        verifier(pin) { [weak self] result in
+            if result == .success { self?.unlock() }
+            completion(result)
         }
     }
 
@@ -94,7 +115,7 @@ final class AppState {
         guard let config = try? context.fetch(descriptor).first else { return }
         config.childProfileId = id
         try? context.save()
-        SyncManager.shared.syncDeviceConfig(activeProfileId: id)
+        onActiveProfileChanged?(id)
     }
 
     func activeProfileId(context: ModelContext) -> UUID? {

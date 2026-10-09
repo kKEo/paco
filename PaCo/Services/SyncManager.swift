@@ -3,18 +3,17 @@ import Foundation
 import SwiftData
 import PaCoShared
 
-/// Writes the enforcement policy (schedules, restrictions, active profile) to the
-/// shared JSON files the agent reads, and imports the agent's usage snapshot.
+/// Turns the parent's persisted policy (schedules, app restrictions) into a
+/// `PolicyTransfer` and hands it to `onPolicyChanged`, which the app delegate
+/// pushes to the local root daemon and to connected child Macs. Also imports the
+/// agent's usage snapshot.
 ///
-/// On a **parent** Mac the policy comes from SwiftData and every write also fires
-/// `onPolicyChanged`, which the app uses to push the same policy to connected
-/// child Macs. On a **child** Mac the policy arrives over Bonjour and is written
-/// with `applyRemotePolicy`; the child never serializes its own (empty) SwiftData
-/// policy, or it would wipe what the parent pushed.
+/// Policy is never written to a user-level file any more: the daemon keeps the
+/// only copy, under a root-owned path, so the monitored user cannot edit it.
 ///
 /// Sync methods always fetch fresh from the `ModelContext` rather than taking an
 /// array from a view: a `@Query` array captured in a button action still reflects
-/// the state *before* the insert/delete, which left the agent one change behind.
+/// the state *before* the insert/delete, which left enforcement one change behind.
 final class SyncManager {
 
     static let shared = SyncManager()
@@ -22,26 +21,12 @@ final class SyncManager {
 
     private let logger = PaCoLogger.app
 
-    /// Parent side: invoked after schedules or restrictions were written.
-    var onPolicyChanged: (() -> Void)?
+    /// Parent side: invoked with the full policy after any schedule/restriction change.
+    var onPolicyChanged: ((PolicyTransfer) -> Void)?
 
     var usageFileURL: URL { PaCoFiles.usageFileURL }
-    /// Forward to PaCoFiles for callers that hold a SyncManager reference (e.g. ChildModeView).
-    var eventsFileURL: URL { PaCoFiles.eventsFileURL }
 
-    private func prepare() throws {
-        try FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
-    }
-
-    /// Parent: write every policy file from the current persisted state.
-    func syncAll(context: ModelContext) {
-        syncSchedules(context: context)
-        syncRestrictions(context: context)
-        let config = (try? context.fetch(FetchDescriptor<DeviceConfig>()))?.first
-        syncDeviceConfig(activeProfileId: config?.childProfileId)
-    }
-
-    /// The policy as it would be written to disk / pushed to a child.
+    /// The policy as it should be enforced right now.
     func currentPolicy(context: ModelContext) -> PolicyTransfer {
         let schedules = ((try? context.fetch(FetchDescriptor<Schedule>())) ?? [])
             .filter(\.isActive).map(ScheduleTransfer.init(from:))
@@ -50,71 +35,17 @@ final class SyncManager {
         return PolicyTransfer(schedules: schedules, restrictions: restrictions)
     }
 
-    // MARK: - Schedules
-
-    func syncSchedules(context: ModelContext) {
-        do {
-            let schedules = try context.fetch(FetchDescriptor<Schedule>())
-            try writeSchedules(schedules.filter(\.isActive).map(ScheduleTransfer.init(from:)))
-            onPolicyChanged?()
-        } catch {
-            logger.error("Failed to sync schedules: \(error)")
-        }
+    /// Publish the current policy. Schedules and restrictions always travel
+    /// together, so the three entry points are equivalent; they exist so call
+    /// sites read naturally.
+    func syncAll(context: ModelContext) {
+        let policy = currentPolicy(context: context)
+        logger.info("Publishing policy: \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+        onPolicyChanged?(policy)
     }
 
-    // MARK: - App Restrictions
-
-    func syncRestrictions(context: ModelContext) {
-        do {
-            let restrictions = try context.fetch(FetchDescriptor<AppRestriction>())
-            try writeRestrictions(restrictions.map(AppRestrictionTransfer.init(from:)))
-            onPolicyChanged?()
-        } catch {
-            logger.error("Failed to sync restrictions: \(error)")
-        }
-    }
-
-    // MARK: - Remote policy (child side)
-
-    /// Child: persist the policy pushed by the parent for the local agent.
-    func applyRemotePolicy(_ policy: PolicyTransfer) -> Bool {
-        do {
-            try writeSchedules(policy.schedules)
-            try writeRestrictions(policy.restrictions)
-            return true
-        } catch {
-            logger.error("Failed to apply remote policy: \(error)")
-            return false
-        }
-    }
-
-    private func writeSchedules(_ transfers: [ScheduleTransfer]) throws {
-        try prepare()
-        let data = try JSONEncoder().encode(transfers)
-        try data.write(to: PaCoFiles.schedulesFileURL, options: .atomic)
-        logger.info("Wrote \(transfers.count) schedules")
-    }
-
-    private func writeRestrictions(_ transfers: [AppRestrictionTransfer]) throws {
-        try prepare()
-        let data = try JSONEncoder().encode(transfers)
-        try data.write(to: PaCoFiles.restrictionsFileURL, options: .atomic)
-        logger.info("Wrote \(transfers.count) app restrictions")
-    }
-
-    // MARK: - Device config (active profile)
-
-    func syncDeviceConfig(activeProfileId: UUID?) {
-        do {
-            try prepare()
-            let transfer = DeviceConfigTransfer(activeProfileId: activeProfileId)
-            let data = try JSONEncoder().encode(transfer)
-            try data.write(to: PaCoFiles.configFileURL, options: .atomic)
-            logger.info("Synced device config, activeProfileId=\(activeProfileId?.uuidString ?? "nil")")
-        } catch {
-            logger.error("Failed to sync device config: \(error)")
-        }
-    }
+    func syncSchedules(context: ModelContext) { syncAll(context: context) }
+    func syncRestrictions(context: ModelContext) { syncAll(context: context) }
 
     // MARK: - Usage (read from agent-written file)
 

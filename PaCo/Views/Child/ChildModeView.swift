@@ -11,7 +11,7 @@ struct ChildModeView: View {
     @State private var requestError = ""
     @State private var pinEntry = ""
     @State private var pinError = ""
-    @State private var noPINSet = false
+    @State private var pinBusy = false
     @State private var showRequestOverlay = false
     @State private var requestMinutes = 30
     @State private var requestReason = ""
@@ -99,7 +99,7 @@ struct ChildModeView: View {
                     Spacer()
 
                     Button("Parent Access") {
-                        noPINSet = (try? !PINManager.hasPIN()) ?? false
+                        pinError = bonjour.isParentConnected ? "" : "The parent's Mac must be connected to check the PIN."
                         showPINPrompt = true
                     }
                     .font(.caption)
@@ -186,15 +186,15 @@ struct ChildModeView: View {
                     .ignoresSafeArea()
                 VStack(spacing: 16) {
                     Text("Enter Parent PIN").font(.headline)
-                    if noPINSet {
-                        Text("No PIN set — tap Unlock to continue.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        SecureField("PIN", text: $pinEntry)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 150)
-                    }
+                    Text("Checked with the parent's Mac — nothing PIN-related is stored here.")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                    SecureField("PIN", text: $pinEntry)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 150)
+                        .onSubmit { verifyPIN() }
+                        .disabled(pinBusy)
                     if !pinError.isEmpty {
                         Text(pinError).foregroundStyle(.red).font(.caption)
                     }
@@ -204,10 +204,11 @@ struct ChildModeView: View {
                             pinEntry = ""
                             pinError = ""
                         }
-                        Button("Unlock") {
+                        Button(pinBusy ? "Checking…" : "Unlock") {
                             verifyPIN()
                         }
                         .buttonStyle(.borderedProminent)
+                        .disabled(pinBusy || pinEntry.isEmpty)
                     }
                 }
                 .padding(30)
@@ -290,23 +291,31 @@ struct ChildModeView: View {
         }
     }
 
+    /// The PIN is checked by the parent's Mac over the authenticated channel; the
+    /// parent applies its own brute-force lockout. No PIN hash is ever stored on
+    /// a child, so it cannot be recovered offline from this machine.
     private func verifyPIN() {
-        // Verification + lockout live in AppState so the child-device unlock and the
-        // parent dashboard gate behave identically. A child device with no
-        // provisioned parent PIN cannot be unlocked locally; pair with a parent first.
-        switch appState.attemptUnlock(pin: pinEntry) {
-        case .success:
-            showPINPrompt = false
-            pinEntry = ""
-            pinError = ""
-        case .noPIN:
-            pinError = "No parent PIN on this device. Pair with a parent first."
-        case .lockedOut(let until):
-            pinError = "Too many attempts. Try again \(until.formatted(date: .omitted, time: .shortened))."
-        case .incorrect:
-            pinError = "Incorrect PIN"
-        case .error:
-            pinError = "Error verifying PIN"
+        guard !pinBusy else { return }
+        pinBusy = true
+        pinError = ""
+        appState.attemptRemoteUnlock(pin: pinEntry) { result in
+            pinBusy = false
+            switch result {
+            case .success:
+                showPINPrompt = false
+                pinEntry = ""
+                pinError = ""
+            case .parentUnavailable:
+                pinError = "Parent's Mac is not connected."
+            case .noPIN:
+                pinError = "The parent has not set a PIN yet."
+            case .lockedOut(let until):
+                pinError = "Too many attempts. Try again \(until.formatted(date: .omitted, time: .shortened))."
+            case .incorrect:
+                pinError = "Incorrect PIN"
+            case .error:
+                pinError = "Error verifying PIN"
+            }
         }
     }
 

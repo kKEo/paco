@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import SystemConfiguration
 import PaCoShared
 
@@ -7,13 +8,17 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
 
     private let firewallManager = FirewallManager()
     private let processManager = ProcessManager()
+    private let policyEngine: PolicyEngine
     private let logger = PaCoLogger.daemon
     private var integrityTimer: DispatchSourceTimer?
     private let integrityQueue = DispatchQueue(label: "com.paco.daemon.integrity")
 
     private override init() {
+        policyEngine = PolicyEngine(firewall: firewallManager, processManager: processManager)
         super.init()
     }
+
+    // MARK: - Internet
 
     func enableInternet(reply: @escaping (Bool, String?) -> Void) {
         do {
@@ -48,20 +53,67 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
         reply(firewallManager.verifyIntegrity())
     }
 
-    func updateRestrictedApps(bundleIDs: [String], reply: @escaping (Bool) -> Void) {
-        processManager.updateRestrictedApps(Set(bundleIDs))
-        reply(true)
-    }
-
     func status(reply: @escaping (String) -> Void) {
         let blocking = firewallManager.isBlocking
-        reply("daemon running, internet \(blocking ? "blocked" : "allowed")")
+        let policy = policyEngine.policy
+        reply("daemon running, internet \(blocking ? "blocked" : "allowed"), \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
     }
 
-    /// Called once at launch: reconcile persisted block state and start the
-    /// self-driven integrity check so tamper detection runs without the app open.
+    // MARK: - Policy
+
+    func updatePolicy(_ policyData: Data, reply: @escaping (Bool, String?) -> Void) {
+        guard let transfer = try? JSONDecoder().decode(PolicyTransfer.self, from: policyData) else {
+            reply(false, PolicyError.invalidPayload.localizedDescription)
+            return
+        }
+        do {
+            try policyEngine.update(transfer)
+            reply(true, nil)
+        } catch {
+            logger.error("updatePolicy failed: \(error.localizedDescription)")
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func setActiveProfile(_ profileId: String?, reply: @escaping (Bool, String?) -> Void) {
+        let id = profileId.flatMap(UUID.init(uuidString:))
+        if profileId != nil, id == nil {
+            reply(false, "invalid profile id")
+            return
+        }
+        do {
+            try policyEngine.setActiveProfile(id)
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func grantInternetOverride(requestId: String, until: Date, reply: @escaping (Bool, String?) -> Void) {
+        guard let id = UUID(uuidString: requestId) else {
+            reply(false, "invalid request id")
+            return
+        }
+        do {
+            try policyEngine.grantOverride(requestId: id, until: until)
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func fetchPolicy(reply: @escaping (Data?) -> Void) {
+        reply(try? JSONEncoder().encode(policyEngine.policy))
+    }
+
+    // MARK: - Lifecycle
+
+    /// Called once at launch: reconcile persisted block state, start the policy
+    /// tick, and start the self-driven integrity check so tamper detection runs
+    /// without the app open.
     func startup() {
         firewallManager.reconcileOnStartup()
+        policyEngine.start()
         let timer = DispatchSource.makeTimerSource(queue: integrityQueue)
         timer.schedule(deadline: .now() + 15, repeating: 15)
         timer.setEventHandler { [weak self] in
@@ -89,71 +141,70 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
     }
 }
 
+/// Accepts XPC connections only from PaCo binaries signed by the same team as
+/// this daemon. The requirement is attached to the connection with
+/// `setCodeSigningRequirement`, so the system re-checks the peer on every message
+/// (no PID lookup, no PID-reuse race) and the team id is read from the daemon's
+/// own signature rather than hard-coded.
 final class DaemonDelegate: NSObject, NSXPCListenerDelegate {
     private let logger = PaCoLogger.daemon
 
-    /// Developer ID Team Identifier that legitimate PaCo binaries are signed with.
-    /// TODO: set to your real 10-char Team ID before shipping a Release build.
-    private static let teamIdentifier = "REPLACE_WITH_TEAMID"
+    /// Bundle identifiers that may talk to the daemon.
+    private static let allowedIdentifiers = ["com.paco.app", "com.paco.agent"]
 
-    /// Designated requirement the connecting process must satisfy: Apple-issued
-    /// Developer ID chain, our team, and a com.paco.* identifier. Pinning the
-    /// Team ID (not just the identifier) prevents a self-signed binary that merely
-    /// claims a com.paco.* identifier from being accepted.
-    private static var designatedRequirement: SecRequirement? = {
-        let text = "anchor apple generic "
-            + "and identifier \"com.paco.*\" "
-            + "and certificate leaf[subject.OU] = \"\(teamIdentifier)\""
-        var requirement: SecRequirement?
-        let status = SecRequirementCreateWithString(text as CFString, [], &requirement)
-        return status == errSecSuccess ? requirement : nil
+    /// Requirement text, or nil when this daemon is not signed with a team (local
+    /// unsigned/ad-hoc builds), in which case no peer can satisfy it.
+    private lazy var requirementText: String? = {
+        guard let team = Self.ownTeamIdentifier() else { return nil }
+        let identifiers = Self.allowedIdentifiers.map { "identifier \"\($0)\"" }.joined(separator: " or ")
+        return "anchor apple generic and (\(identifiers)) and certificate leaf[subject.OU] = \"\(team)\""
     }()
 
+    override init() {
+        super.init()
+        if let text = requirementText {
+            logger.info("XPC code-signing requirement: \(text)")
+        } else {
+            logger.warning("Daemon has no team identifier in its signature; refusing all XPC peers (DEBUG: set PACO_ALLOW_UNSIGNED_XPC=1)")
+        }
+    }
+
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        let connectingPID = newConnection.processIdentifier
-        guard validateConnection(pid: connectingPID) else {
-            logger.warning("Rejected XPC connection from PID \(connectingPID): failed validation")
+        let pid = newConnection.processIdentifier
+        if let text = requirementText {
+            do {
+                try newConnection.setCodeSigningRequirement(text)
+            } catch {
+                logger.error("Invalid code-signing requirement (\(error.localizedDescription)); rejecting PID \(pid)")
+                return false
+            }
+        } else if !devFallbackAllow() {
+            logger.warning("Rejected XPC connection from PID \(pid): daemon unsigned and no DEBUG override")
             return false
         }
 
         newConnection.exportedInterface = NSXPCInterface(with: DaemonXPCProtocol.self)
         newConnection.exportedObject = DaemonService.shared
         newConnection.invalidationHandler = { [weak self] in
-            self?.logger.info("XPC connection invalidated")
+            self?.logger.info("XPC connection from PID \(pid) invalidated")
         }
         newConnection.resume()
-        logger.info("Accepted XPC connection from PID \(connectingPID)")
+        logger.info("Accepted XPC connection from PID \(pid)")
         return true
     }
 
-    /// Validate that the connecting process satisfies our designated requirement
-    /// (Apple anchor + our Team ID + com.paco.* identifier).
-    private func validateConnection(pid: Int32) -> Bool {
+    /// The Team Identifier this daemon binary is signed with, from its own code signature.
+    private static func ownTeamIdentifier() -> String? {
         var code: SecCode?
-        let attrs = [kSecGuestAttributePid: pid] as CFDictionary
-        guard SecCodeCopyGuestWithAttributes(nil, attrs, [], &code) == errSecSuccess,
-              let code else {
-            logger.warning("Cannot obtain SecCode for PID \(pid)")
-            return devFallbackAllow()
-        }
-
+        guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
         var staticCode: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess,
-              let staticCode else {
-            return devFallbackAllow()
-        }
-
-        guard let requirement = Self.designatedRequirement else {
-            logger.error("Designated requirement unavailable; refusing connection")
-            return devFallbackAllow()
-        }
-
-        let status = SecStaticCodeCheckValidity(staticCode, [], requirement)
-        if status != errSecSuccess {
-            logger.warning("Connection from PID \(pid) failed designated requirement (status \(status))")
-            return false
-        }
-        return true
+        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else { return nil }
+        var info: CFDictionary?
+        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let dict = info as? [String: Any],
+              let team = dict[kSecCodeInfoTeamIdentifier as String] as? String,
+              !team.isEmpty else { return nil }
+        return team
     }
 
     /// In DEBUG builds only, and only when explicitly opted in via the

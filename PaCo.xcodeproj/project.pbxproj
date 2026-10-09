@@ -30,8 +30,10 @@
 		6469F1BB152AAB42B2D2FEBF /* RoleSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40E9A5D6ED4B5F564068629 /* RoleSelectionView.swift */; };
 		667871199FDA02879133B99E /* DaemonXPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4EF5F065E3320C10CDE4A2 /* DaemonXPCClient.swift */; };
 		8222981FC902A79FCB7FF6E3 /* PaCoDaemon in Resources */ = {isa = PBXBuildFile; fileRef = AAF93D48C64AA56979E4D1F2 /* PaCoDaemon */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		84E03CB6700666259270DB10 /* DaemonPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D622E85871A447A98D56AA26 /* DaemonPolicyTests.swift */; };
 		88CA1B375DDC9EE88FE8D6A1 /* PaCoShared in Frameworks */ = {isa = PBXBuildFile; productRef = 3CD2C335F027037535B4A313 /* PaCoShared */; };
 		8B8E7C38A52A7421D5FF94D3 /* UsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB8BB18F315A326C52EC842 /* UsageView.swift */; };
+		8F36ED288990B4FA004F5228 /* PolicyEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050D144E37374C104228CA90 /* PolicyEngine.swift */; };
 		97207196E1AC22B3C1C39900 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE5A1C50E3545E4119D9971 /* SyncManager.swift */; };
 		9C7461D8A9048BAFA4BCF621 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D672967EBA61A41A90680D90 /* MenuBarManager.swift */; };
 		AA64B5832F9BD4AE3E0D693A /* PairingKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D49DF280AEA8DE8A103DB1 /* PairingKeyTests.swift */; };
@@ -68,6 +70,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		050D144E37374C104228CA90 /* PolicyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolicyEngine.swift; sourceTree = "<group>"; };
 		0A4EF5F065E3320C10CDE4A2 /* DaemonXPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonXPCClient.swift; sourceTree = "<group>"; };
 		0F799922CF0F809D06EA8568 /* AppRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRulesView.swift; sourceTree = "<group>"; };
 		2956CA2E163B69C1CBF3F4F4 /* SchedulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulesView.swift; sourceTree = "<group>"; };
@@ -98,6 +101,7 @@
 		C808F38F55FA111815D46089 /* DaemonDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonDelegate.swift; sourceTree = "<group>"; };
 		CB7661AD36BD006657E4F3AF /* PaCoAgent */ = {isa = PBXFileReference; includeInIndex = 0; path = PaCoAgent; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDFC2D92ADE03E55024AF822 /* ChildRequestLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildRequestLog.swift; sourceTree = "<group>"; };
+		D622E85871A447A98D56AA26 /* DaemonPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonPolicyTests.swift; sourceTree = "<group>"; };
 		D672967EBA61A41A90680D90 /* MenuBarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarManager.swift; sourceTree = "<group>"; };
 		DAD3C23B81FF5E9538899939 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		DD82AB167C5D625A3BDF3E5C /* ChildModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildModeView.swift; sourceTree = "<group>"; };
@@ -192,6 +196,7 @@
 				C808F38F55FA111815D46089 /* DaemonDelegate.swift */,
 				FF884EB7B81070A6A2D0FC0D /* FirewallManager.swift */,
 				47FCAF4EC892D63060DA886D /* main.swift */,
+				050D144E37374C104228CA90 /* PolicyEngine.swift */,
 				E89DC53EAD68770A0E809CBD /* ProcessManager.swift */,
 			);
 			path = PaCoDaemon;
@@ -218,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				8FBA80E4FF7073AB9B48DFAF /* ChildRequestStoreTests.swift */,
+				D622E85871A447A98D56AA26 /* DaemonPolicyTests.swift */,
 				875304C90123CD124DB6D365 /* FirewallRuleTests.swift */,
 				7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */,
 				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
@@ -418,6 +424,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B490B4D110E77040235246BF /* ChildRequestStoreTests.swift in Sources */,
+				84E03CB6700666259270DB10 /* DaemonPolicyTests.swift in Sources */,
 				3EEE196AF072FE35A3D3F84C /* FirewallRuleTests.swift in Sources */,
 				DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */,
 				B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */,
@@ -444,6 +451,7 @@
 			files = (
 				4106C0185C69540E2605768E /* DaemonDelegate.swift in Sources */,
 				363634CD7804D60FB408E387 /* FirewallManager.swift in Sources */,
+				8F36ED288990B4FA004F5228 /* PolicyEngine.swift in Sources */,
 				12326CAFB6145194B5027D2C /* ProcessManager.swift in Sources */,
 				BBDBFBD2174DD468760A1D3B /* main.swift in Sources */,
 			);

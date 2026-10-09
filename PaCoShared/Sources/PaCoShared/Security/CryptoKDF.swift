@@ -17,35 +17,33 @@ public enum CryptoKDF {
         iterations: UInt32,
         keyLength: Int
     ) throws -> Data {
-        guard !password.isEmpty else { throw KDFError.emptyInput }
+        // An empty salt or key would give an empty buffer whose base address is nil;
+        // force-unwrapping it crashed the app when a peer sent such a payload.
+        guard !password.isEmpty, !salt.isEmpty, keyLength > 0, iterations > 0 else { throw KDFError.emptyInput }
         let passwordBytes = Array(password.utf8)
-        var derivedKey = Data(count: keyLength)
+        let saltBytes = Array(salt)
+        var derivedKey = [UInt8](repeating: 0, count: keyLength)
 
-        let result = derivedKey.withUnsafeMutableBytes { derivedBuffer in
-            salt.withUnsafeBytes { saltBuffer in
-                CCKeyDerivationPBKDF(
-                    CCPBKDFAlgorithm(kCCPBKDF2),
-                    passwordBytes, passwordBytes.count,
-                    saltBuffer.baseAddress!.assumingMemoryBound(to: UInt8.self), salt.count,
-                    CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
-                    iterations,
-                    derivedBuffer.baseAddress!.assumingMemoryBound(to: UInt8.self), keyLength
-                )
-            }
-        }
+        let result = CCKeyDerivationPBKDF(
+            CCPBKDFAlgorithm(kCCPBKDF2),
+            passwordBytes, passwordBytes.count,
+            saltBytes, saltBytes.count,
+            CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
+            iterations,
+            &derivedKey, keyLength
+        )
 
         guard result == kCCSuccess else { throw KDFError.derivationFailed }
-        return derivedKey
+        return Data(derivedKey)
     }
 
     /// Cryptographically secure random bytes.
     public static func randomBytes(count: Int) throws -> Data {
-        var bytes = Data(count: count)
-        let status = bytes.withUnsafeMutableBytes { buffer in
-            SecRandomCopyBytes(kSecRandomDefault, count, buffer.baseAddress!)
-        }
+        guard count > 0 else { throw KDFError.emptyInput }
+        var bytes = [UInt8](repeating: 0, count: count)
+        let status = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
         guard status == errSecSuccess else { throw KDFError.randomFailed }
-        return bytes
+        return Data(bytes)
     }
 
     /// Constant-time comparison to avoid timing side-channels on secret comparisons.

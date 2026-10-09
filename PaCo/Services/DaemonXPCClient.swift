@@ -1,8 +1,8 @@
 import Foundation
 import PaCoShared
 
-/// XPC client used by the main app to communicate with the daemon.
-/// Used in parent mode when running on the same machine as the child.
+/// XPC client used by the main app to communicate with the local root daemon,
+/// which owns and evaluates the enforcement policy.
 final class DaemonXPCClient: ObservableObject {
 
     @Published var isInternetEnabled = true
@@ -45,6 +45,43 @@ final class DaemonXPCClient: ObservableObject {
     func refreshStatus() {
         proxy?.isInternetEnabled { [weak self] enabled in
             DispatchQueue.main.async { self?.isInternetEnabled = enabled }
+        }
+    }
+
+    // MARK: - Policy
+
+    /// Replace the daemon's schedules + app restrictions. Completion runs on main.
+    func pushPolicy(_ policy: PolicyTransfer, completion: ((Bool) -> Void)? = nil) {
+        guard let data = try? JSONEncoder().encode(policy) else {
+            completion?(false)
+            return
+        }
+        guard let proxy else {
+            logger.warning("No daemon connection; policy not pushed")
+            DispatchQueue.main.async { completion?(false) }
+            return
+        }
+        proxy.updatePolicy(data) { [weak self] success, error in
+            if !success { self?.logger.error("Daemon rejected policy: \(error ?? "unknown")") }
+            DispatchQueue.main.async { completion?(success) }
+        }
+    }
+
+    func setActiveProfile(_ id: UUID?) {
+        proxy?.setActiveProfile(id?.uuidString) { [weak self] success, error in
+            if !success { self?.logger.error("Daemon rejected active profile: \(error ?? "unknown")") }
+        }
+    }
+
+    /// Grant a temporary internet window (approved time extension). Completion runs on main.
+    func grantOverride(requestId: UUID, until: Date, completion: ((Bool) -> Void)? = nil) {
+        guard let proxy else {
+            DispatchQueue.main.async { completion?(false) }
+            return
+        }
+        proxy.grantInternetOverride(requestId: requestId.uuidString, until: until) { [weak self] success, error in
+            if !success { self?.logger.error("Daemon rejected override: \(error ?? "unknown")") }
+            DispatchQueue.main.async { completion?(success) }
         }
     }
 

@@ -1,5 +1,7 @@
 import Foundation
 
+/// The root daemon's XPC interface. The daemon owns the enforcement policy and
+/// evaluates it itself; callers push policy in and read status out.
 @objc public protocol DaemonXPCProtocol {
     func enableInternet(reply: @escaping (Bool, String?) -> Void)
     func disableInternet(reply: @escaping (Bool, String?) -> Void)
@@ -7,6 +9,14 @@ import Foundation
     func killProcess(pid: Int32, reply: @escaping (Bool, String?) -> Void)
     func verifyFirewallIntegrity(reply: @escaping (Bool) -> Void)
     func status(reply: @escaping (String) -> Void)
-    /// Push the set of bundle IDs the daemon is permitted to kill (blocked/scheduled apps).
-    func updateRestrictedApps(bundleIDs: [String], reply: @escaping (Bool) -> Void)
+
+    /// Replace schedules + app restrictions with a JSON-encoded `PolicyTransfer`.
+    /// The daemon persists it, re-derives its kill allowlist and re-evaluates at once.
+    func updatePolicy(_ policyData: Data, reply: @escaping (Bool, String?) -> Void)
+    /// Select which child profile's restrictions apply on this device (nil = all).
+    func setActiveProfile(_ profileId: String?, reply: @escaping (Bool, String?) -> Void)
+    /// Grant a temporary internet window (an approved time extension).
+    func grantInternetOverride(requestId: String, until: Date, reply: @escaping (Bool, String?) -> Void)
+    /// The daemon's current policy as JSON-encoded `DaemonPolicy` (nil on encoding failure).
+    func fetchPolicy(reply: @escaping (Data?) -> Void)
 }

@@ -75,7 +75,7 @@ struct ParentUnlockView: View {
             error = lockoutMessage(until)
         case .noPIN:
             noPIN = true
-        case .error:
+        case .error, .parentUnavailable:
             error = "Error verifying PIN"
         }
         if error.isEmpty == false { pin = "" }

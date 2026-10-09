@@ -29,7 +29,10 @@ public enum PaCoCommand: String, Codable, Sendable {
     case requestExtension
     case approveExtension
     case denyExtension
-    case provisionPIN
+    /// Child → parent: verify a parent PIN typed on the child Mac. The parent
+    /// answers with a `PaCoResponse` carrying `PINVerifyResult`; the PIN hash never
+    /// leaves the parent, so it cannot be brute-forced offline from the child.
+    case verifyPIN
 }
 
 public struct PaCoMessage: Codable, Sendable {
@@ -113,5 +116,38 @@ public struct DeviceStatus: Codable, Sendable {
         self.currentApp = currentApp
         self.internetDurationToday = internetDurationToday
         self.appUsage = appUsage
+    }
+}
+
+/// Child → parent payload of `.verifyPIN`. The PIN travels only inside the
+/// TLS-PSK session; `nonce` lets the child match the reply.
+public struct PINVerifyRequest: Codable, Sendable {
+    public var nonce: UUID
+    public var pin: String
+
+    public init(nonce: UUID, pin: String) {
+        self.nonce = nonce
+        self.pin = pin
+    }
+}
+
+/// Parent → child reply payload for `.verifyPIN`.
+public struct PINVerifyResult: Codable, Sendable {
+    public enum Outcome: String, Codable, Sendable {
+        case success
+        case incorrect
+        case lockedOut
+        case noPIN
+    }
+
+    public var nonce: UUID
+    public var outcome: Outcome
+    /// Present when `outcome == .lockedOut`.
+    public var lockedOutUntil: Date?
+
+    public init(nonce: UUID, outcome: Outcome, lockedOutUntil: Date? = nil) {
+        self.nonce = nonce
+        self.outcome = outcome
+        self.lockedOutUntil = lockedOutUntil
     }
 }
