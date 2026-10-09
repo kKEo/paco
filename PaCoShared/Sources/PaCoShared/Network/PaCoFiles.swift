@@ -7,6 +7,7 @@ public enum PaCoFiles {
     public static let usageFileName       = "usage.json"
     public static let eventsFileName      = "events.json"
     public static let overrideFileName    = "override.json"
+    public static let childRequestsFileName = "child-requests.json"
 
     public static var baseDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -19,4 +20,5 @@ public enum PaCoFiles {
     public static var usageFileURL:        URL { baseDirectory.appendingPathComponent(usageFileName) }
     public static var eventsFileURL:       URL { baseDirectory.appendingPathComponent(eventsFileName) }
     public static var overrideFileURL:     URL { baseDirectory.appendingPathComponent(overrideFileName) }
+    public static var childRequestsFileURL: URL { baseDirectory.appendingPathComponent(childRequestsFileName) }
 }

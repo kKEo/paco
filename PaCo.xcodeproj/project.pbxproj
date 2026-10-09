@@ -37,6 +37,7 @@
 		AA64B5832F9BD4AE3E0D693A /* PairingKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D49DF280AEA8DE8A103DB1 /* PairingKeyTests.swift */; };
 		AFDCB3E00C7B39FB4F3B016A /* PaCoAgent in Resources */ = {isa = PBXBuildFile; fileRef = CB7661AD36BD006657E4F3AF /* PaCoAgent */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B4557907AE6D809E476C2DCD /* PaCoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */; };
+		B490B4D110E77040235246BF /* ChildRequestStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FBA80E4FF7073AB9B48DFAF /* ChildRequestStoreTests.swift */; };
 		B50145DAECC564BF530DDB40 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C1F05F9A46CB4480760C7 /* AppState.swift */; };
 		B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB467988F60D3E8DBB7C21B /* PINManagerTests.swift */; };
 		BBDBFBD2174DD468760A1D3B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCAF4EC892D63060DA886D /* main.swift */; };
@@ -83,6 +84,7 @@
 		87CE9E9DA73996A6497E8C46 /* ParentUnlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentUnlockView.swift; sourceTree = "<group>"; };
 		8BB8BB18F315A326C52EC842 /* UsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageView.swift; sourceTree = "<group>"; };
 		8BE5A1C50E3545E4119D9971 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		8FBA80E4FF7073AB9B48DFAF /* ChildRequestStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildRequestStoreTests.swift; sourceTree = "<group>"; };
 		97A9911EFF8E1908510B6E7F /* PaCoShared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PaCoShared; path = PaCoShared; sourceTree = SOURCE_ROOT; };
 		99CC0A02FD01BC0A5F5B0802 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		9BBAB4B6F6C403B5C6B16D57 /* PaCoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaCoApp.swift; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 		6F08D22C820222B0246CD373 /* PaCoTests */ = {
 			isa = PBXGroup;
 			children = (
+				8FBA80E4FF7073AB9B48DFAF /* ChildRequestStoreTests.swift */,
 				875304C90123CD124DB6D365 /* FirewallRuleTests.swift */,
 				7FF6CE13D7DE5E30CFE4BF78 /* ModelTests.swift */,
 				C41C8AB7D0710BFFDBF226B5 /* PaCoTests.swift */,
@@ -414,6 +417,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B490B4D110E77040235246BF /* ChildRequestStoreTests.swift in Sources */,
 				3EEE196AF072FE35A3D3F84C /* FirewallRuleTests.swift in Sources */,
 				DE49B3ADD9F307611B5F02D2 /* ModelTests.swift in Sources */,
 				B78196C4C35EB4F9C9E91B0B /* PINManagerTests.swift in Sources */,

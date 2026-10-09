@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import SwiftData
 import PaCoShared
@@ -19,9 +20,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     private var usageWatcher: DispatchSourceFileSystemObject?
     private var eventsWatcher: DispatchSourceFileSystemObject?
+    private var statusTimer: DispatchSourceTimer?
     private var seenEventIds: Set<UUID> = []
     private var configuredRole: DeviceRole?
     private let logger = PaCoLogger.app
+
+    /// Matches the agent's schedule tick, so the menu bar icon and status views
+    /// follow what the agent actually did rather than the last manual toggle.
+    private static let statusRefreshInterval: TimeInterval = 30
 
     override init() {
         let schema = Schema([
@@ -53,8 +59,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationDidFinishLaunching(_ notification: Notification) {
         appState.determineMode(context: context)
         daemonClient.connect()
-        // Sync all policy to the shared JSON files so the agent always has current data.
-        SyncManager.shared.syncAll(context: context)
+        startStatusTimer()
+        SyncManager.shared.onPolicyChanged = { [weak self] in
+            self?.pushPolicyToConnectedChildren()
+        }
         startUsageWatcher()
         SyncManager.shared.readUsage(context: context)
         startEventsWatcher()
@@ -69,6 +77,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         appState.lock()
     }
 
+    private func startStatusTimer() {
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + Self.statusRefreshInterval, repeating: Self.statusRefreshInterval)
+        timer.setEventHandler { [weak self] in self?.daemonClient.refreshStatus() }
+        timer.resume()
+        statusTimer = timer
+    }
+
     // MARK: - Role-dependent networking
 
     /// Idempotent per role. Re-run when `appState.role` changes (onboarding
@@ -78,18 +94,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         configuredRole = role
         switch role {
         case .child:
+            // Policy files on a child are owned by the parent's pushes; only the
+            // device-local config is written from this Mac's own state.
+            SyncManager.shared.syncDeviceConfig(activeProfileId: appState.activeProfileId(context: context))
             bonjour.onIncomingMessage = { [weak self] message in
                 self?.handleChildIncoming(message)
             }
             bonjour.startAdvertising(name: Self.deviceName)
         case .parent:
+            // The parent's own agent enforces the same policy locally (single-Mac use).
+            SyncManager.shared.syncAll(context: context)
             // Handle time-extension requests arriving from any paired child.
             bonjour.onChildRequest = { [weak self] message, identity in
                 self?.handleParentIncoming(message, from: identity)
             }
-            // On connect, provision the parent PIN to the child so its
-            // "Parent Access" can be verified locally.
+            bonjour.onChildResponse = { [weak self] response, identity in
+                if response.success {
+                    self?.logger.info("Child '\(identity)' acknowledged command")
+                } else {
+                    self?.logger.warning("Child '\(identity)' rejected command: \(response.error ?? "unknown")")
+                }
+            }
+            // On connect, push the current policy and provision the parent PIN so
+            // the child's "Parent Access" can be verified locally.
             bonjour.onParentConnected = { [weak self] identity in
+                self?.pushPolicy(to: identity)
                 self?.provisionPIN(to: identity)
             }
             bonjour.startBrowsing()
@@ -104,6 +133,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self?.configureRole()
                 self?.observeRole()
             }
+        }
+    }
+
+    // MARK: - Parent → child pushes
+
+    /// Send the full policy to one connected child.
+    private func pushPolicy(to identity: String) {
+        let policy = SyncManager.shared.currentPolicy(context: context)
+        guard let data = try? JSONEncoder().encode(policy) else { return }
+        if bonjour.send(PaCoMessage(command: .updatePolicy, payload: data), to: identity) {
+            logger.info("Pushed policy to '\(identity)': \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+        }
+    }
+
+    /// Re-push after any local policy change so connected children stay in sync.
+    /// Offline children receive the policy when they next connect.
+    private func pushPolicyToConnectedChildren() {
+        guard configuredRole == .parent else { return }
+        for identity in bonjour.connectedIdentities {
+            pushPolicy(to: identity)
         }
     }
 
@@ -150,46 +199,66 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     // MARK: - Message handling
 
     /// Parent-side handling of child-initiated messages (cross-Mac requests).
+    ///
+    /// The request is attributed to the *connection identity* (the paired name the
+    /// TLS session was opened under), never to the name the child wrote into the
+    /// payload: the reply is routed by that identity, so using anything else can
+    /// leave an approval undeliverable.
     private func handleParentIncoming(_ message: PaCoMessage, from identity: String) {
         guard message.command == .requestExtension,
               let data = message.payload,
               let payload = try? JSONDecoder().decode(ExtensionRequestPayload.self, from: data) else { return }
-        DispatchQueue.main.async { [self] in
-            let requestId = payload.requestId
-            let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
-            guard existing == nil else { return }
-            let req = TimeExtensionRequest(
-                id: requestId,
-                childDeviceName: payload.childDeviceName.isEmpty ? identity : payload.childDeviceName,
-                requestedMinutes: payload.requestedMinutes,
-                reason: payload.reason
-            )
-            context.insert(req)
-            try? context.save()
+        if !payload.childDeviceName.isEmpty, payload.childDeviceName != identity {
+            logger.info("Request from '\(identity)' self-reports as '\(payload.childDeviceName)'; using pairing identity")
         }
+        let requestId = payload.requestId
+        let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
+        guard existing == nil else { return }
+        let req = TimeExtensionRequest(
+            id: requestId,
+            profileId: payload.profileId,
+            childDeviceName: identity,
+            requestedMinutes: payload.requestedMinutes,
+            reason: payload.reason
+        )
+        context.insert(req)
+        try? context.save()
+        logger.info("Extension request from '\(identity)': \(payload.requestedMinutes) min")
     }
 
     /// Child-side handling of parent-initiated messages over the authenticated channel.
     private func handleChildIncoming(_ message: PaCoMessage) {
         switch message.command {
-        case .approveExtension:
+        case .updatePolicy:
             guard let data = message.payload,
-                  let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data),
-                  ChildRequestLog.shared.consume(payload.requestId) else {
-                logger.warning("Ignoring approveExtension: unknown or replayed request id")
+                  let policy = try? JSONDecoder().decode(PolicyTransfer.self, from: data) else {
+                bonjour.replyToParent(PaCoResponse(success: false, error: "bad policy payload"))
                 return
             }
+            let ok = SyncManager.shared.applyRemotePolicy(policy)
+            bonjour.replyToParent(PaCoResponse(success: ok, error: ok ? nil : "could not write policy"))
+            if ok {
+                logger.info("Applied policy from parent: \(policy.schedules.count) schedules, \(policy.restrictions.count) restrictions")
+            }
+
+        case .approveExtension:
+            guard let data = message.payload,
+                  let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data) else { return }
             let minutes = payload.grantedMinutes ?? 30
-            OverrideStore.write(InternetOverride(
-                requestId: payload.requestId,
-                grantedUntil: Date().addingTimeInterval(TimeInterval(minutes * 60))
-            ))
+            let until = Date().addingTimeInterval(TimeInterval(minutes * 60))
+            guard ChildRequestLog.shared.resolve(id: payload.requestId, approved: true, grantedUntil: until) else {
+                logger.warning("Ignoring approveExtension: unknown or already-resolved request id")
+                return
+            }
+            OverrideStore.write(InternetOverride(requestId: payload.requestId, grantedUntil: until))
             logger.info("Extension approved: granted \(minutes) min (agent will enable)")
 
         case .denyExtension:
-            if let data = message.payload,
-               let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data) {
-                _ = ChildRequestLog.shared.consume(payload.requestId)
+            guard let data = message.payload,
+                  let payload = try? JSONDecoder().decode(ExtensionResponsePayload.self, from: data),
+                  ChildRequestLog.shared.resolve(id: payload.requestId, approved: false) else {
+                logger.warning("Ignoring denyExtension: unknown or already-resolved request id")
+                return
             }
             logger.info("Extension denied by parent")
 

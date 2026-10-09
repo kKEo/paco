@@ -1,22 +1,56 @@
 import Foundation
+import PaCoShared
 
-/// Child-side record of extension request IDs this device has sent, so an
-/// incoming approval/denial can be correlated to a real outstanding request
-/// (defense-in-depth on top of the authenticated TLS-PSK channel).
-final class ChildRequestLog {
+/// Child-side, observable view of the sent time-extension requests and their
+/// outcomes, persisted to `child-requests.json` so a pending request survives an
+/// app relaunch and its late approval is still accepted (see `ChildRequestStore`).
+///
+/// All access happens on the main queue (Bonjour callbacks and views both run there).
+final class ChildRequestLog: ObservableObject {
     static let shared = ChildRequestLog()
-    private init() {}
 
-    private let lock = NSLock()
-    private var sentIds: Set<UUID> = []
+    @Published private(set) var store: ChildRequestStore
 
-    func record(_ id: UUID) {
-        lock.lock(); sentIds.insert(id); lock.unlock()
+    /// Unanswered requests older than this are dropped on load: the parent is
+    /// not going to answer them and they would block a new request forever.
+    private static let pendingMaxAge: TimeInterval = 24 * 3600
+
+    private let fileURL = PaCoFiles.childRequestsFileURL
+    private let logger = PaCoLogger.app
+
+    private init() {
+        var loaded = ChildRequestStore.load(from: PaCoFiles.childRequestsFileURL)
+        loaded.expirePending(olderThan: Self.pendingMaxAge)
+        store = loaded
     }
 
-    /// True if `id` matches an outstanding request; consumes it so it can't be replayed.
-    func consume(_ id: UUID) -> Bool {
-        lock.lock(); defer { lock.unlock() }
-        return sentIds.remove(id) != nil
+    var pending: ChildRequestRecord? { store.pending }
+    var latest: ChildRequestRecord? { store.latest }
+
+    func record(id: UUID, requestedMinutes: Int, reason: String) {
+        store.record(id: id, requestedMinutes: requestedMinutes, reason: reason)
+        persist()
+    }
+
+    /// Resolve an outstanding request; false if unknown or already resolved (replay).
+    @discardableResult
+    func resolve(id: UUID, approved: Bool, grantedUntil: Date? = nil) -> Bool {
+        guard store.resolve(id: id, approved: approved, grantedUntil: grantedUntil) else { return false }
+        persist()
+        return true
+    }
+
+    /// Give up on the outstanding request so a new one can be sent.
+    func withdrawPending() {
+        store.withdrawPending()
+        persist()
+    }
+
+    private func persist() {
+        do {
+            try store.save(to: fileURL)
+        } catch {
+            logger.error("Failed to save child request log: \(error)")
+        }
     }
 }

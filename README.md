@@ -39,7 +39,7 @@ PaCo/
 PaCo.app ←──── XPC ────→ PaCoDaemon   (internet on/off, kill process)
 PaCo.app ←── JSON files ─→ PaCoAgent  (schedules.json, restrictions.json, config.json,
                                         usage.json, events.json — via ~/Library/Application Support/com.paco/)
-Parent Mac ←── Bonjour/TCP ──→ Child Mac  (remote commands, time-extension requests/approvals)
+Parent Mac ←── Bonjour/TCP ──→ Child Mac  (policy push, PIN provisioning, time-extension requests/approvals)
 ```
 
 ### Shared JSON Files
@@ -48,11 +48,17 @@ All JSON files live in `~/Library/Application Support/com.paco/` on each Mac:
 
 | File | Written by | Read by |
 |------|-----------|---------|
-| `schedules.json` | PaCo.app (parent) | PaCoAgent |
-| `restrictions.json` | PaCo.app (parent) | PaCoAgent |
-| `config.json` | PaCo.app (parent) | PaCoAgent |
+| `schedules.json` | PaCo.app — from SwiftData on a parent, from the parent's Bonjour push on a child | PaCoAgent |
+| `restrictions.json` | PaCo.app — same as above | PaCoAgent |
+| `config.json` | PaCo.app (device-local active profile) | PaCoAgent |
+| `override.json` | PaCo.app (child, on an approved extension) | PaCoAgent |
 | `usage.json` | PaCoAgent | PaCo.app |
-| `events.json` | PaCoAgent + PaCo.app (child) | PaCo.app (parent, via DispatchSource watcher) |
+| `events.json` | PaCoAgent | PaCo.app (parent, via DispatchSource watcher) |
+| `child-requests.json` | PaCo.app (child) | PaCo.app (child) — sent requests and their outcomes, survives relaunch |
+
+### Policy Push (parent → child)
+
+The parent app keeps one TLS-PSK connection per paired child open app-wide: it browses from launch and auto-connects whenever a discovered service has a stored pairing key (retrying every 30 s and giving up on a connection stuck for 20 s). On every connect, and after every schedule or app-rule change, the parent sends a `PaCoMessage(.updatePolicy)` carrying a `PolicyTransfer` (active schedules + all restrictions). The child writes it to its own `schedules.json` / `restrictions.json`, acknowledges with a `PaCoResponse`, and its agent enforces it on the next tick. A child that is offline receives the current policy when it next connects. On the parent Mac the same policy is also written locally, so a single Mac can be both parent and child for testing.
 
 ### Internet Control
 
@@ -64,10 +70,10 @@ The agent evaluates all active schedules every 30 seconds. Most-restrictive-wins
 
 ### Request/Approve Workflow
 
-1. Child taps **Request More Time** → writes a `NotificationEvent(.extensionRequested)` to `events.json` and sends a `PaCoMessage(.requestExtension)` over Bonjour.
-2. Parent's app watches `events.json` via `DispatchSource` and inserts a `TimeExtensionRequest` into SwiftData.
-3. Parent sees the request in **Requests** tab or the **Home** banner, and taps Approve or Deny.
-4. Approval calls `daemonClient.toggleInternet()` immediately and sends a `PaCoMessage(.approveExtension)` back to the child over Bonjour.
+1. Child taps **Request More Time** (enabled only while the parent is connected) → sends a `PaCoMessage(.requestExtension)` over Bonjour and records the request in `child-requests.json`. The child view shows "waiting for parent…".
+2. Parent's app receives it on the paired connection and inserts a `TimeExtensionRequest` into SwiftData, attributed to the *pairing identity* the request arrived on (not the name in the payload), which is also how the reply is routed.
+3. Parent sees the request in **Requests** tab or the **Home** banner, and taps Approve or Deny. Approve is disabled while that child is offline; the request stays pending until the grant was actually sent.
+4. The child receives `.approveExtension`, matches it against its persisted request (each id resolves once — replay guard), writes `override.json`, and shows "Approved — internet on until HH:MM". Its agent enables internet on the next 30-second tick. A denial shows "Request denied".
 
 ### Security
 
@@ -148,7 +154,7 @@ The postinstall script:
 2. Choose **Parent** or **Child** role.
 3. Parent: set a PIN and create a child profile.
 4. Child: the app lives in the menu bar and advertises itself over Bonjour.
-5. Parent: open **Devices** tab to discover and pair the child Mac.
+5. Parent: open **Devices** tab to discover and pair the child Mac. From then on the parent connects to the child automatically whenever both are on the network and pushes schedules and app rules to it.
 
 ---
 

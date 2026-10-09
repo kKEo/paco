@@ -34,18 +34,11 @@ struct DevicesView: View {
                             PairedDeviceRow(
                                 pairing: pairing,
                                 onlineEndpoint: onlineEndpoint(for: pairing),
+                                isConnected: bonjour.isConnected(to: pairing.childDeviceName),
                                 onConnect: { endpoint in
-                                    bonjour.connect(
-                                        to: endpoint,
-                                        identity: pairing.childDeviceName,
-                                        responseHandler: { _ in },
-                                        incomingMessageHandler: { _ in }
-                                    )
+                                    bonjour.connect(to: endpoint, identity: pairing.childDeviceName)
                                 },
-                                onRemove: {
-                                    context.delete(pairing)
-                                    try? context.save()
-                                }
+                                onRemove: { unpair(pairing) }
                             )
                         }
                     }
@@ -130,8 +123,6 @@ struct DevicesView: View {
                 .shadow(radius: 12)
             }
         }
-        .onAppear { bonjour.startBrowsing() }
-        .onChange(of: bonjour.discoveredDevices) { _, _ in autoConnectPairedDevices() }
     }
 
     /// Generate a one-time code, derive & store the pairing key under the child's
@@ -150,28 +141,23 @@ struct DevicesView: View {
         }
         pairingForName = name
         generatedCode = code
+        // Browsing and auto-connect run app-wide (AppDelegate/BonjourService); this
+        // just nudges a connection now that the key exists, in case the child is
+        // already online and paired on its side.
+        bonjour.autoConnectPairedDevices()
     }
 
-    /// Auto-connect to any paired, online device we're not already connected to,
-    /// so child requests arrive without the parent clicking Connect.
-    private func autoConnectPairedDevices() {
-        for pairing in pairings {
-            guard !bonjour.isConnected(to: pairing.childDeviceName),
-                  let endpoint = onlineEndpoint(for: pairing) else { continue }
-            bonjour.connect(
-                to: endpoint,
-                identity: pairing.childDeviceName,
-                responseHandler: { _ in },
-                incomingMessageHandler: { _ in }
-            )
-        }
+    /// Forget a child: drop the live connection and the pairing key, so the
+    /// app-level auto-connect stops reconnecting to it.
+    private func unpair(_ pairing: PairingInfo) {
+        bonjour.disconnect(identity: pairing.childDeviceName)
+        try? PairingKeyManager.removeKey(identity: pairing.childDeviceName)
+        context.delete(pairing)
+        try? context.save()
     }
 
     private func deviceName(from result: NWBrowser.Result) -> String {
-        if case .service(let name, _, _, _) = result.endpoint {
-            return name
-        }
-        return result.endpoint.debugDescription
+        BonjourService.serviceName(of: result)
     }
 
     private func onlineEndpoint(for pairing: PairingInfo) -> NWEndpoint? {
@@ -182,26 +168,37 @@ struct DevicesView: View {
 struct PairedDeviceRow: View {
     let pairing: PairingInfo
     let onlineEndpoint: NWEndpoint?
+    let isConnected: Bool
     let onConnect: (NWEndpoint) -> Void
     let onRemove: () -> Void
+
+    private var statusText: String {
+        if isConnected { return "Connected" }
+        return onlineEndpoint != nil ? "Online — connecting…" : "Offline"
+    }
+
+    private var statusColor: Color {
+        if isConnected { return .green }
+        return onlineEndpoint != nil ? .orange : .secondary
+    }
 
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: "laptopcomputer")
                 .font(.title2)
-                .foregroundStyle(onlineEndpoint != nil ? .green : .secondary)
+                .foregroundStyle(statusColor)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(pairing.childDeviceName).font(.headline)
-                Text(onlineEndpoint != nil ? "Online" : "Offline")
+                Text(statusText)
                     .font(.caption)
-                    .foregroundStyle(onlineEndpoint != nil ? .green : .secondary)
+                    .foregroundStyle(statusColor)
             }
 
             Spacer()
 
-            if let endpoint = onlineEndpoint {
-                Button("Connect") { onConnect(endpoint) }
+            if let endpoint = onlineEndpoint, !isConnected {
+                Button("Retry") { onConnect(endpoint) }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
             }

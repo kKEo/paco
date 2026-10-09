@@ -6,7 +6,9 @@ struct ChildModeView: View {
     @EnvironmentObject private var daemonClient: DaemonXPCClient
     @EnvironmentObject private var bonjour: BonjourService
     @Environment(AppState.self) private var appState
+    @ObservedObject private var requestLog = ChildRequestLog.shared
     @State private var showPINPrompt = false
+    @State private var requestError = ""
     @State private var pinEntry = ""
     @State private var pinError = ""
     @State private var noPINSet = false
@@ -33,10 +35,15 @@ struct ChildModeView: View {
                     .font(.title)
                     .fontWeight(.semibold)
 
-                // Schedule info
-                Text("PaCo is monitoring this device")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                // Parent link status
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(bonjour.isParentConnected ? .green : (isPaired ? .orange : .secondary))
+                        .frame(width: 8, height: 8)
+                    Text(parentStatusText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
                 Divider()
                     .padding(.horizontal, 40)
@@ -60,11 +67,20 @@ struct ChildModeView: View {
                     }
                 }
 
-                Button("Request More Time") {
-                    showRequestOverlay = true
+                requestStatusView
+
+                if requestLog.pending == nil {
+                    Button("Request More Time") {
+                        requestError = ""
+                        showRequestOverlay = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!bonjour.isParentConnected)
+                    .padding(.top, 4)
                 }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
+                if !requestError.isEmpty {
+                    Text(requestError).font(.caption).foregroundStyle(.red)
+                }
 
                 Spacer()
 
@@ -91,11 +107,13 @@ struct ChildModeView: View {
                 }
             }
             .padding(30)
-            .frame(width: 350, height: 400)
+            .frame(width: 350, height: 460)
             .onAppear {
                 loadUsage()
+                daemonClient.refreshStatus()
                 usageRefreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
                     loadUsage()
+                    daemonClient.refreshStatus()
                 }
             }
             .onDisappear {
@@ -200,6 +218,78 @@ struct ChildModeView: View {
         }
     }
 
+    // MARK: - Status helpers
+
+    private var isPaired: Bool { PairingKeyManager.hasAnyKey() }
+
+    private var parentStatusText: String {
+        if bonjour.isParentConnected { return "Connected to parent" }
+        return isPaired ? "Paired — parent not connected" : "Not paired with a parent"
+    }
+
+    /// Feedback for the most recent time request: waiting, approved (with the
+    /// granted window) or denied. Resolved requests fade out after an hour.
+    @ViewBuilder
+    private var requestStatusView: some View {
+        if let record = requestLog.latest, shouldShow(record) {
+            HStack(spacing: 8) {
+                Image(systemName: statusIcon(for: record))
+                    .foregroundStyle(statusColor(for: record))
+                Text(statusText(for: record))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if record.isPending {
+                    Spacer(minLength: 0)
+                    Button("Withdraw") { requestLog.withdrawPending() }
+                        .buttonStyle(.plain)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity)
+            .background(statusColor(for: record).opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    private func shouldShow(_ record: ChildRequestRecord) -> Bool {
+        if record.isPending { return true }
+        guard let resolvedAt = record.resolvedAt else { return false }
+        return Date().timeIntervalSince(resolvedAt) < 3600
+    }
+
+    private func statusText(for record: ChildRequestRecord) -> String {
+        let time: (Date) -> String = { $0.formatted(date: .omitted, time: .shortened) }
+        switch record.state {
+        case .sent:
+            return "Request for \(record.requestedMinutes) min sent at \(time(record.sentAt)) — waiting for parent…"
+        case .approved:
+            if let until = record.grantedUntil {
+                return "Approved — internet on until \(time(until))"
+            }
+            return "Approved"
+        case .denied:
+            return "Request denied" + (record.resolvedAt.map { " at \(time($0))" } ?? "")
+        }
+    }
+
+    private func statusIcon(for record: ChildRequestRecord) -> String {
+        switch record.state {
+        case .sent: return "clock"
+        case .approved: return "checkmark.circle"
+        case .denied: return "xmark.circle"
+        }
+    }
+
+    private func statusColor(for record: ChildRequestRecord) -> Color {
+        switch record.state {
+        case .sent: return .orange
+        case .approved: return .green
+        case .denied: return .red
+        }
+    }
+
     private func verifyPIN() {
         // Verification + lockout live in AppState so the child-device unlock and the
         // parent dashboard gate behave identically. A child device with no
@@ -268,9 +358,13 @@ struct ChildModeView: View {
             reason: requestReason
         )
         guard let payloadData = try? JSONEncoder().encode(payload) else { return }
-        // Record so the matching approval can be correlated, then send over the
-        // authenticated channel to the parent.
-        ChildRequestLog.shared.record(requestId)
-        bonjour.sendToParent(PaCoMessage(command: .requestExtension, payload: payloadData))
+        // Only record the request once it was handed to a live parent connection;
+        // the record is what lets the approval be correlated (and persisted across
+        // relaunches) and what the status card shows.
+        guard bonjour.sendToParent(PaCoMessage(command: .requestExtension, payload: payloadData)) else {
+            requestError = "Parent is not connected. Try again when the parent's PaCo is running."
+            return
+        }
+        requestLog.record(id: requestId, requestedMinutes: requestMinutes, reason: requestReason)
     }
 }

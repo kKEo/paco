@@ -32,14 +32,19 @@ struct RequestsView: View {
                     if !pendingRequests.isEmpty {
                         Text("Pending").font(.headline).foregroundStyle(.secondary)
                         ForEach(pendingRequests) { req in
-                            RequestRow(request: req, onApprove: { approve(req) }, onDeny: { deny(req) })
+                            RequestRow(
+                                request: req,
+                                isChildConnected: bonjour.isConnected(to: req.childDeviceName),
+                                onApprove: { approve(req) },
+                                onDeny: { deny(req) }
+                            )
                         }
                     }
 
                     if !resolvedRequests.isEmpty {
                         Text("Resolved").font(.headline).foregroundStyle(.secondary)
                         ForEach(Array(resolvedRequests.prefix(20)), id: \.id) { req in
-                            RequestRow(request: req, onApprove: nil, onDeny: nil)
+                            RequestRow(request: req, isChildConnected: true, onApprove: nil, onDeny: nil)
                         }
                     }
                 }
@@ -48,21 +53,24 @@ struct RequestsView: View {
         }
     }
 
+    /// Grant the requested minutes to the child the request arrived from
+    /// (`childDeviceName` is the pairing identity, which is also the routing key).
+    /// The request is only marked approved once the grant was handed to a live
+    /// connection; otherwise it stays pending so the parent can retry.
     private func approve(_ req: TimeExtensionRequest) {
-        req.status = .approved
-        req.respondedAt = Date()
-        try? context.save()
-
-        // Grant the requested minutes to the specific child that asked. The child
-        // turns this into a temporary override window that its own agent enforces.
         let payload = ExtensionResponsePayload(
             requestId: req.id, status: .approved, grantedMinutes: req.requestedMinutes
         )
-        if let data = try? JSONEncoder().encode(payload) {
-            bonjour.send(PaCoMessage(command: .approveExtension, payload: data), to: req.childDeviceName)
-        }
+        guard let data = try? JSONEncoder().encode(payload),
+              bonjour.send(PaCoMessage(command: .approveExtension, payload: data), to: req.childDeviceName)
+        else { return }
+        req.status = .approved
+        req.respondedAt = Date()
+        try? context.save()
     }
 
+    /// A denial is recorded even if the child is offline: there is nothing to deliver
+    /// that changes enforcement, and the parent should be able to clear the queue.
     private func deny(_ req: TimeExtensionRequest) {
         req.status = .denied
         req.respondedAt = Date()
@@ -77,6 +85,7 @@ struct RequestsView: View {
 
 struct RequestRow: View {
     let request: TimeExtensionRequest
+    let isChildConnected: Bool
     let onApprove: (() -> Void)?
     let onDeny: (() -> Void)?
 
@@ -97,6 +106,11 @@ struct RequestRow: View {
                 Text(request.requestedAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                if onApprove != nil && !isChildConnected {
+                    Text("Child is offline — approval will be possible when it reconnects.")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
             }
 
             Spacer()
@@ -105,6 +119,7 @@ struct RequestRow: View {
                 Button("Approve") { approve() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .disabled(!isChildConnected)
                 Button("Deny") { deny() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)

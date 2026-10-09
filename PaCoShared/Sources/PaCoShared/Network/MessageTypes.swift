@@ -21,8 +21,8 @@ public enum PaCoCommand: String, Codable, Sendable {
     case enableInternet
     case disableInternet
     case getStatus
-    case updateSchedules
-    case updateAppRestrictions
+    /// Parent → child: full `PolicyTransfer` (schedules + app restrictions).
+    case updatePolicy
     case getUsageData
     case pair
     case ping

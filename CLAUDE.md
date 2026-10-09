@@ -41,10 +41,10 @@ One Xcode project, four targets:
 ### Communication (three distinct channels)
 
 1. **App ↔ Daemon:** XPC (internet toggle, kill process). Connection is validated by bundle identifier.
-2. **App ↔ Agent:** JSON files in `~/Library/Application Support/com.paco/` (`schedules.json`, `restrictions.json`, `config.json` written by app; `usage.json`, `events.json` written by agent/child app). The app watches `usage.json` and `events.json` with `DispatchSource` file watchers set up in `AppDelegate.swift`; `SyncManager` handles serialization and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind).
-3. **Parent Mac ↔ Child Mac:** Bonjour/TCP (`BonjourService`) carrying `PaCoMessage` commands (e.g. `.requestExtension`, `.approveExtension`).
+2. **App ↔ Agent:** JSON files in `~/Library/Application Support/com.paco/` (`schedules.json`, `restrictions.json`, `config.json`, `override.json` written by app; `usage.json`, `events.json` written by agent; `child-requests.json` is the child app's own persisted request log). The app watches `usage.json` and `events.json` with `DispatchSource` file watchers set up in `AppDelegate.swift`; `SyncManager` handles serialization and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind). On a **child** Mac `schedules.json`/`restrictions.json` are written only by `SyncManager.applyRemotePolicy` from the parent's push — the child never calls `syncSchedules`/`syncRestrictions`, which would overwrite them with its empty local store.
+3. **Parent Mac ↔ Child Mac:** Bonjour/TCP (`BonjourService`) carrying `PaCoMessage` commands: `.updatePolicy` (`PolicyTransfer`, parent → child on connect and after every `SyncManager` policy write via `onPolicyChanged`), `.provisionPIN`, `.requestExtension` (child → parent), `.approveExtension`/`.denyExtension`. Browsing and auto-connect are app-level (`BonjourService.autoConnectPairedDevices`, keyed off stored `PairingKeyManager` keys), not tied to the Devices tab.
 
-The time-extension flow crosses all of these: child writes a `NotificationEvent` to `events.json` + sends Bonjour message → parent's events watcher inserts a `TimeExtensionRequest` into SwiftData (deduped by event id via `EventTracker` and by request id) → approval toggles internet via XPC and replies over Bonjour.
+The time-extension flow: child sends `.requestExtension` over Bonjour and records it in `ChildRequestLog` (persisted) → parent inserts a `TimeExtensionRequest` into SwiftData with `childDeviceName` = the **connection identity** the request arrived on (deduped by request id) → approval sends `.approveExtension` back on that identity (and is only recorded once the send succeeded) → child resolves the request in `ChildRequestLog` (one-shot, replay guard) and writes `override.json` for its agent.
 
 ### Things that are easy to get wrong
 
@@ -54,5 +54,7 @@ The time-extension flow crosses all of these: child writes a `NotificationEvent`
 - The parent dashboard is PIN-gated via `AppState.isUnlocked`; `AppState.lock()` is called when the dashboard disappears and when the app resigns active. PIN verification + lockout live in `AppState.attemptUnlock`, shared by `ParentUnlockView` and the child-device "Parent Access" prompt.
 - `pf` evaluates every rule and the *last* match wins; pass rules in `FirewallRuleBuilder` must stay `quick` and precede the block rule (`FirewallRuleTests` enforces this).
 - `FirewallManager` uses a non-recursive `NSLock`; code that already holds it must call `applyBlockLocked()`, not `disableInternet()`.
+- Replies to a child go to `TimeExtensionRequest.childDeviceName`, which must be the Bonjour connection identity (the paired name), never the name the child self-reports in a payload.
+- `BonjourService` callbacks and `ChildRequestLog` run on the main queue; `connectedIdentities` / `isParentConnected` are the only "is the peer reachable" signals (an entry in `parentConnections` may still be handshaking).
 - `SWIFT_STRICT_CONCURRENCY` is `minimal` on all targets.
 - Full end-to-end daemon/agent testing requires Developer ID signing (`SMAppService`/XPC mach services enforce it); unsigned builds run the UI but daemon/agent connections fail.
