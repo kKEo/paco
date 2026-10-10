@@ -1,5 +1,7 @@
 # PaCo — Parental Control for macOS
 
+[![CI](https://github.com/kKEo/paco/actions/workflows/ci.yml/badge.svg)](https://github.com/kKEo/paco/actions/workflows/ci.yml) [![Docs](https://github.com/kKEo/paco/actions/workflows/docs.yml/badge.svg)](https://github.com/kKEo/paco/actions/workflows/docs.yml)
+
 A personal-use macOS parental control app with internet on/off scheduling, app restrictions, usage tracking, and a child time-extension request/approve workflow.
 
 ## Requirements

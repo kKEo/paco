@@ -21,6 +21,8 @@ make notarize TEAM_ID=ABCDE12345 NOTARY_PROFILE=paco
 | `NOTARY_PROFILE` | empty | `xcrun notarytool` keychain profile, created once with `xcrun notarytool store-credentials`. |
 | `VERSION` | `1.0.0` | Package version and file name. |
 
+Tagged releases are built by the Release workflow; see [Continuous integration](continuous-integration.md#release).
+
 ## Package layout
 
 `make pkg` stages `build/pkg-root/`:

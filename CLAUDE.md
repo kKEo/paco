@@ -32,6 +32,12 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests \
   -only-testing:PaCoTests/ScheduleEvaluatorTests/testSomething
 ```
 
+### CI (GitHub Actions)
+
+- `ci.yml`: XcodeGen project-sync check (pinned `XCODEGEN_VERSION` — bump it when upgrading XcodeGen locally), Debug build, tests, Release build; ad-hoc signed on `macos-15`.
+- `docs.yml`: `python3 .github/scripts/check_book.py` — links, anchors, SUMMARY, images, and that `docs/diagrams/*.py` reproduce the committed SVGs. Regenerate diagrams after editing the scripts.
+- `release.yml`: on `v*` tags, signed + notarized pkg published as a GitHub Release. Needs the `TEAM_ID` variable and the signing/notary secrets listed in its header.
+
 ## Architecture
 
 One Xcode project, four targets:

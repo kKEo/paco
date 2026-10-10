@@ -36,4 +36,6 @@ make build
 xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug
 ```
 
+CI runs the same build and tests on every pull request, plus a Release build and a project-sync check; see [Continuous integration](continuous-integration.md).
+
 Run the relevant items of the [manual test plan](testing.md#manual-test-plan) when touching the daemon, agent or networking.

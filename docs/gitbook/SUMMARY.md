@@ -35,6 +35,7 @@
 * [Usage tracking](developer-guide/usage-tracking.md)
 * [Testing](developer-guide/testing.md)
 * [Packaging and release](developer-guide/packaging.md)
+* [Continuous integration](developer-guide/continuous-integration.md)
 * [Debugging](developer-guide/debugging.md)
 * [Contributing](developer-guide/contributing.md)
 * [Known limitations and roadmap](developer-guide/known-limitations.md)

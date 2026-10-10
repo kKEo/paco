@@ -1,0 +1,43 @@
+# Check the GitBook: links, anchors, table of contents, images, and that the
+# diagrams in docs/diagrams reproduce the committed SVGs.
+name: Docs
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - '.gitbook.yaml'
+      - '.github/scripts/check_book.py'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.gitbook.yaml'
+      - '.github/scripts/check_book.py'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-book:
+    name: Check book
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check links, images and diagrams
+        run: python3 .github/scripts/check_book.py

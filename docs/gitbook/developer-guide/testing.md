@@ -24,7 +24,7 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug
 | `FrameCodecTests` | 4 | Encode/decode, big-endian header, malformed headers |
 | `PINManagerTests` | 4 | Hashing and verification |
 
-There are 67 tests in total. None of them touch the Keychain, launchd, pf or the network.
+There are 67 tests in total, run by the CI workflow on every push and pull request. None of them touch the Keychain, launchd, pf or the network.
 
 ## Manual test plan
 

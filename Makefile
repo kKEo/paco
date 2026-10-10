@@ -6,6 +6,8 @@ APP_IDENTITY ?= Developer ID Application
 PKG_IDENTITY ?= Developer ID Installer
 # `xcrun notarytool store-credentials <profile>` once, then `make notarize NOTARY_PROFILE=<profile>`.
 NOTARY_PROFILE ?=
+# Optional: keychain holding NOTARY_PROFILE when it is not in the default search list (CI).
+NOTARY_KEYCHAIN ?=
 ifneq ($(TEAM_ID),)
 SIGN_FLAGS := DEVELOPMENT_TEAM=$(TEAM_ID) CODE_SIGN_STYLE=Manual \
 	CODE_SIGN_IDENTITY="$(APP_IDENTITY)" ENABLE_HARDENED_RUNTIME=YES OTHER_CODE_SIGN_FLAGS=--timestamp
@@ -100,7 +102,8 @@ pkg: build-release
 # Submit the signed pkg to Apple and staple the ticket. Requires TEAM_ID and NOTARY_PROFILE.
 notarize: pkg
 	@test -n "$(NOTARY_PROFILE)" || { echo "Set NOTARY_PROFILE (see 'xcrun notarytool store-credentials')"; exit 1; }
-	xcrun notarytool submit "$(PKG_OUT)" --keychain-profile "$(NOTARY_PROFILE)" --wait
+	xcrun notarytool submit "$(PKG_OUT)" --keychain-profile "$(NOTARY_PROFILE)" \
+		$(if $(NOTARY_KEYCHAIN),--keychain "$(NOTARY_KEYCHAIN)",) --wait
 	xcrun stapler staple "$(PKG_OUT)"
 
 clean:

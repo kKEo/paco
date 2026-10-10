@@ -1,0 +1,165 @@
+# Build a Developer ID–signed installer, notarize it, and publish it as a GitHub Release.
+#
+# Triggered by pushing a tag such as v1.2.0, or manually (which uploads the pkg as a
+# workflow artifact instead of creating a release).
+#
+# Repository configuration (Settings → Secrets and variables → Actions, or the
+# "release" environment):
+#   variable  TEAM_ID                         10-character Apple Developer Team ID
+#   secret    DEVELOPER_ID_APPLICATION_P12    base64 of the "Developer ID Application" .p12
+#   secret    DEVELOPER_ID_INSTALLER_P12      base64 of the "Developer ID Installer" .p12
+#   secret    CERTIFICATES_P12_PASSWORD       password of both .p12 files
+#   secret    NOTARY_APPLE_ID                 Apple ID used for notarization
+#   secret    NOTARY_APP_PASSWORD             app-specific password for that Apple ID
+#
+# Export a .p12 as base64 with:  base64 -i DeveloperIDApplication.p12 | pbcopy
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for the package file name (no leading v)'
+        required: true
+        default: '0.0.0-dev'
+      notarize:
+        description: 'Submit the package to Apple for notarization'
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Signed package
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: release
+    env:
+      TEAM_ID: ${{ vars.TEAM_ID }}
+      DEVELOPER_ID_APPLICATION_P12: ${{ secrets.DEVELOPER_ID_APPLICATION_P12 }}
+      DEVELOPER_ID_INSTALLER_P12: ${{ secrets.DEVELOPER_ID_INSTALLER_P12 }}
+      CERTIFICATES_P12_PASSWORD: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+      NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+      NOTARY_APP_PASSWORD: ${{ secrets.NOTARY_APP_PASSWORD }}
+      NOTARIZE: ${{ github.event_name == 'push' || inputs.notarize }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Check configuration
+        run: |
+          missing=()
+          for name in TEAM_ID DEVELOPER_ID_APPLICATION_P12 DEVELOPER_ID_INSTALLER_P12 CERTIFICATES_P12_PASSWORD; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ "$NOTARIZE" = "true" ]; then
+            for name in NOTARY_APPLE_ID NOTARY_APP_PASSWORD; do
+              [ -n "${!name}" ] || missing+=("$name")
+            done
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing release configuration: ${missing[*]}. See the header of .github/workflows/release.yml."
+            exit 1
+          fi
+
+      - name: Determine version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$INPUT_VERSION"
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a version like 1.2.0 or 1.2.0-beta.1"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "PKG=build/PaCo-$VERSION.pkg" >> "$GITHUB_ENV"
+          echo "Building PaCo $VERSION"
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Import signing certificates
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          for name in DEVELOPER_ID_APPLICATION_P12 DEVELOPER_ID_INSTALLER_P12; do
+            p12="$RUNNER_TEMP/$name.p12"
+            printf '%s' "${!name}" | base64 --decode > "$p12"
+            security import "$p12" -k "$KEYCHAIN" -P "$CERTIFICATES_P12_PASSWORD" -f pkcs12 \
+              -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+            rm -f "$p12"
+          done
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          # Put the temporary keychain first in the search list so codesign and pkgbuild find the identities.
+          existing=()
+          while IFS= read -r line; do
+            line="${line#"${line%%[![:space:]]*}"}"   # trim leading spaces
+            existing+=("${line//\"/}")               # drop surrounding quotes
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$KEYCHAIN" "${existing[@]}"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
+      - name: Store notarization credentials
+        if: env.NOTARIZE == 'true'
+        run: |
+          xcrun notarytool store-credentials paco \
+            --apple-id "$NOTARY_APPLE_ID" --team-id "$TEAM_ID" --password "$NOTARY_APP_PASSWORD" \
+            --keychain "$KEYCHAIN"
+
+      - name: Build signed package
+        if: env.NOTARIZE != 'true'
+        run: make pkg TEAM_ID="$TEAM_ID" VERSION="$VERSION"
+
+      - name: Build, sign and notarize package
+        if: env.NOTARIZE == 'true'
+        run: make notarize TEAM_ID="$TEAM_ID" VERSION="$VERSION" NOTARY_PROFILE=paco NOTARY_KEYCHAIN="$KEYCHAIN"
+
+      - name: Verify package signature
+        run: |
+          pkgutil --check-signature "$PKG"
+          if [ "$NOTARIZE" = "true" ]; then
+            xcrun stapler validate "$PKG"
+          fi
+          shasum -a 256 "$PKG" | tee "$PKG.sha256"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaCo-${{ env.VERSION }}
+          path: |
+            ${{ env.PKG }}
+            ${{ env.PKG }}.sha256
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$PKG" "$PKG.sha256" \
+            --title "PaCo $VERSION" --generate-notes --verify-tag
+
+      - name: Remove temporary keychain
+        if: always()
+        run: |
+          if [ -n "${KEYCHAIN:-}" ]; then
+            security delete-keychain "$KEYCHAIN" || true
+          fi

@@ -1,0 +1,100 @@
+# Build every target and run the unit tests on each push and pull request.
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitbook.yaml'
+      - '.github/workflows/docs.yml'
+      - '.github/workflows/release.yml'
+      - '.github/scripts/check_book.py'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitbook.yaml'
+      - '.github/workflows/docs.yml'
+      - '.github/workflows/release.yml'
+      - '.github/scripts/check_book.py'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with the version used locally: generated project files differ between versions.
+  XCODEGEN_VERSION: 2.45.4
+
+# CI builds are ad-hoc signed (CODE_SIGN_IDENTITY=-). The daemon refuses XPC peers from such
+# builds, which is fine: nothing here runs the daemon, and the unit tests only link PaCoShared.
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen ${{ env.XCODEGEN_VERSION }}
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Check PaCo.xcodeproj matches project.yml
+        run: |
+          xcodegen generate --quiet
+          if ! git diff --quiet -- PaCo.xcodeproj; then
+            echo "::error::PaCo.xcodeproj is out of date. Run 'xcodegen generate' and commit the result."
+            git diff --stat -- PaCo.xcodeproj
+            exit 1
+          fi
+
+      - name: Build (Debug)
+        run: |
+          set -o pipefail
+          xcodebuild build -quiet \
+            -project PaCo.xcodeproj -scheme PaCo -configuration Debug \
+            -destination "platform=macOS" -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM=
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test -quiet \
+            -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug \
+            -destination "platform=macOS" -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/PaCoTests.xcresult" \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM=
+
+      # Release compiles without DEBUG, so it also catches code that only builds under #if DEBUG.
+      - name: Build (Release)
+        run: |
+          set -o pipefail
+          xcodebuild build -quiet \
+            -project PaCo.xcodeproj -scheme PaCo -configuration Release \
+            -destination "platform=macOS" -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM=
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaCoTests.xcresult
+          path: ${{ runner.temp }}/PaCoTests.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
