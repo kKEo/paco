@@ -1,0 +1,9 @@
+/* Figures: centred, scaled to the column, caption under the image. */
+.markdown-section figure { margin: 1.5em 0; text-align: center; }
+.markdown-section figure img { max-width: 100%; height: auto; }
+.markdown-section figcaption { color: #64748b; font-size: 0.9em; margin-top: 0.4em; }
+.markdown-section figcaption p { margin: 0; }
+/* Mermaid diagrams: allow horizontal scroll on narrow screens. */
+.markdown-section .mermaid { overflow-x: auto; text-align: center; margin: 1.5em 0; }
+.markdown-section .mermaid-failed { white-space: pre; text-align: left; font-family: monospace; }
+.book-header .paco-repo { font-size: 13px; font-weight: 600; padding: 0 12px; }

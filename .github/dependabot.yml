@@ -7,3 +7,9 @@ updates:
       interval: weekly
     commit-message:
       prefix: ci
+  - package-ecosystem: npm
+    directory: /docs/site
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: docs

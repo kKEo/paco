@@ -9,7 +9,8 @@ A schedule turns the internet off between two times on the days you choose. Whil
 ## Add a schedule
 
 1. Open **Schedules** and click **Add Schedule**. You need at least one [profile](profiles.md) first.
-2. Fill in the form:
+2. Fill in the form. The fields are described below.
+3. Click **Create**. The schedule takes effect right away and is sent to the child's Mac.
 
 | Field | Meaning |
 |---|---|
@@ -19,8 +20,6 @@ A schedule turns the internet off between two times on the days you choose. Whil
 | **Internet OFF at** | When the internet goes off. Minutes are in 15-minute steps. |
 | **Internet ON at** | When the internet comes back. |
 | **Grace period** | 0–15 minutes during which the internet stays on after the off time. The default is 5. |
-
-3. Click **Create**. The schedule takes effect right away and is sent to the child's Mac.
 
 ## How days and times work
 

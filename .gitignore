@@ -17,6 +17,9 @@ PaCoShared/build/
 *.hmap
 *.msgpack
 
+# Docs site (HonKit)
+docs/site/node_modules/
+
 # Swift Package Manager
 .build/
 .swiftpm/

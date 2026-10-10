@@ -1,0 +1,8 @@
+{
+  "name": "gitbook-plugin-paco",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PaCo docs site tweaks: client-side Mermaid rendering and a link back to the repository.",
+  "main": "index.js",
+  "engines": { "gitbook": ">=3.0.0" }
+}

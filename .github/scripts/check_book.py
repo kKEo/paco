@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Consistency checks for the GitBook in docs/gitbook.
 
+0. No template tags other than the {% hint %} callouts (they break both renderers).
 1. Every relative Markdown link points to an existing file, and every #anchor
    matches a heading in the target page (GitBook slug rules).
 2. Every page is listed in SUMMARY.md, and every SUMMARY entry exists.
@@ -38,6 +39,14 @@ def slug(heading):
 pages = sorted(glob.glob(f'{BOOK}/**/*.md', recursive=True))
 pages = [p for p in pages if '/.gitbook/' not in p]
 anchors = {os.path.normpath(p): {slug(h) for h in re.findall(r'(?m)^#+\s+(.*)$', open(p).read())} for p in pages}
+
+# 0. template tags: GitBook and HonKit both treat {% ... %} as template syntax, even
+#    inside code spans, so only the hint callout tags may appear.
+for page in pages:
+    for n, line in enumerate(open(page).read().split('\n'), 1):
+        for tag in re.findall(r'{%.*?%}', line):
+            if not re.fullmatch(r'{%\s*(hint\s+style="(info|warning|danger|success)"|endhint)\s*%}', tag):
+                error(f'{page}:{n}: template tag {tag} is not allowed (only hint callouts); rephrase it')
 
 # 1. links and anchors
 for page in pages:

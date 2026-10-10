@@ -10,6 +10,7 @@ on:
       - '.gitbook.yaml'
       - '.github/workflows/docs.yml'
       - '.github/workflows/release.yml'
+      - '.github/workflows/pages.yml'
       - '.github/scripts/check_book.py'
   pull_request:
     paths-ignore:
@@ -18,6 +19,7 @@ on:
       - '.gitbook.yaml'
       - '.github/workflows/docs.yml'
       - '.github/workflows/release.yml'
+      - '.github/workflows/pages.yml'
       - '.github/scripts/check_book.py'
   workflow_dispatch:
 

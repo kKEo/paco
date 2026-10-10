@@ -1,15 +1,16 @@
 ---
-description: The GitHub Actions workflows, what they check, and how to cut a release.
+description: The GitHub Actions workflows, what they check, how the docs site is published, and how to cut a release.
 ---
 
 # Continuous integration
 
-Three workflows live in `.github/workflows/`. Dependabot (`.github/dependabot.yml`) keeps the actions they use up to date.
+Four workflows live in `.github/workflows/`. Dependabot (`.github/dependabot.yml`) keeps the actions and the docs site's npm packages up to date.
 
 | Workflow | Runs on | Trigger | What it does |
 |---|---|---|---|
 | **CI** (`ci.yml`) | `macos-15` | Push to `master`, pull requests, manual | Checks the Xcode project is in sync, builds Debug, runs the tests, builds Release |
 | **Docs** (`docs.yml`) | `ubuntu-latest` | Changes under `docs/` | Checks the book's links, table of contents, images and diagrams |
+| **Pages** (`pages.yml`) | `ubuntu-latest` | Changes under `docs/` | Builds the book into a static site; deploys it to GitHub Pages from `master` |
 | **Release** (`release.yml`) | `macos-15` | Tag `v*`, manual | Builds a signed pkg, notarizes it, publishes a GitHub Release |
 
 CI skips commits that only touch documentation, and Docs runs only for them, so each kind of change pays only for its own checks.
@@ -46,6 +47,32 @@ When the last check fails, regenerate the diagrams and commit them:
 python3 docs/diagrams/ug.py docs/gitbook/.gitbook/assets
 python3 docs/diagrams/dg.py docs/gitbook/.gitbook/assets
 ```
+
+## Pages
+
+The book is published at [kkeo.github.io/paco](https://kkeo.github.io/paco/). The source stays in GitBook format in `docs/gitbook/`; `docs/site/` turns it into a static site with [HonKit](https://github.com/honkit/honkit), the maintained fork of the original GitBook tool.
+
+| File | Role |
+|---|---|
+| `docs/site/package.json`, `package-lock.json` | Pinned HonKit and plugins |
+| `docs/site/book.json` | Site title and plugins: `hints` for the callout blocks, and the local `paco` plugin |
+| `docs/site/plugin/` | Local plugin: renders Mermaid diagrams in the browser with a pinned Mermaid version, styles figures, adds a GitHub link |
+| `docs/site/build.sh` | Copies the book, moves `.gitbook/assets` to `assets/` (static hosts skip dot-folders), runs HonKit, adds `.nojekyll` |
+| `docs/site/check_site.py` | Fails on broken links, anchors or images in the HTML, `.md` links, and unrendered callouts or tables |
+
+Pull requests that touch `docs/` build and check the site without deploying. Pushes to `master` also deploy it. Pages must use **GitHub Actions** as its source (*Settings → Pages*), which is already the case for this repository.
+
+To preview locally:
+
+```bash
+cd docs/site && npm ci && ./build.sh
+python3 check_site.py ../../build/site
+python3 -m http.server --directory ../../build/site 8000   # then open http://localhost:8000
+```
+
+{% hint style="info" %}
+HonKit's Markdown parser does not support a table nested inside a list item. End the list first and put the table after it; `check_site.py` catches raw table syntax in the output.
+{% endhint %}
 
 ## Release
 

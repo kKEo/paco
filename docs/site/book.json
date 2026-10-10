@@ -1,0 +1,15 @@
+{
+  "title": "PaCo",
+  "description": "Parental control for macOS: user guide and developer guide.",
+  "language": "en",
+  "plugins": ["hints", "paco", "-sharing", "-fontsettings"],
+  "pluginsConfig": {
+    "paco": {
+      "repository": "https://github.com/kKEo/paco"
+    }
+  },
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  }
+}

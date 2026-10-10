@@ -1,0 +1,14 @@
+{
+  "name": "paco-docs-site",
+  "private": true,
+  "description": "Builds the GitBook in docs/gitbook into a static site for GitHub Pages.",
+  "scripts": {
+    "build": "./build.sh",
+    "check": "python3 check_site.py ../../build/site"
+  },
+  "devDependencies": {
+    "gitbook-plugin-hints": "1.0.2",
+    "gitbook-plugin-paco": "file:./plugin",
+    "honkit": "6.2.2"
+  }
+}
