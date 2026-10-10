@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="260" viewBox="0 0 760 260" role="img" aria-labelledby="t d">
+<title id="t">What decides whether the internet is on</title>
+<desc id="d">First the manual switch, then an approved time request, then the schedules.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="259" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="110" y="24" width="620" height="62" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<circle cx="140" cy="55" r="15" fill="#7C3AED"/>
+<text x="140" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<text x="166" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="start">Manual switch on Home</text>
+<text x="166" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#64748B" text-anchor="start">On or off for 60 minutes, then the schedule resumes</text>
+<rect x="132" y="100" width="576" height="62" rx="12" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<circle cx="162" cy="131" r="15" fill="#16A34A"/>
+<text x="162" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<text x="188" y="127" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="start">Approved time request</text>
+<text x="188" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#64748B" text-anchor="start">On for the minutes you granted</text>
+<rect x="154" y="176" width="532" height="62" rx="12" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<circle cx="184" cy="207" r="15" fill="#2563EB"/>
+<text x="184" y="212" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<text x="210" y="203" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="start">Schedules</text>
+<text x="210" y="222" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#64748B" text-anchor="start">If any active schedule says off, the internet is off</text>
+<line x1="58" y1="228" x2="58" y2="34" stroke="#334155" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-slate)"/>
+<text x="46" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#334155" text-anchor="end">wins</text>
+<text x="46" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#334155" text-anchor="end">first</text>
+</svg>

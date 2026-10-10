@@ -28,6 +28,8 @@ Codable mirrors used across process and network boundaries, because the daemon a
 
 ## Files
 
+<figure><img src="../.gitbook/assets/dg-storage.svg" alt="Root-owned files under /Library/Application Support/PaCo and /etc; per-user files under ~/Library/Application Support/com.paco; Keychain items under service com.paco.keychain."><figcaption><p>Where each piece of data lives.</p></figcaption></figure>
+
 | Path | Owner | Content |
 |---|---|---|
 | `/Library/Application Support/PaCo/policy.json` | root, `0644` | `DaemonPolicy` |

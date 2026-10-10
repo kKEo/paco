@@ -20,6 +20,8 @@ Everything stays on your local network. PaCo has no cloud account and sends noth
 
 You install PaCo on the parent's Mac and on the child's Mac. The parent's Mac holds the rules and sends them to the child's Mac over an encrypted connection on your home network. The child's Mac enforces them with a background service that runs even when nobody is logged in to PaCo, and keeps enforcing the last rules it received when the parent's Mac is away.
 
+<figure><img src=".gitbook/assets/ug-overview.svg" alt="The parent's Mac sends rules and approvals to the child's Mac over an encrypted home-network connection; the child's Mac enforces them."><figcaption><p>Your Mac holds the rules; the child’s Mac enforces them.</p></figcaption></figure>
+
 ## Where to start
 
 | You are… | Read |

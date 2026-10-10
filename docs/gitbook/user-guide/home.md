@@ -14,6 +14,8 @@ description: The Home page, pending requests, and switching the internet on or o
 
 ## The manual switch
 
+<figure><img src="../.gitbook/assets/ug-precedence.svg" alt="The manual switch wins over approved requests, which win over schedules."><figcaption><p>The manual switch beats everything else while it lasts.</p></figcaption></figure>
+
 Flipping a profile card's switch turns the internet on or off **for 60 minutes**. After that, your schedules take over again. Click **Back to schedule** in the blue banner to end the override early.
 
 The manual switch beats both schedules and approved requests while it lasts. Approving a time request ends a manual "off", so your approval is not silently cancelled.

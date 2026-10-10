@@ -30,6 +30,8 @@ The destinations come from `FirewallRuleBuilder.passDestinations`: private IPv4 
 **pf evaluates every rule and the last match wins**, unless a rule is `quick`. Without `quick`, the final `block` would override every `pass`. Pass rules must stay `quick` and precede the block. `FirewallRuleTests` enforces this.
 {% endhint %}
 
+<figure><img src="../.gitbook/assets/dg-pf-rules.svg" alt="For a packet to 192.168.1.20, without quick the block rule matches last and the packet is blocked; with quick the pass rule for 192.168.0.0/16 stops evaluation and the packet passes."><figcaption><p>Why every pass rule must be quick.</p></figcaption></figure>
+
 ## Applying and lifting the block
 
 **Block** (`disableInternet` → `applyBlockLocked`):

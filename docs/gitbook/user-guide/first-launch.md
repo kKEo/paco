@@ -12,6 +12,8 @@ Click the shield in the menu bar. The first time, PaCo shows **Welcome to PaCo**
 2. Enter a 6-digit PIN twice and click **Create**.
 3. The parent dashboard opens.
 
+<figure><img src="../.gitbook/assets/ug-dashboard.svg" alt="The parent dashboard with a sidebar of eight sections and the Home page showing a pending request, a manual override banner and a profile card with a switch."><figcaption><p>The parent dashboard, open on Home.</p></figcaption></figure>
+
 The PIN protects every parent screen. You will be asked for it each time you open the dashboard. Choose a PIN your child does not know and cannot guess.
 
 The dashboard has these sections in the sidebar:

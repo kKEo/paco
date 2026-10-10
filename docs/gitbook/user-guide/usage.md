@@ -20,6 +20,8 @@ In this version, a child Mac's usage is shown on the child's Mac only. It is not
 
 ## How time is counted
 
+<figure><img src="../.gitbook/assets/ug-usage.svg" alt="Ten-minute timeline: Safari, Minecraft and Notes accrue time only while in front; a background helper is never counted."><figcaption><p>Only the app in front accrues time.</p></figcaption></figure>
+
 * Only the app in front counts. An app open in the background does not add time.
 * An app's time counts while it is still open, not only after it quits.
 * Only regular apps with a Dock icon are counted, not background helpers.

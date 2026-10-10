@@ -15,6 +15,8 @@ Every Mac running PaCo has one role, chosen the first time PaCo opens.
 | **Parent** | Your Mac | Holds the profiles, schedules and app rules. Approves time requests. Protected by your PIN. |
 | **Child** | Your child's Mac | Enforces the rules it receives from your Mac. Shows the child their status and lets them ask for more time. |
 
+<figure><img src="../.gitbook/assets/ug-overview.svg" alt="Parent's Mac and child's Mac on the home network, linked by an encrypted connection."><figcaption><p>The two roles and what travels between them.</p></figcaption></figure>
+
 ## Typical setup
 
 1. [Install PaCo](installation.md) on both Macs.
@@ -31,6 +33,8 @@ From then on your Mac sends every change to the child's Mac automatically whenev
 ## The menu bar icon
 
 PaCo lives in the menu bar, not in the Dock. Click the shield icon to open it.
+
+<figure><img src="../.gitbook/assets/ug-menubar.svg" alt="Three menu bar states: green shield for internet on, red shield with slash for internet off, grey shield with slash for service unreachable."><figcaption><p>The three states of the menu bar icon.</p></figcaption></figure>
 
 | Icon | Meaning |
 |---|---|

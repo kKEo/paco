@@ -8,6 +8,8 @@ App rules close apps your child should not use. When a blocked app opens, PaCo c
 
 ## Rule types
 
+<figure><img src="../.gitbook/assets/ug-app-rules.svg" alt="Evening timeline from 16:00 to 24:00: the Always Blocked app is blocked all evening; the Follows Schedule app is allowed until 21:00, blocked after, and allowed again during an approved request from 21:30 to 22:00."><figcaption><p>Always Blocked versus Follows Schedule over one evening.</p></figcaption></figure>
+
 | Type | Behaviour |
 |---|---|
 | **Always Blocked** | The app is closed every time it opens. |

@@ -38,6 +38,8 @@ Granting an extension clears a manual override whose `enabled` is `false`, so a 
 
 `PaCoDaemon/PolicyEngine.swift` owns the policy inside the daemon.
 
+<figure><img src="../.gitbook/assets/dg-policy-pipeline.svg" alt="XPC calls go through mutate(), which persists policy.json and swaps the in-memory DaemonPolicy; that updates the ProcessManager allowlist, is read by the agent, and feeds internetAction(), which drives FirewallManager only on state changes, every 30 seconds and after each mutation."><figcaption><p>From XPC call to firewall.</p></figcaption></figure>
+
 * **Load.** At init it reads `/Library/Application Support/PaCo/policy.json` (falls back to `.empty`) and seeds `ProcessManager` with `restrictedBundleIDs`.
 * **Mutate.** Every XPC mutation goes through `mutate(_:)`: copy, change, stamp `updatedAt`, persist atomically with mode `0644`, swap in, update the kill allowlist, then schedule an immediate evaluation. If persisting fails the in-memory policy is unchanged and the XPC call replies with the error.
 * **Evaluate.** A `DispatchSourceTimer` on a private queue fires 1 s after start and every 30 s. `.allowed` enables, `.blocked` disables, `.gracePeriod` leaves the current state alone and logs the remaining time.
@@ -54,6 +56,8 @@ The policy lock (`NSLock`) is never held while calling the firewall.
 1. An `overrideUntil` in the future returns `.allowed`.
 2. Inactive schedules are ignored. No active schedules returns `.allowed`.
 3. Each schedule is evaluated alone. Any `.blocked` wins immediately; otherwise a `.gracePeriod` wins over `.allowed`.
+
+<figure><img src="../.gitbook/assets/dg-evaluator-windows.svg" alt="A same-day 09:00 to 15:00 window requires day D selected; an overnight 21:00 to 07:00 window on D has a part before midnight that checks D and a part after midnight that checks yesterday, which is also D; the first 15 minutes are a grace period."><figcaption><p>Day attribution for same-day and overnight windows.</p></figcaption></figure>
 
 Per-schedule rules (`evaluateSingle`):
 

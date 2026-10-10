@@ -6,6 +6,8 @@ description: How a child asks for more internet time and how you answer.
 
 When the internet is off, your child can ask for more time. You decide on your Mac, and an approval turns the internet on immediately on their Mac for the minutes they asked for.
 
+<figure><img src="../.gitbook/assets/ug-request-flow.svg" alt="The child sends a 30-minute request, you approve it on your Mac, and the child's Mac shows Internet is ON until 21:28."><figcaption><p>A request from start to finish.</p></figcaption></figure>
+
 ## What the child does
 
 1. Click the shield in the menu bar and then **Request More Time**.\

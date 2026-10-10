@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t d">
+<title id="t">A time request from start to finish</title>
+<desc id="d">The child sends a request, you approve it on your Mac, and the child's internet turns on immediately.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="299" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="20" y="20" width="220" height="260" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="38" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Child's Mac</text>
+<text x="38" y="63" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">asks for time</text>
+<rect x="270" y="20" width="220" height="260" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="288" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Your Mac</text>
+<text x="288" y="63" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">Requests</text>
+<rect x="520" y="20" width="220" height="260" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="538" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Child's Mac</text>
+<text x="538" y="63" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">gets the answer</text>
+<path d="M246,150 L262,150" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-faint)"/>
+<path d="M496,150 L512,150" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-faint)"/>
+<rect x="38" y="84" width="188" height="172" rx="14" fill="#0F172A" opacity="0.08"/>
+<rect x="36" y="80" width="188" height="172" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2"/>
+<text x="130" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Request More Time</text>
+<rect x="54" y="118" width="152" height="28" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<text x="66" y="137" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#0F172A" text-anchor="start">30 minutes</text>
+<text x="190" y="137" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#64748B" text-anchor="end">−  +</text>
+<rect x="54" y="154" width="152" height="28" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<text x="66" y="173" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#64748B" text-anchor="start">Finish homework</text>
+<rect x="54" y="200" width="152" height="28" rx="6" fill="#2563EB"/>
+<text x="130.0" y="218.32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">Send Request</text>
+<rect x="284" y="84" width="192" height="132" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<circle cx="306" cy="110" r="10" fill="#fff" stroke="#EA580C" stroke-width="1.7999999999999998"/>
+<path d="M306,104.5 L306,110 L310.2,112.5" stroke="#EA580C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<text x="324" y="108" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F172A" text-anchor="start">Alex's MacBook</text>
+<text x="324" y="124" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">30 min</text>
+<text x="298" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">Finish homework</text>
+<text x="298" y="166" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#94A3B8" text-anchor="start">Today 20:58</text>
+<rect x="298" y="180" width="76" height="26" rx="6" fill="#2563EB"/>
+<text x="336.0" y="197.32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">Approve</text>
+<rect x="384" y="180" width="76" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<text x="422.0" y="197.32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#DC2626" text-anchor="middle">Deny</text>
+<text x="380" y="250" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Approve needs the child’s</text>
+<text x="380" y="265" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Mac to be connected</text>
+<path d="M630,88 L649.68,97.12 L649.68,113.92 Q649.68,130.72 630,138.88 Q610.32,130.72 610.32,113.92 L610.32,97.12 Z" fill="#16A34A" stroke="#16A34A" stroke-width="2.88" stroke-linejoin="round"/>
+<path d="M630,88 L649.68,97.12 L649.68,113.2 L630,113.2 Z M610.32,113.2 L630,113.2 L630,138.88 Q610.32,130.72 610.32,113.92 Z" fill="#fff" opacity="0.42"/>
+<text x="630" y="166" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">Internet is ON</text>
+<rect x="536" y="182" width="188" height="44" rx="10" fill="#DCFCE7"/>
+<circle cx="556" cy="204" r="9" fill="#16A34A"/>
+<path d="M551.95,204 L555.1,207.42 L560.5,200.85" stroke="#fff" stroke-width="2.5200000000000005" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="572" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0F172A" text-anchor="start">Approved — internet</text>
+<text x="572" y="216" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0F172A" text-anchor="start">on until 21:28</text>
+<text x="630" y="250" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Then the schedule applies</text>
+<text x="630" y="265" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">again</text>
+</svg>

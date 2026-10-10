@@ -15,28 +15,7 @@ description: The four targets, what each owns, and how they fit together.
 
 ## Process diagram
 
-```mermaid
-flowchart LR
-  subgraph ParentMac[Parent's Mac]
-    PApp[PaCo.app\nParent role]
-    PD[PaCoDaemon\nroot]
-    PA[PaCoAgent]
-    PApp -- XPC: policy, manual toggle --> PD
-    PA -- XPC: fetchPolicy, kill --> PD
-    PA -- usage.json --> PApp
-  end
-  subgraph ChildMac[Child's Mac]
-    CApp[PaCo.app\nChild role]
-    CD[PaCoDaemon\nroot]
-    CA[PaCoAgent]
-    CApp -- XPC: policy, override --> CD
-    CA -- XPC: fetchPolicy, kill --> CD
-    CA -- usage.json --> CApp
-  end
-  PApp <-- Bonjour + TLS-PSK\npolicy, requests, PIN checks --> CApp
-  PD -- pfctl --> PF1[(pf anchor)]
-  CD -- pfctl --> PF2[(pf anchor)]
-```
+<figure><img src="../.gitbook/assets/dg-architecture.svg" alt="Two Macs; on each, PaCo.app and PaCoAgent in the user session talk to the root PaCoDaemon over XPC; the daemon owns policy.json and the pf anchor; the agent writes usage.json for the app; the two apps are linked by Bonjour with TLS-PSK."><figcaption><p>Processes, privilege zones and channels on both Macs.</p></figcaption></figure>
 
 ## Responsibilities in one line each
 

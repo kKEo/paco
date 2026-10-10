@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t d">
+<title id="t">Parent-side connection lifecycle</title>
+<desc id="d">Discovered paired children are connected automatically; stuck or failed connections are removed and retried.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="329" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="20" y="60" width="170" height="70" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="105.0" y="90.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Discovered</text>
+<text x="105.0" y="109.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">service seen + key stored</text>
+<rect x="250" y="60" width="170" height="70" rx="10" fill="#FFEDD5" stroke="#EA580C" stroke-width="1.5"/>
+<text x="335.0" y="90.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Connecting</text>
+<text x="335.0" y="109.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">.preparing / .waiting</text>
+<rect x="470" y="60" width="116" height="70" rx="10" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<text x="528.0" y="90.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Ready</text>
+<text x="528.0" y="109.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">.ready</text>
+<rect x="250" y="222" width="170" height="70" rx="10" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="335.0" y="252.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Removed</text>
+<text x="335.0" y="271.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">cancelled / forgotten</text>
+<line x1="190" y1="95" x2="248" y2="95" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<text x="219" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">connect</text>
+<line x1="420" y1="95" x2="468" y2="95" stroke="#16A34A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-green)"/>
+<text x="444" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">TLS ok</text>
+<line x1="335" y1="130" x2="335" y2="220" stroke="#DC2626" stroke-width="2" stroke-linecap="round" marker-end="url(#a-red)"/>
+<text x="345" y="168" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#DC2626" text-anchor="start">20 s timeout</text>
+<text x="345" y="183" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#DC2626" text-anchor="start">or .failed</text>
+<path d="M528,130 L528,257 L422,257" stroke="#DC2626" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-red)"/>
+<text x="536" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#DC2626" text-anchor="start">.failed / peer closed</text>
+<text x="536" y="205" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#DC2626" text-anchor="start">receive error</text>
+<path d="M250,257 L105,257 L105,132" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-blue)"/>
+<text x="112" y="225" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#2563EB" text-anchor="start">retry: every 30 s</text>
+<text x="112" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#2563EB" text-anchor="start">or browse change</text>
+<rect x="604" y="52" width="146" height="86" rx="10" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="616" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#16A34A" text-anchor="start">on .ready</text>
+<text x="616" y="93" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10" font-weight="400" fill="#0F172A" text-anchor="start">connectedIdentities</text>
+<text x="616" y="107" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10" font-weight="400" fill="#0F172A" text-anchor="start">+= identity</text>
+<text x="616" y="126" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#0F172A" text-anchor="start">push full policy</text>
+<line x1="586" y1="95" x2="602" y2="95" stroke="#16A34A" stroke-width="1.5" stroke-linecap="round"/>
+<text x="20" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#64748B" text-anchor="start">Driven by BonjourService.autoConnectPairedDevices()</text>
+</svg>

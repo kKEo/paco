@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="500" viewBox="0 0 760 500" role="img" aria-labelledby="t d">
+<title id="t">Trust boundaries</title>
+<desc id="d">What the monitored user can reach, and the checks at each boundary.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="499" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<text x="20" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#64748B" text-anchor="start">On the child’s Mac</text>
+<rect x="20" y="72" width="190" height="150" rx="12" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="34" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#DC2626" text-anchor="start">Monitored user</text>
+<text x="34" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• Terminal, any app</text>
+<text x="34" y="139" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• files in ~</text>
+<text x="34" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• launchctl (own domain)</text>
+<rect x="222" y="82" width="26" height="130" rx="6" fill="#334155"/>
+<circle cx="235" cy="147.0" r="12" fill="#EA580C"/>
+<text x="235" y="152.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<rect x="260" y="72" width="210" height="150" rx="12" fill="#FFEDD5" stroke="#EA580C" stroke-width="1.5"/>
+<text x="274" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#EA580C" text-anchor="start">PaCo app &amp; agent</text>
+<text x="274" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• signed com.paco.app/agent</text>
+<text x="274" y="139" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• push policy, overrides</text>
+<text x="274" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• ask to kill an app</text>
+<rect x="482" y="82" width="26" height="130" rx="6" fill="#334155"/>
+<circle cx="495" cy="147.0" r="12" fill="#EA580C"/>
+<text x="495" y="152.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<rect x="520" y="72" width="220" height="150" rx="12" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<text x="534" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#16A34A" text-anchor="start">Root daemon</text>
+<text x="534" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• policy.json (root-owned)</text>
+<text x="534" y="139" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• pf anchor com.paco</text>
+<text x="534" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• SIGKILL</text>
+<text x="534" y="177" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• integrity check / 15 s</text>
+<line x1="210" y1="147" x2="220" y2="147" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+<line x1="250" y1="147" x2="258" y2="147" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" marker-end="url(#a-faint)"/>
+<line x1="470" y1="147" x2="480" y2="147" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+<line x1="510" y1="147" x2="518" y2="147" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" marker-end="url(#a-faint)"/>
+<path d="M120,72 C140,30 600,30 620,70" stroke="#DC2626" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" marker-end="url(#a-red)"/>
+<circle cx="370" cy="40" r="9" fill="#DC2626"/>
+<path d="M366.4,36.4 L373.6,43.6 M373.6,36.4 L366.4,43.6" stroke="#fff" stroke-width="2.5200000000000005" stroke-linecap="round"/>
+<text x="370" y="63" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#DC2626" text-anchor="middle">direct edits blocked: files are root-owned</text>
+<text x="20" y="258" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#64748B" text-anchor="start">On the network</text>
+<rect x="20" y="270" width="190" height="96" rx="12" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="34" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#DC2626" text-anchor="start">Other LAN devices</text>
+<text x="34" y="318" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• anyone on Wi-Fi</text>
+<text x="34" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• with the source code</text>
+<rect x="222" y="280" width="26" height="76" rx="6" fill="#334155"/>
+<circle cx="235" cy="318.0" r="12" fill="#EA580C"/>
+<text x="235" y="323.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<rect x="260" y="270" width="210" height="96" rx="12" fill="#FFEDD5" stroke="#EA580C" stroke-width="1.5"/>
+<text x="274" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#EA580C" text-anchor="start">Child's PaCo app</text>
+<text x="274" y="318" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• accepts paired parent only</text>
+<text x="274" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">• relays to its daemon</text>
+<line x1="210" y1="318" x2="220" y2="318" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+<line x1="250" y1="318" x2="258" y2="318" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" marker-end="url(#a-faint)"/>
+<rect x="520" y="270" width="220" height="96" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="534" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#334155" text-anchor="start">Parent's PIN hash</text>
+<text x="534" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">stays on the parent’s Mac;</text>
+<text x="534" y="334" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">the child asks it to verify</text>
+<text x="534" y="352" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">(.verifyPIN, shared lockout)</text>
+<circle cx="32" cy="402" r="11" fill="#EA580C"/>
+<text x="32" y="407" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<text x="52" y="406.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">XPC code-signing requirement: same Team ID as the daemon, identifier com.paco.app or com.paco.agent</text>
+<circle cx="32" cy="432" r="11" fill="#EA580C"/>
+<text x="32" y="437" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<text x="52" y="436.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">Daemon validates input: kills only signed bundle IDs in the restricted set; overrides must end in the future</text>
+<circle cx="32" cy="462" r="11" fill="#EA580C"/>
+<text x="32" y="467" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<text x="52" y="466.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">TLS-PSK with the pairing key; an unpaired child cancels every connection</text>
+</svg>

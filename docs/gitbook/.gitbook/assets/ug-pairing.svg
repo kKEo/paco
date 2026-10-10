@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t d">
+<title id="t">Pairing in three steps</title>
+<desc id="d">Click Pair on your Mac, type the code on the child's Mac, and the two connect.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="299" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="20" y="20" width="220" height="262" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<circle cx="46" cy="46" r="13" fill="#2563EB"/>
+<text x="46" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<text x="68" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">On your Mac</text>
+<text x="68" y="61" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">Devices → Pair</text>
+<rect x="270" y="20" width="220" height="262" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<circle cx="296" cy="46" r="13" fill="#2563EB"/>
+<text x="296" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<text x="318" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">On the child's Mac</text>
+<text x="318" y="61" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">Pair with Parent</text>
+<rect x="520" y="20" width="220" height="262" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<circle cx="546" cy="46" r="13" fill="#2563EB"/>
+<text x="546" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<text x="568" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Both Macs</text>
+<text x="568" y="61" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">Connected</text>
+<path d="M246,150 L262,150" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-faint)"/>
+<path d="M496,150 L512,150" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#a-faint)"/>
+<text x="38" y="98" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" fill="#64748B" text-anchor="start">NEARBY DEVICES</text>
+<rect x="34" y="106" width="192" height="44" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<rect x="46" y="117" width="26" height="16.12" rx="1.3" fill="#2563EB"/>
+<rect x="47.3" y="118.3" width="23.400000000000002" height="13.780000000000001" rx="0.52" fill="#F8FAFC"/>
+<path d="M43.4,135.12 L74.6,135.12 L73.3,134.94 L44.7,134.94 Z" fill="#2563EB"/>
+<text x="82" y="133" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="start">Alex's MacBook</text>
+<rect x="180" y="118" width="38" height="22" rx="6" fill="#2563EB"/>
+<text x="199.0" y="133.14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">Pair</text>
+<text x="130" y="182" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#64748B" text-anchor="middle">Pairing Code</text>
+<rect x="42" y="192" width="176" height="46" rx="8" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.5"/>
+<text x="130" y="223" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" font-weight="700" fill="#2563EB" text-anchor="middle">7KQ2M9XD</text>
+<text x="130" y="262" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Read it out or show it</text>
+<rect x="292" y="96" width="180" height="150" rx="14" fill="#0F172A" opacity="0.08"/>
+<rect x="290" y="92" width="180" height="150" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2"/>
+<text x="380" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Pair with Parent</text>
+<rect x="306" y="136" width="148" height="30" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<text x="318" y="156" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#0F172A" text-anchor="start">7KQ2M9XD</text>
+<rect x="310" y="184" width="64" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<text x="342.0" y="201.32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#0F172A" text-anchor="middle">Cancel</text>
+<rect x="386" y="184" width="64" height="26" rx="6" fill="#2563EB"/>
+<text x="418.0" y="201.32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">Pair</text>
+<text x="380" y="262" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Case and spaces don’t matter</text>
+<rect x="534" y="106" width="192" height="56" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+<rect x="546" y="121" width="26" height="16.12" rx="1.3" fill="#16A34A"/>
+<rect x="547.3" y="122.3" width="23.400000000000002" height="13.780000000000001" rx="0.52" fill="#F8FAFC"/>
+<path d="M543.4,139.12 L574.6,139.12 L573.3,138.94 L544.7,138.94 Z" fill="#16A34A"/>
+<text x="582" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="start">Alex's MacBook</text>
+<circle cx="586" cy="146" r="4" fill="#16A34A"/>
+<text x="595" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#16A34A" text-anchor="start">Connected</text>
+<path d="M625.2,194.8 V190.6 A4.800000000000001,4.800000000000001 0 0 1 634.8,190.6 V194.8" stroke="#334155" stroke-width="1.92" fill="none"/>
+<rect x="622.8" y="194.56" width="14.399999999999999" height="10.8" rx="1.44" fill="#334155"/>
+<text x="630" y="232" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="middle">Rules are sent now and</text>
+<text x="630" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="middle">after every change</text>
+<text x="630" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Usually within 30 seconds</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" role="img" aria-labelledby="t d">
+<title id="t">Overnight schedules belong to the day they start</title>
+<desc id="d">A Thursday 21:00 to 07:00 schedule blocks until Friday 07:00 but not Friday evening; a daytime schedule blocks the selected day only.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="359" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="70" y="50" width="220" height="218" rx="0" fill="#F8FAFC"/>
+<text x="180.0" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Thursday</text>
+<line x1="70.0" y1="268" x2="70.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="70.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">00</text>
+<line x1="125.0" y1="268" x2="125.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="125.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">06</text>
+<line x1="180.0" y1="268" x2="180.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="180.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">12</text>
+<line x1="235.0" y1="268" x2="235.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="235.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">18</text>
+<rect x="290" y="50" width="220" height="218" rx="0" fill="#FFFFFF"/>
+<text x="400.0" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Friday</text>
+<line x1="290.0" y1="268" x2="290.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="290.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">00</text>
+<line x1="345.0" y1="268" x2="345.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="345.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">06</text>
+<line x1="400.0" y1="268" x2="400.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="400.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">12</text>
+<line x1="455.0" y1="268" x2="455.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="455.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">18</text>
+<rect x="510" y="50" width="220" height="218" rx="0" fill="#F8FAFC"/>
+<text x="620.0" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Saturday</text>
+<line x1="510.0" y1="268" x2="510.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="510.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">00</text>
+<line x1="565.0" y1="268" x2="565.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="565.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">06</text>
+<line x1="620.0" y1="268" x2="620.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="620.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">12</text>
+<line x1="675.0" y1="268" x2="675.0" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="675.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">18</text>
+<line x1="730" y1="268" x2="730" y2="273" stroke="#94A3B8" stroke-width="1" stroke-linecap="round"/>
+<text x="78" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Overnight: Thursday, OFF 21:00 → ON 07:00</text>
+<rect x="262.5" y="92" width="91.66666666666663" height="28" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="308.3333333333333" y="111" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#DC2626" text-anchor="middle">off</text>
+<rect x="482.5" y="92" width="91.66666666666663" height="28" rx="6" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="482.5" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Friday evening stays on</text>
+<text x="482.5" y="154" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">(select Friday to block it)</text>
+<text x="78" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Daytime: Thursday, OFF 09:00 → ON 15:00</text>
+<rect x="152.5" y="204" width="55.0" height="28" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="180.0" y="223" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#DC2626" text-anchor="middle">off</text>
+<text x="180.0" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">Only the selected day</text>
+<rect x="70" y="312" width="26" height="16" rx="4" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="104" y="325" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#0F172A" text-anchor="start">Internet off</text>
+<rect x="220" y="312" width="26" height="16" rx="4" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="254" y="325" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#0F172A" text-anchor="start">Not blocked: the next day is not selected</text>
+</svg>

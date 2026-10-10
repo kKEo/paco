@@ -26,6 +26,8 @@ A schedule turns the internet off between two times on the days you choose. Whil
 
 **Overnight periods belong to the day they start on.** If the off time is later than the on time, the period runs past midnight.
 
+<figure><img src="../.gitbook/assets/ug-schedule-overnight.svg" alt="Timeline over Thursday, Friday and Saturday: a Thursday 21:00 to 07:00 schedule blocks until Friday 07:00 but not Friday evening; a daytime schedule blocks only Thursday 09:00 to 15:00."><figcaption><p>Overnight periods run into the next morning; daytime periods stay on their day.</p></figcaption></figure>
+
 * *Thursday, off 21:00, on 07:00* turns the internet off on Thursday at 21:00 and back on at Friday 07:00.
 * It does not turn the internet off on Friday evening unless Friday is also selected.
 * To cover every school night, select Sunday to Thursday.
@@ -44,6 +46,8 @@ When more than one schedule applies at the same moment, the strictest wins: if a
 * To delete a schedule, use the list's delete gesture on its row (swipe left on a trackpad).
 
 ## What can override a schedule
+
+<figure><img src="../.gitbook/assets/ug-precedence.svg" alt="Three layers: the manual switch wins first, then an approved time request, then the schedules."><figcaption><p>What decides whether the internet is on, in order.</p></figcaption></figure>
 
 In order of priority:
 

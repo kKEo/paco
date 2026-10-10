@@ -16,6 +16,8 @@ All of this lives in `PaCo/Services/BonjourService.swift`, with wire types and k
 
 ## Pairing and keys
 
+<figure><img src="../.gitbook/assets/dg-pairing-crypto.svg" alt="Both Macs take the same code, normalise it, run PBKDF2-HMAC-SHA256 with 210,000 iterations and a fixed salt, get a 32-byte PSK and store it in the Keychain; a person types the code on the child, and the keys secure a TLS-PSK session."><figcaption><p>Key derivation on both sides; the code never crosses the network.</p></figcaption></figure>
+
 1. The parent generates an 8-character code from a 32-symbol alphabet (`0-9`, `A-Z` without `I L O U`), about 40 bits, from `SecRandomCopyBytes`.
 2. Both sides derive a 32-byte key with PBKDF2-HMAC-SHA256, 210,000 iterations, fixed salt `com.paco.pairing.v1`. The code is upper-cased and stripped of spaces first.
 3. Keys are stored in the Keychain (account `com.paco.pairing.keys`, a JSON list of identity/key pairs) by `PairingKeyManager`.
@@ -37,6 +39,8 @@ An unpaired child advertises over **plain TCP** only so the parent can see its n
 
 ## Auto-connect (parent)
 
+<figure><img src="../.gitbook/assets/dg-connection-states.svg" alt="Discovered to Connecting to Ready; Connecting goes to Removed after a 20-second timeout or failure; Ready goes to Removed on failure or peer close; Removed returns to Discovered on the 30-second retry or a browse change."><figcaption><p>Parent-side connection lifecycle.</p></figcaption></figure>
+
 Connecting is app-level, independent of which dashboard tab is open:
 
 * `autoConnectPairedDevices()` runs on every browse-results change and on a 30-second timer. It connects to every discovered service that has a stored key and no existing connection.
@@ -49,6 +53,8 @@ Connecting is app-level, independent of which dashboard tab is open:
 ## Framing
 
 `FrameCodec` in `Network/MessageTypes.swift`:
+
+<figure><img src="../.gitbook/assets/dg-frame-format.svg" alt="Bytes 00 00 01 2C give a big-endian length of 300, then type byte 01 for message, then 299 bytes of JSON."><figcaption><p>One frame on the wire.</p></figcaption></figure>
 
 ```
 [ UInt32 big-endian body length ][ FrameType: 1 = message, 2 = response ][ JSON ]

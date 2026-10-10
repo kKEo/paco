@@ -14,6 +14,8 @@ The adversary is the **monitored child**: logged in to a **standard** macOS acco
 
 ## Trust boundaries and mitigations
 
+<figure><img src="../.gitbook/assets/dg-trust-boundaries.svg" alt="The monitored user reaches the PaCo app and agent only through gate 1, the XPC code-signing requirement; the app reaches the daemon through gate 2, input validation; LAN devices reach the child app only through gate 3, TLS-PSK. Direct edits to root-owned files are blocked."><figcaption><p>Trust boundaries on the child’s Mac and on the network.</p></figcaption></figure>
+
 | Threat | Mitigation | Where |
 |---|---|---|
 | Edit the schedule or forge an extension on disk | Policy lives only in the daemon, persisted root-owned under `/Library/Application Support/PaCo/`; the agent only reads it | `PolicyEngine` |

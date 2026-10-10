@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t d">
+<title id="t">Always Blocked versus Follows Schedule</title>
+<desc id="d">An evening with a 21:00 off schedule and an approved request from 21:30 to 22:00.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="289" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<line x1="190.0" y1="60" x2="190.0" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="190.0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">16:00</text>
+<line x1="257.5" y1="60" x2="257.5" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="257.5" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">17:00</text>
+<line x1="325.0" y1="60" x2="325.0" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="325.0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">18:00</text>
+<line x1="392.5" y1="60" x2="392.5" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="392.5" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">19:00</text>
+<line x1="460.0" y1="60" x2="460.0" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="460.0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">20:00</text>
+<line x1="527.5" y1="60" x2="527.5" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="527.5" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">21:00</text>
+<line x1="595.0" y1="60" x2="595.0" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="595.0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">22:00</text>
+<line x1="662.5" y1="60" x2="662.5" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="662.5" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">23:00</text>
+<line x1="730.0" y1="60" x2="730.0" y2="226" stroke="#E2E8F0" stroke-width="1" stroke-linecap="round"/>
+<text x="730.0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">24:00</text>
+<text x="20" y="85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Internet</text>
+<text x="20" y="101" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="start">School nights, off 21:00</text>
+<rect x="190.0" y="70" width="337.5" height="30" rx="5" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.2"/>
+<rect x="527.5" y="70" width="33.75" height="30" rx="5" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+<rect x="561.25" y="70" width="33.75" height="30" rx="5" fill="url(#hatch)" stroke="#16A34A" stroke-width="1.2"/>
+<rect x="595.0" y="70" width="135.0" height="30" rx="5" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+<text x="20" y="139" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Always Blocked app</text>
+<rect x="190.0" y="124" width="540.0" height="30" rx="5" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+<text x="20" y="193" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Follows Schedule app</text>
+<text x="20" y="209" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="start">Blocked during School nights</text>
+<rect x="190.0" y="178" width="337.5" height="30" rx="5" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.2"/>
+<rect x="527.5" y="178" width="33.75" height="30" rx="5" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+<rect x="561.25" y="178" width="33.75" height="30" rx="5" fill="url(#hatch)" stroke="#16A34A" stroke-width="1.2"/>
+<rect x="595.0" y="178" width="135.0" height="30" rx="5" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+<text x="578.125" y="54" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#16A34A" text-anchor="middle">approved request</text>
+<line x1="578.125" y1="58" x2="578.125" y2="68" stroke="#16A34A" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="190" y="260" width="22" height="14" rx="3" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<text x="218" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">Allowed</text>
+<rect x="290" y="260" width="22" height="14" rx="3" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="318" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">Blocked</text>
+<rect x="390" y="260" width="22" height="14" rx="3" fill="url(#hatch)" stroke="#16A34A" stroke-width="1.5"/>
+<text x="418" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">Allowed by an approved request</text>
+</svg>

@@ -6,6 +6,8 @@ description: What your child sees and what a parent can do on the child's Mac.
 
 Clicking the shield on the child's Mac opens the child view.
 
+<figure><img src="../.gitbook/assets/ug-child-view.svg" alt="The child view with labels for internet status, link to your Mac, today's usage, latest request, Request More Time, Pair with Parent and Parent Access."><figcaption><p>The child view and what each part does.</p></figcaption></figure>
+
 ## The child view
 
 | Element | Meaning |
@@ -26,6 +28,8 @@ There is no Quit button in the child view, so the child cannot close PaCo from t
 
 1. Click **Parent Access**.
 2. Enter your PIN and click **Unlock**.
+
+<figure><img src="../.gitbook/assets/ug-parent-access.svg" alt="The PIN typed on the child's Mac travels encrypted to your Mac, which checks it and returns correct, wrong or locked out."><figcaption><p>Parent Access asks your Mac to check the PIN.</p></figcaption></figure>
 
 The PIN is sent to your Mac over the encrypted connection and checked there; it is never stored on the child's Mac. This means:
 

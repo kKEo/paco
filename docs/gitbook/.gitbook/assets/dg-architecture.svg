@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="540" viewBox="0 0 760 540" role="img" aria-labelledby="t d">
+<title id="t">PaCo architecture</title>
+<desc id="d">On each Mac the app and agent run in the user session and talk to the root daemon over XPC; the daemon owns policy.json and the pf anchor; the two apps talk over Bonjour with TLS-PSK.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="539" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="20" y="20" width="320" height="452" rx="16" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="180.0" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#0F172A" text-anchor="middle">Parent's Mac</text>
+<rect x="30" y="60" width="300" height="196" rx="12" fill="#F8FAFC"/>
+<text x="42" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="start">LOGGED-IN USER</text>
+<rect x="190" y="92" width="130" height="62" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="255.0" y="110.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">PaCo.app</text>
+<text x="255.0" y="129.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">SwiftData · UI</text>
+<text x="255.0" y="144.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">Bonjour peer</text>
+<rect x="40" y="92" width="130" height="62" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="105.0" y="110.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">PaCoAgent</text>
+<text x="105.0" y="129.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">app monitor</text>
+<text x="105.0" y="144.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">usage</text>
+<path d="M135,190 H213 L225,202 V226 H135 Z" fill="#fff" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M213,190 V202 H225" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="180.0" y="212.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" font-weight="400" fill="#0F172A" text-anchor="middle">usage.json</text>
+<line x1="152" y1="154" x2="157" y2="188" stroke="#7C3AED" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#a-purple)"/>
+<line x1="203" y1="190" x2="208" y2="156" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#a-blue)"/>
+<rect x="30" y="266" width="300" height="196" rx="12" fill="#E2E8F0"/>
+<text x="180.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">ROOT</text>
+<rect x="40" y="298" width="280" height="60" rx="10" fill="#334155" stroke="#334155" stroke-width="1.5"/>
+<text x="180.0" y="323.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">PaCoDaemon</text>
+<text x="180.0" y="342.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#CBD5E1" text-anchor="middle">PolicyEngine · FirewallManager · ProcessManager</text>
+<path d="M48,391 V433 A62.0,7 0 0 0 172,433 V391" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="110.0" cy="391" rx="62.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="110.0" y="416.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">policy.json</text>
+<text x="110.0" y="431.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">DaemonPolicy</text>
+<path d="M190,391 V433 A62.0,7 0 0 0 314,433 V391" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="252.0" cy="391" rx="62.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="252.0" y="416.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">com.paco</text>
+<text x="252.0" y="431.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">pf anchor</text>
+<line x1="110" y1="358" x2="110" y2="382" stroke="#334155" stroke-width="1.6" stroke-linecap="round" marker-end="url(#a-slate)"/>
+<line x1="252" y1="358" x2="252" y2="382" stroke="#334155" stroke-width="1.6" stroke-linecap="round" marker-end="url(#a-slate)"/>
+<line x1="290" y1="154" x2="290" y2="296" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="272" y="232" width="36" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="290.0" y="244.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">XPC</text>
+<line x1="70" y1="154" x2="70" y2="296" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="52" y="232" width="36" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="70.0" y="244.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">XPC</text>
+<rect x="420" y="20" width="320" height="452" rx="16" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="580.0" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#0F172A" text-anchor="middle">Child's Mac</text>
+<rect x="430" y="60" width="300" height="196" rx="12" fill="#F8FAFC"/>
+<text x="442" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="start">LOGGED-IN USER</text>
+<rect x="440" y="92" width="130" height="62" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="505.0" y="110.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">PaCo.app</text>
+<text x="505.0" y="129.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">SwiftData · UI</text>
+<text x="505.0" y="144.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">Bonjour peer</text>
+<rect x="590" y="92" width="130" height="62" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="655.0" y="110.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">PaCoAgent</text>
+<text x="655.0" y="129.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">app monitor</text>
+<text x="655.0" y="144.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">usage</text>
+<path d="M535,190 H613 L625,202 V226 H535 Z" fill="#fff" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M613,190 V202 H625" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="580.0" y="212.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" font-weight="400" fill="#0F172A" text-anchor="middle">usage.json</text>
+<line x1="608" y1="154" x2="603" y2="188" stroke="#7C3AED" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#a-purple)"/>
+<line x1="557" y1="190" x2="552" y2="156" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#a-blue)"/>
+<rect x="430" y="266" width="300" height="196" rx="12" fill="#E2E8F0"/>
+<text x="580.0" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">ROOT</text>
+<rect x="440" y="298" width="280" height="60" rx="10" fill="#334155" stroke="#334155" stroke-width="1.5"/>
+<text x="580.0" y="323.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">PaCoDaemon</text>
+<text x="580.0" y="342.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#CBD5E1" text-anchor="middle">PolicyEngine · FirewallManager · ProcessManager</text>
+<path d="M448,391 V433 A62.0,7 0 0 0 572,433 V391" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="510.0" cy="391" rx="62.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="510.0" y="416.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">policy.json</text>
+<text x="510.0" y="431.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">DaemonPolicy</text>
+<path d="M590,391 V433 A62.0,7 0 0 0 714,433 V391" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="652.0" cy="391" rx="62.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="652.0" y="416.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">com.paco</text>
+<text x="652.0" y="431.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">pf anchor</text>
+<line x1="510" y1="358" x2="510" y2="382" stroke="#334155" stroke-width="1.6" stroke-linecap="round" marker-end="url(#a-slate)"/>
+<line x1="652" y1="358" x2="652" y2="382" stroke="#334155" stroke-width="1.6" stroke-linecap="round" marker-end="url(#a-slate)"/>
+<line x1="470" y1="154" x2="470" y2="296" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="452" y="232" width="36" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="470.0" y="244.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">XPC</text>
+<line x1="690" y1="154" x2="690" y2="296" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="672" y="232" width="36" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="690.0" y="244.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">XPC</text>
+<line x1="320" y1="123" x2="440" y2="123" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-orange)" marker-start="url(#a-orange)"/>
+<text x="380" y="110" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#EA580C" text-anchor="middle">Bonjour</text>
+<text x="380" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#EA580C" text-anchor="middle">TLS-PSK</text>
+<line x1="30" y1="500" x2="62" y2="500" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<text x="70" y="504" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">XPC, code-signing checked</text>
+<line x1="250" y1="500" x2="282" y2="500" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" marker-end="url(#a-blue)"/>
+<text x="290" y="504" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">file in ~/Library/Application Support/com.paco</text>
+<line x1="578" y1="500" x2="626" y2="500" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-orange)" marker-start="url(#a-orange)"/>
+<text x="634" y="504" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">encrypted LAN link</text>
+</svg>

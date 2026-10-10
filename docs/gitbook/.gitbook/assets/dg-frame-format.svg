@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" role="img" aria-labelledby="t d">
+<title id="t">Frame format on the parent–child link</title>
+<desc id="d">Four-byte big-endian length, one type byte, then JSON.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="249" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="40" y="50" width="52" height="52" rx="6" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="66" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">00</text>
+<rect x="96" y="50" width="52" height="52" rx="6" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="122" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">00</text>
+<rect x="152" y="50" width="52" height="52" rx="6" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="178" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">01</text>
+<rect x="208" y="50" width="52" height="52" rx="6" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="234" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">2C</text>
+<rect x="264" y="50" width="52" height="52" rx="6" fill="#FFEDD5" stroke="#EA580C" stroke-width="1.5"/>
+<text x="290" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">01</text>
+<rect x="320" y="50" width="400" height="52" rx="6" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<text x="334" y="81" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#0F172A" text-anchor="start">{"command":"updatePolicy","payload":…}</text>
+<text x="40" y="36" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="start">byte 0</text>
+<path d="M40,112 L40,120 L260,120 L260,112" stroke="#2563EB" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="150.0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#2563EB" text-anchor="middle">length: UInt32, big-endian</text>
+<text x="150.0" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">= 300: type byte + JSON</text>
+<text x="150.0" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">0 &lt; length &lt; 1 MiB</text>
+<path d="M264,112 L264,120 L316,120 L316,112" stroke="#EA580C" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="290.0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#EA580C" text-anchor="middle">type</text>
+<text x="290.0" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">1 message</text>
+<text x="290.0" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">2 response</text>
+<path d="M320,112 L320,120 L720,120 L720,112" stroke="#16A34A" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="520.0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#16A34A" text-anchor="middle">JSON body: PaCoMessage or PaCoResponse</text>
+<text x="520.0" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="middle">299 bytes in this example</text>
+<text x="380" y="230" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="middle">A malformed header, short read or receive error cancels the connection; the parent reconnects.</text>
+</svg>
