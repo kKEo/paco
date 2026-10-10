@@ -7,6 +7,11 @@ final class DaemonXPCClient: ObservableObject {
 
     @Published var isInternetEnabled = true
     @Published var isConnected = false
+    /// The parent's timed manual toggle currently in force, if any.
+    @Published var manualOverride: ManualInternetOverride?
+
+    /// How long a dashboard toggle overrides the schedule before it takes over again.
+    static let manualOverrideMinutes = 60
 
     private var connection: NSXPCConnection?
     private let logger = PaCoLogger.app
@@ -26,25 +31,29 @@ final class DaemonXPCClient: ObservableObject {
         refreshStatus()
     }
 
+    /// Flip the internet for `manualOverrideMinutes`; the schedule resumes afterwards.
     func toggleInternet() {
-        if isInternetEnabled {
-            proxy?.disableInternet { [weak self] success, _ in
-                if success {
-                    DispatchQueue.main.async { self?.isInternetEnabled = false }
-                }
-            }
-        } else {
-            proxy?.enableInternet { [weak self] success, _ in
-                if success {
-                    DispatchQueue.main.async { self?.isInternetEnabled = true }
-                }
-            }
+        let enable = !isInternetEnabled
+        proxy?.setManualInternet(enabled: enable, minutes: Self.manualOverrideMinutes) { [weak self] success, error in
+            if !success { self?.logger.error("Manual toggle failed: \(error ?? "unknown")") }
+            DispatchQueue.main.async { self?.refreshStatus() }
+        }
+    }
+
+    /// Drop the manual toggle and let the schedule decide again.
+    func clearManualOverride() {
+        proxy?.clearManualInternet { [weak self] _, _ in
+            DispatchQueue.main.async { self?.refreshStatus() }
         }
     }
 
     func refreshStatus() {
         proxy?.isInternetEnabled { [weak self] enabled in
             DispatchQueue.main.async { self?.isInternetEnabled = enabled }
+        }
+        proxy?.fetchPolicy { [weak self] data in
+            let policy = data.flatMap { try? JSONDecoder().decode(DaemonPolicy.self, from: $0) }
+            DispatchQueue.main.async { self?.manualOverride = policy?.activeManualOverride() }
         }
     }
 

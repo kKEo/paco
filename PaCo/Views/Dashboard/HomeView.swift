@@ -30,6 +30,21 @@ struct HomeView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
 
+                if let manual = daemonClient.manualOverride {
+                    HStack(spacing: 12) {
+                        Image(systemName: "hand.raised")
+                            .foregroundStyle(.blue)
+                        Text("Manual: internet \(manual.enabled ? "ON" : "OFF") until \(manual.until.formatted(date: .omitted, time: .shortened)), then back to the schedule")
+                            .font(.subheadline)
+                        Spacer()
+                        Button("Back to schedule") { daemonClient.clearManualOverride() }
+                            .controlSize(.small)
+                    }
+                    .padding(14)
+                    .background(.blue.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
                 if profiles.isEmpty {
                     ContentUnavailableView(
                         "No Profiles",
@@ -48,6 +63,7 @@ struct HomeView: View {
             }
             .padding(24)
         }
+        .onAppear { daemonClient.refreshStatus() }
     }
 }
 

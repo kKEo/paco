@@ -17,10 +17,12 @@ xcodegen generate
 ```bash
 make build            # Debug build (scheme PaCo)
 make build-release    # Release build into build/DerivedData
-make pkg              # Release build → installer pkg at build/PaCo-<VERSION>.pkg
+make pkg              # Release build → installer pkg at build/PaCo-<VERSION>.pkg (see TEAM_ID below)
 make clean            # rm -rf build/
 make clear-pin        # Delete stored PIN hash+salt from Keychain (testing)
 make clear-policy     # sudo-remove the daemon's root-owned policy + block state (testing)
+make pkg TEAM_ID=XXXXXXXXXX            # signed Release pkg (unsigned without TEAM_ID)
+make notarize TEAM_ID=… NOTARY_PROFILE=…  # notarize + staple the pkg
 
 # Tests (separate scheme)
 xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug
@@ -42,7 +44,7 @@ One Xcode project, four targets:
 ### Communication (three distinct channels)
 
 1. **App/Agent ↔ Daemon:** XPC (`DaemonXPCProtocol`). The daemon **owns the policy**: the app pushes `PolicyTransfer` (`updatePolicy`), the active profile (`setActiveProfile`) and approved overrides (`grantInternetOverride`); the daemon persists a `DaemonPolicy` at `/Library/Application Support/PaCo/policy.json` (root-owned) and evaluates it itself every 30 s in `PolicyEngine`. The agent only `fetchPolicy`s to know which apps to watch. Connections carry a code-signing requirement (`setCodeSigningRequirement`) built from the daemon's own Team ID + `com.paco.app`/`com.paco.agent`.
-2. **App ↔ Agent:** JSON files in `~/Library/Application Support/com.paco/` (`usage.json`, `events.json` written by agent; `child-requests.json` is the child app's own persisted request log). No policy files live here any more. The app watches `usage.json` and `events.json` with `DispatchSource` file watchers set up in `AppDelegate.swift`; `SyncManager` composes the `PolicyTransfer` and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind), then fires `onPolicyChanged`.
+2. **Agent → App:** JSON files in `~/Library/Application Support/com.paco/` (`usage.json` watched by the app with a `DispatchSource` in `AppDelegate.swift`; `events.json` is an agent-side log nobody reads yet; `child-requests.json` is the child app's own persisted request log; `PaCo.store` is the SwiftData database — explicit URL, not the shared default store). No policy files live here any more. `SyncManager` composes the `PolicyTransfer` and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind), then fires `onPolicyChanged`.
 3. **Parent Mac ↔ Child Mac:** Bonjour/TCP (`BonjourService`) carrying `PaCoMessage` commands: `.updatePolicy` (`PolicyTransfer`, parent → child on connect and after every policy change), `.requestExtension` and `.verifyPIN` (child → parent, answered with a `PaCoResponse`), `.approveExtension`/`.denyExtension`. Browsing and auto-connect are app-level (`BonjourService.autoConnectPairedDevices`, keyed off stored `PairingKeyManager` keys), not tied to the Devices tab.
 
 The time-extension flow: child sends `.requestExtension` over Bonjour and records it in `ChildRequestLog` (persisted) → parent inserts a `TimeExtensionRequest` into SwiftData with `childDeviceName` = the **connection identity** the request arrived on (deduped by request id) → approval sends `.approveExtension` back on that identity (and is only recorded once the send succeeded) → child resolves the request in `ChildRequestLog` (one-shot, replay guard) and grants the override to its daemon over XPC.
@@ -50,6 +52,9 @@ The time-extension flow: child sends `.requestExtension` over Bonjour and record
 ### Things that are easy to get wrong
 
 - **New SwiftData model?** It must be added to the `Schema([...])` list in `AppDelegate.swift`, and models live in `PaCoShared/Sources/PaCoShared/Models/`.
+- **Schedule semantics** live in `ScheduleEvaluator`: an overnight window belongs to the day it starts on (the post-midnight part checks *yesterday's* weekday). `DaemonPolicy` filters schedules and restrictions by `activeProfileId` (nil-profile items always apply) and applies precedence manual toggle → extension override → schedules. "Follows Schedule" app rules are blocked while their schedule blocks; a disabled schedule blocks nothing, a missing one keeps the app blocked. `SyncManager` ships inactive schedules too so the daemon can resolve them.
+- **Manual toggle** is `setManualInternet(enabled:minutes:)`, a timed `ManualInternetOverride` inside the policy — there is no untimed enable/disable XPC any more.
+- **Usage** is foreground time from `NSWorkspace.didActivateApplicationNotification`, accounted in the testable `UsageLedger` (PaCoShared); only `activationPolicy == .regular` apps are counted.
 - **PaCoTests links only PaCoShared** (see `project.yml`) — logic that needs unit tests must live in the PaCoShared package, not in the app/daemon/agent targets.
 - All startup (mode detection, daemon XPC connect, file sync, watchers, Bonjour role setup) runs once in `AppDelegate.applicationDidFinishLaunching`, never in a view's `onAppear` — with `MenuBarExtra(.window)` that only fires when the popover opens and re-fires on every open. Network role keys off `AppState.role` (persisted `DeviceConfig`), not `AppState.mode` (what the UI shows).
 - The parent dashboard is PIN-gated via `AppState.isUnlocked`; `AppState.lock()` is called when the dashboard disappears and when the app resigns active. PIN verification + lockout live in `AppState.attemptUnlock`, shared by `ParentUnlockView` and the child-device "Parent Access" prompt.

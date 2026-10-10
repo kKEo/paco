@@ -21,9 +21,9 @@ final class PolicyEngine {
 
     private let lock = NSLock()
     private var _policy: DaemonPolicy = .empty
-    /// Last internet state this engine asked the firewall for (edge-triggered, like
-    /// the agent used to be): a manual toggle from the app persists until the next
-    /// schedule transition instead of being reverted on the next tick.
+    /// Last internet state this engine asked the firewall for; the firewall is only
+    /// touched when the desired state changes. Manual toggles are part of the
+    /// policy (`manualOverride`), so every tick is a pure function of policy + time.
     private var lastAppliedEnabled: Bool?
 
     init(firewall: FirewallManager, processManager: ProcessManager) {
@@ -61,8 +61,25 @@ final class PolicyEngine {
 
     func grantOverride(requestId: UUID, until: Date) throws {
         guard until > Date() else { throw PolicyError.invalidOverride }
-        try mutate { $0.override = InternetOverride(requestId: requestId, grantedUntil: until) }
+        try mutate {
+            $0.override = InternetOverride(requestId: requestId, grantedUntil: until)
+            // An approval is the parent's latest word; a standing manual "off" would
+            // otherwise silently defeat it.
+            if $0.manualOverride?.enabled == false { $0.manualOverride = nil }
+        }
         logger.info("Internet override granted until \(until)")
+    }
+
+    func setManual(enabled: Bool, minutes: Int) throws {
+        guard minutes > 0 else { throw PolicyError.invalidOverride }
+        let until = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        try mutate { $0.manualOverride = ManualInternetOverride(enabled: enabled, until: until) }
+        logger.info("Manual internet \(enabled ? "ON" : "OFF") until \(until)")
+    }
+
+    func clearManual() throws {
+        try mutate { $0.manualOverride = nil }
+        logger.info("Manual internet override cleared")
     }
 
     private func mutate(_ change: (inout DaemonPolicy) -> Void) throws {

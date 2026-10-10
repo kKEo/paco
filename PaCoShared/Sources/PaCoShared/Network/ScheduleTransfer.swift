@@ -13,6 +13,8 @@ public struct ScheduleTransfer: Codable, Sendable, Equatable, Schedulable {
     public var onMinute: Int
     public var gracePeriodMinutes: Int
     public var isActive: Bool
+    /// The child profile this schedule belongs to (nil = applies to every profile).
+    public var profileId: UUID?
 
     public init(
         id: UUID = UUID(),
@@ -23,7 +25,8 @@ public struct ScheduleTransfer: Codable, Sendable, Equatable, Schedulable {
         onHour: Int,
         onMinute: Int,
         gracePeriodMinutes: Int = 5,
-        isActive: Bool = true
+        isActive: Bool = true,
+        profileId: UUID? = nil
     ) {
         self.id = id
         self.label = label
@@ -34,6 +37,7 @@ public struct ScheduleTransfer: Codable, Sendable, Equatable, Schedulable {
         self.onMinute = onMinute
         self.gracePeriodMinutes = gracePeriodMinutes
         self.isActive = isActive
+        self.profileId = profileId
     }
 
     /// Convert from a SwiftData Schedule model
@@ -47,5 +51,6 @@ public struct ScheduleTransfer: Codable, Sendable, Equatable, Schedulable {
         self.onMinute = schedule.onMinute
         self.gracePeriodMinutes = schedule.gracePeriodMinutes
         self.isActive = schedule.isActive
+        self.profileId = schedule.childProfile?.id
     }
 }

@@ -7,25 +7,39 @@ public enum FrameType: UInt8, Sendable {
     case response = 2
 }
 
-/// Build a length-prefixed frame: [UInt32 big-endian body length][FrameType byte][json].
-func makeFrame(type: FrameType, json: Data) -> Data {
-    var body = Data([type.rawValue])
-    body.append(json)
-    var length = UInt32(body.count).bigEndian
-    var framed = Data(bytes: &length, count: 4)
-    framed.append(body)
-    return framed
+/// Wire format shared by both ends: `[UInt32 big-endian body length][FrameType byte][json]`.
+public enum FrameCodec {
+    public static let headerLength = 4
+    /// Upper bound on a frame body; anything larger is treated as garbage.
+    public static let maxBodyLength = 1_048_576
+
+    public static func encode(type: FrameType, json: Data) -> Data {
+        var body = Data([type.rawValue])
+        body.append(json)
+        var length = UInt32(body.count).bigEndian
+        var framed = Data(bytes: &length, count: headerLength)
+        framed.append(body)
+        return framed
+    }
+
+    /// The body length announced by a 4-byte header; nil if malformed or out of bounds.
+    public static func bodyLength(header: Data) -> Int? {
+        guard header.count == headerLength else { return nil }
+        let length = header.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
+        guard length > 0, length < maxBodyLength else { return nil }
+        return Int(length)
+    }
+
+    /// Split a frame body into its type (nil if unknown) and JSON payload.
+    public static func decodeBody(_ body: Data) -> (type: FrameType?, json: Data)? {
+        guard let first = body.first else { return nil }
+        return (FrameType(rawValue: first), Data(body.dropFirst()))
+    }
 }
 
 public enum PaCoCommand: String, Codable, Sendable {
-    case enableInternet
-    case disableInternet
-    case getStatus
     /// Parent → child: full `PolicyTransfer` (schedules + app restrictions).
     case updatePolicy
-    case getUsageData
-    case pair
-    case ping
     case requestExtension
     case approveExtension
     case denyExtension
@@ -47,7 +61,7 @@ public struct PaCoMessage: Codable, Sendable {
     }
 
     public func encoded() throws -> Data {
-        makeFrame(type: .message, json: try JSONEncoder().encode(self))
+        FrameCodec.encode(type: .message, json: try JSONEncoder().encode(self))
     }
 }
 
@@ -63,7 +77,7 @@ public struct PaCoResponse: Codable, Sendable {
     }
 
     public func encoded() throws -> Data {
-        makeFrame(type: .response, json: try JSONEncoder().encode(self))
+        FrameCodec.encode(type: .response, json: try JSONEncoder().encode(self))
     }
 }
 
@@ -94,28 +108,6 @@ public struct ExtensionResponsePayload: Codable, Sendable {
         self.requestId = requestId
         self.status = status
         self.grantedMinutes = grantedMinutes
-    }
-}
-
-public struct DeviceStatus: Codable, Sendable {
-    public var deviceName: String
-    public var internetEnabled: Bool
-    public var currentApp: String?
-    public var internetDurationToday: TimeInterval
-    public var appUsage: [AppUsageEntry]
-
-    public init(
-        deviceName: String,
-        internetEnabled: Bool,
-        currentApp: String? = nil,
-        internetDurationToday: TimeInterval = 0,
-        appUsage: [AppUsageEntry] = []
-    ) {
-        self.deviceName = deviceName
-        self.internetEnabled = internetEnabled
-        self.currentApp = currentApp
-        self.internetDurationToday = internetDurationToday
-        self.appUsage = appUsage
     }
 }
 

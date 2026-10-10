@@ -15,3 +15,18 @@ public struct InternetOverride: Codable, Sendable, Equatable {
 
     public func isActive(at date: Date = Date()) -> Bool { grantedUntil > date }
 }
+
+/// A parent's manual on/off from the dashboard. Timed, so a manual "off" during
+/// an allowed window (or "on" during a blocked one) expires and the schedule
+/// takes over again instead of sticking until the next schedule edge days later.
+public struct ManualInternetOverride: Codable, Sendable, Equatable {
+    public var enabled: Bool
+    public var until: Date
+
+    public init(enabled: Bool, until: Date) {
+        self.enabled = enabled
+        self.until = until
+    }
+
+    public func isActive(at date: Date = Date()) -> Bool { until > date }
+}

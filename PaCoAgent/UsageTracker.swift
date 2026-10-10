@@ -1,11 +1,13 @@
 import Foundation
 import PaCoShared
 
+/// Day-scoped usage counters: internet-on time and per-app foreground time
+/// (`UsageLedger`). Restored from the last snapshot on start so an agent restart
+/// mid-day continues accumulating instead of resetting to zero.
 final class UsageTracker {
 
     private let logger = PaCoLogger.agent
-    private var appStartTimes: [String: Date] = [:]  // bundleId -> launch time
-    private var dailyUsage: [String: AppUsageEntry] = [:]  // bundleId -> aggregated
+    private var ledger = UsageLedger()
     private var internetOnSince: Date?
     private var totalInternetSeconds: TimeInterval = 0
     private var currentDate: Date
@@ -15,9 +17,6 @@ final class UsageTracker {
         restoreFromSnapshot()
     }
 
-    /// Seed in-memory counters from the last usage snapshot on disk so an agent
-    /// restart (crash/reboot/relaunch) mid-day continues accumulating instead of
-    /// resetting to zero. At most one tick (~30s) of activity is lost.
     private func restoreFromSnapshot() {
         guard let data = try? Data(contentsOf: PaCoFiles.usageFileURL),
               let transfer = try? JSONDecoder().decode(UsageTransfer.self, from: data),
@@ -25,20 +24,20 @@ final class UsageTracker {
             return
         }
         totalInternetSeconds = transfer.internetOnDuration
-        for entry in transfer.appUsage {
-            dailyUsage[entry.bundleIdentifier] = entry
-        }
+        ledger = UsageLedger(entries: transfer.appUsage)
         logger.info("Restored usage snapshot: \(transfer.appUsage.count) apps, internet \(Int(self.totalInternetSeconds))s")
     }
 
     // MARK: - Internet tracking
 
     func internetDidEnable() {
+        rollDateIfNeeded()
         internetOnSince = Date()
         logger.info("Tracking: internet enabled")
     }
 
     func internetDidDisable() {
+        rollDateIfNeeded()
         if let since = internetOnSince {
             totalInternetSeconds += Date().timeIntervalSince(since)
             internetOnSince = nil
@@ -47,30 +46,21 @@ final class UsageTracker {
         logger.info("Tracking: internet disabled, total: \(total)s")
     }
 
-    // MARK: - App tracking
+    // MARK: - App tracking (foreground time)
+
+    func appDidActivate(bundleId: String?, appName: String?) {
+        rollDateIfNeeded()
+        ledger.activate(bundleId: bundleId, appName: appName)
+    }
 
     func appDidLaunch(bundleId: String, appName: String) {
         rollDateIfNeeded()
-        appStartTimes[bundleId] = Date()
-
-        // Increment launch count
-        var entry = dailyUsage[bundleId] ?? AppUsageEntry(
-            bundleIdentifier: bundleId, appName: appName, duration: 0, launchCount: 0
-        )
-        entry.launchCount += 1
-        dailyUsage[bundleId] = entry
+        ledger.launch(bundleId: bundleId, appName: appName)
     }
 
     func appDidTerminate(bundleId: String, appName: String) {
         rollDateIfNeeded()
-        guard let startTime = appStartTimes.removeValue(forKey: bundleId) else { return }
-        let duration = Date().timeIntervalSince(startTime)
-
-        var entry = dailyUsage[bundleId] ?? AppUsageEntry(
-            bundleIdentifier: bundleId, appName: appName, duration: 0, launchCount: 0
-        )
-        entry.duration += duration
-        dailyUsage[bundleId] = entry
+        ledger.terminate(bundleId: bundleId)
     }
 
     // MARK: - Reporting
@@ -86,32 +76,21 @@ final class UsageTracker {
     var currentDay: Date { currentDate }
 
     func currentAppUsage() -> [AppUsageEntry] {
-        Array(dailyUsage.values)
-    }
-
-    func buildUsageRecord(for profileId: UUID) -> UsageRecord {
-        return UsageRecord(
-            date: currentDate,
-            internetOnDuration: currentInternetDuration(),
-            appUsage: currentAppUsage()
-        )
-    }
-
-    func reset() {
-        appStartTimes.removeAll()
-        dailyUsage.removeAll()
-        internetOnSince = nil
-        totalInternetSeconds = 0
-        currentDate = Calendar.current.startOfDay(for: Date())
+        rollDateIfNeeded()
+        return ledger.snapshot()
     }
 
     // MARK: - Private
 
+    /// At midnight the counters start over; whatever is frontmost keeps accruing
+    /// into the new day and an open internet-on interval restarts from now.
     private func rollDateIfNeeded() {
         let today = Calendar.current.startOfDay(for: Date())
-        if today != currentDate {
-            logger.info("Day rolled over, resetting usage counters")
-            reset()
-        }
+        guard today != currentDate else { return }
+        logger.info("Day rolled over, resetting usage counters")
+        ledger.reset()
+        totalInternetSeconds = 0
+        if internetOnSince != nil { internetOnSince = Date() }
+        currentDate = today
     }
 }

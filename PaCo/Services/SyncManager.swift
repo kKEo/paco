@@ -28,8 +28,10 @@ final class SyncManager {
 
     /// The policy as it should be enforced right now.
     func currentPolicy(context: ModelContext) -> PolicyTransfer {
+        // Inactive schedules travel too (the evaluator skips them): an app rule that
+        // follows a disabled schedule must resolve it and be lenient, not blocked.
         let schedules = ((try? context.fetch(FetchDescriptor<Schedule>())) ?? [])
-            .filter(\.isActive).map(ScheduleTransfer.init(from:))
+            .map(ScheduleTransfer.init(from:))
         let restrictions = ((try? context.fetch(FetchDescriptor<AppRestriction>())) ?? [])
             .map(AppRestrictionTransfer.init(from:))
         return PolicyTransfer(schedules: schedules, restrictions: restrictions)

@@ -86,6 +86,7 @@ final class ScheduleEvaluatorTests: XCTestCase {
     }
 
     func testOvernightGracePeriodWrapAround() {
+        // Monday-only schedule: the post-midnight part of the window still belongs to Monday.
         let schedule = Schedule(
             label: "Late night",
             days: [.monday],
@@ -94,34 +95,43 @@ final class ScheduleEvaluatorTests: XCTestCase {
             gracePeriodMinutes: 15
         )
 
-        // Monday 23:55 -> in grace period (before midnight portion)
-        let monday2355 = makeDate(weekday: 2, hour: 23, minute: 55)
-        let result1 = ScheduleEvaluator.evaluate(schedules: [schedule], at: monday2355)
-        // Grace ends at 00:05, currently 23:55 -> remaining = (5 min to midnight + 5 min) * 60 = 600s
-        XCTAssertEqual(result1, .gracePeriod(remainingSeconds: 600))
+        // Monday 23:55 -> grace (before midnight): 5 min to midnight + 5 min = 600s
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schedule], at: makeDate(weekday: 2, hour: 23, minute: 55)),
+                       .gracePeriod(remainingSeconds: 600))
+        // Tuesday 00:02 -> grace (after midnight): 3 min = 180s
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schedule], at: makeDate(weekday: 3, hour: 0, minute: 2)),
+                       .gracePeriod(remainingSeconds: 180))
+        // Tuesday 00:06 -> past grace, blocked
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schedule], at: makeDate(weekday: 3, hour: 0, minute: 6)), .blocked)
+    }
 
-        // Tuesday 00:02 -> in grace period (after midnight portion)
-        // Note: Tuesday is weekday 3; need to check if day matches
-        // The schedule is for Monday only, so after midnight (Tuesday) the day check may not match.
-        // This is actually correct behavior: the overnight schedule day applies to the start day.
-        // For the wrap to work, Tuesday must also be in the schedule:
-        let scheduleWithTuesday = Schedule(
-            label: "Late night",
-            days: [.monday, .tuesday],
-            offHour: 23, offMinute: 50,
-            onHour: 7, onMinute: 0,
-            gracePeriodMinutes: 15
-        )
+    // MARK: - Overnight windows belong to the day they start on
 
-        let tuesday0002 = makeDate(weekday: 3, hour: 0, minute: 2)
-        let result2 = ScheduleEvaluator.evaluate(schedules: [scheduleWithTuesday], at: tuesday0002)
-        // Grace ends at 00:05, currently 00:02 -> remaining = 3 * 60 = 180s
-        XCTAssertEqual(result2, .gracePeriod(remainingSeconds: 180))
+    func testOvernightWindowBlocksIntoNextMorning() {
+        let thursdayNight = Schedule(label: "Thu night", days: [.thursday], offHour: 21, offMinute: 0, onHour: 7, onMinute: 0, gracePeriodMinutes: 0)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 5, hour: 22, minute: 0)), .blocked)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 6, hour: 2, minute: 0)), .blocked, "Friday 02:00 is still Thursday's night")
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 6, hour: 6, minute: 59)), .blocked)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 6, hour: 7, minute: 0)), .allowed)
+    }
 
-        // Tuesday 00:06 -> past grace period, should be blocked
-        let tuesday0006 = makeDate(weekday: 3, hour: 0, minute: 6)
-        let result3 = ScheduleEvaluator.evaluate(schedules: [scheduleWithTuesday], at: tuesday0006)
-        XCTAssertEqual(result3, .blocked)
+    func testOvernightWindowDoesNotBlockNextEvening() {
+        let thursdayNight = Schedule(label: "Thu night", days: [.thursday], offHour: 21, offMinute: 0, onHour: 7, onMinute: 0, gracePeriodMinutes: 0)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 6, hour: 22, minute: 0)), .allowed, "Friday night is not selected")
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [thursdayNight], at: makeDate(weekday: 5, hour: 2, minute: 0)), .allowed, "Thursday 02:00 belongs to Wednesday night")
+    }
+
+    func testOvernightWindowWrapsFromSundayToMonday() {
+        let sundayNight = Schedule(label: "Sun night", days: [.sunday], offHour: 22, offMinute: 0, onHour: 6, onMinute: 0, gracePeriodMinutes: 0)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [sundayNight], at: makeDate(weekday: 2, hour: 1, minute: 0)), .blocked)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [sundayNight], at: makeDate(weekday: 2, hour: 23, minute: 0)), .allowed)
+    }
+
+    func testSameDayWindowUsesTodayOnly() {
+        let schoolHours = Schedule(label: "School", days: [.monday], offHour: 9, offMinute: 0, onHour: 15, onMinute: 0, gracePeriodMinutes: 0)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schoolHours], at: makeDate(weekday: 2, hour: 10, minute: 0)), .blocked)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schoolHours], at: makeDate(weekday: 2, hour: 16, minute: 0)), .allowed)
+        XCTAssertEqual(ScheduleEvaluator.evaluate(schedules: [schoolHours], at: makeDate(weekday: 3, hour: 10, minute: 0)), .allowed)
     }
 
     func testScheduleTransferWorksWithEvaluator() {

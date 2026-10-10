@@ -49,9 +49,18 @@ struct AppRulesView: View {
                                         Text(profile.name)
                                             .font(.caption2).foregroundStyle(.blue)
                                     }
+                                    if restriction.restrictionType == .scheduledOnly {
+                                        if let schedule = schedules.first(where: { $0.id == restriction.allowedScheduleId }) {
+                                            Text("Blocked while “\(schedule.label)” blocks the internet\(schedule.isActive ? "" : " (schedule disabled — not blocking)")")
+                                                .font(.caption2).foregroundStyle(.secondary)
+                                        } else {
+                                            Text("Schedule missing — app stays blocked. Delete and re-add this rule.")
+                                                .font(.caption2).foregroundStyle(.red)
+                                        }
+                                    }
                                 }
                                 Spacer()
-                                Text(restriction.restrictionType == .blocked ? "Always Blocked" : "Schedule Only")
+                                Text(restriction.restrictionType == .blocked ? "Always Blocked" : "Follows Schedule")
                                     .font(.subheadline)
                                     .padding(.horizontal, 8).padding(.vertical, 4)
                                     .background(restriction.restrictionType == .blocked
@@ -86,7 +95,7 @@ struct AppRulesView: View {
 
                     Picker("Type", selection: $newType) {
                         Text("Always Blocked").tag(RestrictionType.blocked)
-                        Text("Schedule Only").tag(RestrictionType.scheduledOnly)
+                        Text("Follows Schedule").tag(RestrictionType.scheduledOnly)
                     }
                     .pickerStyle(.segmented)
 
@@ -96,12 +105,14 @@ struct AppRulesView: View {
                             Text("No schedules for this profile — create one first.")
                                 .font(.caption).foregroundStyle(.secondary)
                         } else {
-                            Picker("Allowed during", selection: $newAllowedSchedule) {
+                            Picker("Blocked during", selection: $newAllowedSchedule) {
                                 Text("Select schedule…").tag(Optional<Schedule>.none)
                                 ForEach(profileSchedules) { s in
                                     Text(s.label).tag(Optional(s))
                                 }
                             }
+                            Text("The app is blocked whenever this schedule blocks the internet.")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                     }
 

@@ -28,7 +28,7 @@ final class DaemonPolicyTests: XCTestCase {
         ])
         XCTAssertEqual(policy.restrictedBundleIDs, ["com.a", "com.b", "com.none"])
         policy.activeProfileId = a
-        XCTAssertEqual(policy.restrictedBundleIDs, ["com.a"])
+        XCTAssertEqual(policy.restrictedBundleIDs, ["com.a", "com.none"], "the active profile's rules plus profile-less ones")
     }
 
     func testApplyKeepsProfileAndOverride() {
@@ -52,6 +52,37 @@ final class DaemonPolicyTests: XCTestCase {
         XCTAssertEqual(policy.internetAction(at: date(hour: 12)), .allowed)
         XCTAssertEqual(policy.internetAction(at: date(hour: 14)), .blocked, "expired override no longer applies")
         XCTAssertNil(policy.activeOverrideUntil(at: date(hour: 14)))
+    }
+
+    func testActiveProfileFiltersSchedules() {
+        let a = UUID(), b = UUID()
+        var scheduleA = schedule(off: 9, on: 17); scheduleA.profileId = a
+        var scheduleB = schedule(off: 9, on: 17); scheduleB.profileId = b
+        var policy = DaemonPolicy(schedules: [scheduleA, scheduleB], restrictions: [])
+        XCTAssertEqual(policy.activeSchedules.count, 2, "no active profile: every profile's schedules apply")
+        policy.activeProfileId = a
+        XCTAssertEqual(policy.activeSchedules.map(\.id), [scheduleA.id])
+        policy.activeProfileId = UUID()
+        XCTAssertEqual(policy.internetAction(at: date(hour: 12)), .allowed, "another profile's schedule must not block this device")
+    }
+
+    func testManualOverrideWinsThenExpires() {
+        var policy = DaemonPolicy(schedules: [schedule(off: 9, on: 17)], restrictions: [])
+        policy.manualOverride = ManualInternetOverride(enabled: true, until: date(hour: 13))
+        XCTAssertEqual(policy.internetAction(at: date(hour: 12)), .allowed, "manual on beats the schedule")
+        XCTAssertEqual(policy.internetAction(at: date(hour: 14)), .blocked, "expired manual override falls back to the schedule")
+
+        policy.manualOverride = ManualInternetOverride(enabled: false, until: date(hour: 21))
+        policy.override = InternetOverride(requestId: UUID(), grantedUntil: date(hour: 21))
+        XCTAssertEqual(policy.internetAction(at: date(hour: 20)), .blocked, "manual off beats an approved extension")
+        XCTAssertEqual(policy.internetAction(at: date(hour: 22)), .allowed)
+    }
+
+    func testDisabledScheduleDoesNotBlockScheduledApp() {
+        let id = UUID()
+        var inactive = schedule(id: id, off: 9, on: 17); inactive.isActive = false
+        let policy = DaemonPolicy(schedules: [inactive], restrictions: [])
+        XCTAssertTrue(policy.isScheduledAppAllowed(scheduleId: id, at: date(hour: 12)))
     }
 
     func testScheduledAppRequiresKnownSchedule() {

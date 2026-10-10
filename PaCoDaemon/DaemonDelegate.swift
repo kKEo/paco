@@ -20,22 +20,21 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
 
     // MARK: - Internet
 
-    func enableInternet(reply: @escaping (Bool, String?) -> Void) {
+    func setManualInternet(enabled: Bool, minutes: Int, reply: @escaping (Bool, String?) -> Void) {
         do {
-            try firewallManager.enableInternet()
+            try policyEngine.setManual(enabled: enabled, minutes: minutes)
             reply(true, nil)
         } catch {
-            logger.error("enableInternet failed: \(error.localizedDescription)")
+            logger.error("setManualInternet failed: \(error.localizedDescription)")
             reply(false, error.localizedDescription)
         }
     }
 
-    func disableInternet(reply: @escaping (Bool, String?) -> Void) {
+    func clearManualInternet(reply: @escaping (Bool, String?) -> Void) {
         do {
-            try firewallManager.disableInternet()
+            try policyEngine.clearManual()
             reply(true, nil)
         } catch {
-            logger.error("disableInternet failed: \(error.localizedDescription)")
             reply(false, error.localizedDescription)
         }
     }

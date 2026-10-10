@@ -44,8 +44,4 @@ final class FirewallRuleTests: XCTestCase {
         XCTAssertEqual(passLines.count, FirewallRuleBuilder.passDestinations.count)
     }
 
-    func testEmptyRulesForAllow() {
-        let rules = FirewallRuleBuilder.allowInternetRules()
-        XCTAssertTrue(rules.isEmpty)
-    }
 }

@@ -1,12 +1,11 @@
 import Foundation
 
+/// Agent-written activity log entry (`events.json`, last 100). Not consumed by
+/// the app yet; kept as the hook for user-facing notifications.
 public enum NotificationEventKind: String, Codable, Sendable {
     case appBlocked
     case internetDisabled
     case internetEnabled
-    case extensionRequested
-    case extensionApproved
-    case extensionDenied
 }
 
 public struct NotificationEvent: Codable, Sendable, Identifiable {

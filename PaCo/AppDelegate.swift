@@ -19,9 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let modelContainer: ModelContainer
 
     private var usageWatcher: DispatchSourceFileSystemObject?
-    private var eventsWatcher: DispatchSourceFileSystemObject?
     private var statusTimer: DispatchSourceTimer?
-    private var seenEventIds: Set<UUID> = []
     private var configuredRole: DeviceRole?
     /// Child side: outstanding PIN checks sent to the parent, keyed by nonce.
     private var pendingPINChecks: [UUID: (UnlockResult) -> Void] = [:]
@@ -42,7 +40,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             DeviceConfig.self,
             TimeExtensionRequest.self,
         ])
-        let config = ModelConfiguration(isStoredInMemoryOnly: false)
+        // Explicit store location: the SwiftData default is
+        // ~/Library/Application Support/default.store, shared with any other
+        // non-sandboxed SwiftData app on the machine.
+        let config = ModelConfiguration(url: PaCoFiles.baseDirectory.appendingPathComponent("PaCo.store"))
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [config])
         } catch {
@@ -77,7 +78,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         daemonClient.setActiveProfile(appState.activeProfileId(context: context))
         startUsageWatcher()
         SyncManager.shared.readUsage(context: context)
-        startEventsWatcher()
         configureRole()
         observeRole()
         logger.info("Startup complete")
@@ -194,13 +194,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         usageWatcher = makeWatcher(for: SyncManager.shared.usageFileURL) { [weak self] in
             guard let self else { return }
             SyncManager.shared.readUsage(context: self.context)
-        }
-    }
-
-    private func startEventsWatcher() {
-        eventsWatcher?.cancel()
-        eventsWatcher = makeWatcher(for: PaCoFiles.eventsFileURL) { [weak self] in
-            self?.processNewEvents()
         }
     }
 
@@ -331,31 +324,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             if let pending = self?.pendingPINChecks.removeValue(forKey: nonce) {
                 pending(.parentUnavailable)
             }
-        }
-    }
-
-    private func processNewEvents() {
-        guard let data = try? Data(contentsOf: PaCoFiles.eventsFileURL),
-              let events = try? JSONDecoder().decode([NotificationEvent].self, from: data)
-        else { return }
-
-        for event in events where !seenEventIds.contains(event.id) {
-            seenEventIds.insert(event.id)
-            guard event.kind == .extensionRequested else { continue }
-            let childName = event.payload["childDeviceName"] ?? "Unknown Device"
-            let minutes = Int(event.payload["requestedMinutes"] ?? "30") ?? 30
-            let reason = event.payload["reason"] ?? ""
-            let requestId = UUID(uuidString: event.payload["requestId"] ?? "") ?? UUID()
-            let existing = (try? context.fetch(FetchDescriptor<TimeExtensionRequest>()))?.first { $0.id == requestId }
-            guard existing == nil else { continue }
-            let req = TimeExtensionRequest(
-                id: requestId,
-                childDeviceName: childName,
-                requestedMinutes: minutes,
-                reason: reason
-            )
-            context.insert(req)
-            try? context.save()
         }
     }
 }

@@ -1,11 +1,24 @@
 VERSION      ?= 1.0.0
+# Developer ID signing. Leave TEAM_ID empty for an unsigned local build (the
+# daemon then refuses XPC peers unless PACO_ALLOW_UNSIGNED_XPC=1, see README).
+TEAM_ID      ?=
+APP_IDENTITY ?= Developer ID Application
+PKG_IDENTITY ?= Developer ID Installer
+# `xcrun notarytool store-credentials <profile>` once, then `make notarize NOTARY_PROFILE=<profile>`.
+NOTARY_PROFILE ?=
+ifneq ($(TEAM_ID),)
+SIGN_FLAGS := DEVELOPMENT_TEAM=$(TEAM_ID) CODE_SIGN_STYLE=Manual \
+	CODE_SIGN_IDENTITY="$(APP_IDENTITY)" ENABLE_HARDENED_RUNTIME=YES OTHER_CODE_SIGN_FLAGS=--timestamp
+else
+SIGN_FLAGS :=
+endif
 BUILD_DIR    := build/Release
 ARCHIVE_DIR  := build/archive
 PKG_ROOT     := build/pkg-root
 PKG_SCRIPTS  := build/pkg-scripts
 PKG_OUT      := build/PaCo-$(VERSION).pkg
 
-.PHONY: build build-release pkg clean clear-pin clear-policy
+.PHONY: build build-release pkg notarize clean clear-pin clear-policy
 
 build:
 	xcodebuild -project PaCo.xcodeproj -scheme PaCo -destination "platform=macOS" build
@@ -15,6 +28,7 @@ build-release:
 		-configuration Release \
 		-destination "platform=macOS" \
 		-derivedDataPath build/DerivedData \
+		$(SIGN_FLAGS) \
 		build
 
 pkg: build-release
@@ -30,7 +44,8 @@ pkg: build-release
 	cp -R "build/DerivedData/Build/Products/Release/PaCo.app" \
 	      "$(PKG_ROOT)/Applications/"
 
-	# Copy helper binaries into the app's Resources
+	# Copy helper binaries into the app's Resources (they keep their own signatures;
+	# the daemon derives its XPC requirement from the Team ID in its signature).
 	cp "build/DerivedData/Build/Products/Release/PaCoDaemon" \
 	   "$(PKG_ROOT)/Applications/PaCo.app/Contents/Resources/"
 	cp "build/DerivedData/Build/Products/Release/PaCoAgent" \
@@ -46,6 +61,12 @@ pkg: build-release
 
 	# ── postinstall script ────────────────────────────────────────────
 	@printf '#!/bin/bash\nset -e\n\n'\
+'# Stop a previous install first so an upgrade does not keep the old daemon/agent running\n'\
+'launchctl bootout system/com.paco.daemon 2>/dev/null || true\n'\
+'CONSOLE_UID=$$(stat -f %u /dev/console)\n'\
+'if [ -n "$$CONSOLE_UID" ] && [ "$$CONSOLE_UID" != "0" ]; then\n'\
+'    launchctl bootout gui/$$CONSOLE_UID/com.paco.agent 2>/dev/null || true\n'\
+'fi\n\n'\
 '# Install daemon binary\n'\
 'install -o root -g wheel -m 755 \\\n'\
 '    /Applications/PaCo.app/Contents/Resources/PaCoDaemon \\\n'\
@@ -57,7 +78,6 @@ pkg: build-release
 '# Load daemon (system domain)\n'\
 'launchctl bootstrap system /Library/LaunchDaemons/com.paco.daemon.plist 2>/dev/null || true\n\n'\
 '# Load agent into the console user'"'"'s GUI domain so it runs without waiting for a re-login\n'\
-'CONSOLE_UID=$$(stat -f %u /dev/console)\n'\
 'if [ -n "$$CONSOLE_UID" ] && [ "$$CONSOLE_UID" != "0" ]; then\n'\
 '    launchctl bootstrap gui/$$CONSOLE_UID /Library/LaunchAgents/com.paco.agent.plist 2>/dev/null || true\n'\
 'fi\n\n'\
@@ -71,10 +91,17 @@ pkg: build-release
 		--identifier com.paco.pkg \
 		--version "$(VERSION)" \
 		--install-location / \
+		$(if $(TEAM_ID),--sign "$(PKG_IDENTITY)",) \
 		"$(PKG_OUT)"
 
 	@echo ""
 	@echo "Package written to: $(PKG_OUT)"
+
+# Submit the signed pkg to Apple and staple the ticket. Requires TEAM_ID and NOTARY_PROFILE.
+notarize: pkg
+	@test -n "$(NOTARY_PROFILE)" || { echo "Set NOTARY_PROFILE (see 'xcrun notarytool store-credentials')"; exit 1; }
+	xcrun notarytool submit "$(PKG_OUT)" --keychain-profile "$(NOTARY_PROFILE)" --wait
+	xcrun stapler staple "$(PKG_OUT)"
 
 clean:
 	rm -rf build

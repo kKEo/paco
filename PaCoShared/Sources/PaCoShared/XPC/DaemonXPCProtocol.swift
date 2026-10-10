@@ -3,8 +3,11 @@ import Foundation
 /// The root daemon's XPC interface. The daemon owns the enforcement policy and
 /// evaluates it itself; callers push policy in and read status out.
 @objc public protocol DaemonXPCProtocol {
-    func enableInternet(reply: @escaping (Bool, String?) -> Void)
-    func disableInternet(reply: @escaping (Bool, String?) -> Void)
+    /// Parent's manual toggle: force internet on/off for `minutes`, after which the
+    /// schedule takes over again. Replaces the old untimed enable/disable.
+    func setManualInternet(enabled: Bool, minutes: Int, reply: @escaping (Bool, String?) -> Void)
+    /// Drop the manual toggle and return to the schedule immediately.
+    func clearManualInternet(reply: @escaping (Bool, String?) -> Void)
     func isInternetEnabled(reply: @escaping (Bool) -> Void)
     func killProcess(pid: Int32, reply: @escaping (Bool, String?) -> Void)
     func verifyFirewallIntegrity(reply: @escaping (Bool) -> Void)

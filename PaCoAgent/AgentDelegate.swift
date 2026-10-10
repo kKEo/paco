@@ -140,6 +140,10 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         appMonitor(monitor, didDetectBlockedApp: bundleId, pid: pid, appName: appName)
     }
 
+    func appMonitor(_ monitor: AppMonitor, didActivateApp bundleId: String?, appName: String?) {
+        usageTracker.appDidActivate(bundleId: bundleId, appName: appName)
+    }
+
     func appMonitor(_ monitor: AppMonitor, didLaunchApp bundleId: String, appName: String) {
         usageTracker.appDidLaunch(bundleId: bundleId, appName: appName)
     }

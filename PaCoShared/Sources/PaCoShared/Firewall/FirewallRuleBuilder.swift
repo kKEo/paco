@@ -32,7 +32,6 @@ public enum FirewallRuleBuilder {
         return lines.joined(separator: "\n") + "\n"
     }
 
-    public static func allowInternetRules() -> String { "" }
     public static let anchorName = "com.paco"
     public static let anchorFilePath = "/etc/pf.anchors/com.paco"
 }

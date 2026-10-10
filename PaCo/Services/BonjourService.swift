@@ -403,20 +403,21 @@ final class BonjourService: ObservableObject {
     /// Any receive error cancels the connection so the state handler cleans up
     /// and (on the parent) the retry path reconnects.
     private func receiveFrame(on connection: NWConnection, then handler: @escaping (FrameType?, Data) -> Void) {
-        connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { [weak self] headerData, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: FrameCodec.headerLength, maximumLength: FrameCodec.headerLength) { [weak self] headerData, _, isComplete, error in
             guard let self else { return }
             if let error {
                 self.logger.error("Receive header error: \(error)")
                 connection.cancel()
                 return
             }
-            guard let headerData, headerData.count == 4 else {
+            guard let headerData, headerData.count == FrameCodec.headerLength else {
                 if isComplete { self.logger.info("Peer closed the connection") }
                 else { self.logger.warning("Incomplete header received") }
                 connection.cancel()
                 return
             }
-            guard let length = self.frameBodyLength(headerData) else {
+            guard let length = FrameCodec.bodyLength(header: headerData) else {
+                self.logger.warning("Invalid frame header")
                 connection.cancel()
                 return
             }
@@ -427,22 +428,13 @@ final class BonjourService: ObservableObject {
                     connection.cancel()
                     return
                 }
-                guard let bodyData, bodyData.count == length, let first = bodyData.first else {
+                guard let bodyData, bodyData.count == length, let body = FrameCodec.decodeBody(bodyData) else {
                     connection.cancel()
                     return
                 }
-                handler(FrameType(rawValue: first), Data(bodyData.dropFirst()))
+                handler(body.type, body.json)
             }
         }
     }
 
-    /// Parse and validate the 4-byte big-endian length header; nil if invalid.
-    private func frameBodyLength(_ headerData: Data) -> Int? {
-        let length = headerData.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-        guard length > 0, length < 1_048_576 else {
-            logger.warning("Invalid frame length: \(length)")
-            return nil
-        }
-        return Int(length)
-    }
 }

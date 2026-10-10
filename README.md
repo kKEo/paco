@@ -38,7 +38,7 @@ PaCo/
 ```
 PaCo.app ←──── XPC ────→ PaCoDaemon   (policy push, active profile, override grant, internet on/off, kill process)
 PaCoAgent ←─── XPC ────→ PaCoDaemon   (fetch policy, internet status, kill process)
-PaCo.app ←── JSON files ─→ PaCoAgent  (usage.json, events.json — via ~/Library/Application Support/com.paco/)
+PaCoAgent ──→ JSON files ──→ PaCo.app  (usage.json; events.json is an agent-side log — via ~/Library/Application Support/com.paco/)
 Parent Mac ←── Bonjour/TCP ──→ Child Mac  (policy push, PIN verification, time-extension requests/approvals)
 ```
 
@@ -53,7 +53,7 @@ All JSON files live in `~/Library/Application Support/com.paco/` on each Mac:
 | File | Written by | Read by |
 |------|-----------|---------|
 | `usage.json` | PaCoAgent | PaCo.app |
-| `events.json` | PaCoAgent | PaCo.app (parent, via DispatchSource watcher) |
+| `events.json` | PaCoAgent | nobody yet — activity log (app blocked, internet on/off), the hook for future notifications |
 | `child-requests.json` | PaCo.app (child) | PaCo.app (child) — sent requests and their outcomes, survives relaunch |
 
 ### Policy Push (parent → child)
@@ -66,7 +66,12 @@ PaCo uses a `pf` anchor named `com.paco`. When internet is blocked, the daemon w
 
 ### Schedule Evaluation
 
-The daemon evaluates all active schedules every 30 seconds (`PolicyEngine`). Most-restrictive-wins: if any active schedule says blocked, internet is disabled. A configurable grace period (0–15 min) gives a warning window after the off-time before enforcement. The decision is edge-triggered, so a manual toggle from the dashboard persists until the next schedule transition.
+The daemon evaluates the active profile's schedules every 30 seconds (`PolicyEngine`). Most-restrictive-wins: if any active schedule says blocked, internet is disabled. A configurable grace period (0–15 min) gives a warning window after the off-time before enforcement.
+
+- **Days mean "the night that starts on that day".** An overnight window (off later than on, e.g. 21:00 → 07:00) on Thursday blocks until Friday 07:00 and does not block Friday evening. Same-day windows (09:00 → 15:00) apply to the selected day only.
+- **Profiles.** Schedules and app rules belong to a child profile; a device enforces the active profile's rules (chosen under Profiles) plus any without a profile. With no active profile, everything applies.
+- **Manual toggle.** The Home switch forces internet on or off for 60 minutes (`ManualInternetOverride`), then the schedule takes over again. Home shows the override and a "Back to schedule" button. Precedence: manual toggle → approved extension → schedules.
+- **"Follows Schedule" app rules** block the app exactly while the chosen schedule blocks the internet (an approved extension lifts both). A disabled schedule blocks nothing; a deleted one leaves the rule flagged in red and the app blocked until the rule is re-added.
 
 ### Request/Approve Workflow
 
@@ -74,6 +79,10 @@ The daemon evaluates all active schedules every 30 seconds (`PolicyEngine`). Mos
 2. Parent's app receives it on the paired connection and inserts a `TimeExtensionRequest` into SwiftData, attributed to the *pairing identity* the request arrived on (not the name in the payload), which is also how the reply is routed.
 3. Parent sees the request in **Requests** tab or the **Home** banner, and taps Approve or Deny. Approve is disabled while that child is offline; the request stays pending until the grant was actually sent.
 4. The child receives `.approveExtension`, matches it against its persisted request (each id resolves once — replay guard), grants the override to its daemon over XPC, and shows "Approved — internet on until HH:MM". The daemon enables internet immediately. A denial shows "Request denied".
+
+### Usage Tracking
+
+The agent counts **foreground** time per regular (Dock) app using `NSWorkspace` activation events (`UsageLedger`), so an app that is open shows its time immediately, apps already running when the agent starts count from then, and helpers are not listed. Internet-on time comes from the daemon's state. Counters reset at midnight; a snapshot is written every 30 s to `usage.json` and restored on agent restart.
 
 ### Parent Access on a child Mac
 
@@ -132,20 +141,22 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug
 ### Manual install for local testing
 
 ```bash
-# 1. Build release binaries
-make build-release
+# 1. Build and stage a signed installer package (TEAM_ID = your 10-char Team ID)
+make pkg TEAM_ID=ABCDE12345
 
-# 2. Build and stage the installer package
-make pkg
+# 2. Optional: notarize + staple (after `xcrun notarytool store-credentials paco` once)
+make notarize TEAM_ID=ABCDE12345 NOTARY_PROFILE=paco
 
 # 3. Install (requires sudo)
 sudo installer -pkg build/PaCo-1.0.0.pkg -target /
 ```
 
+Without `TEAM_ID` the build is unsigned (local UI testing only). With it, all four targets are signed with your Developer ID Application certificate and hardened runtime, and the pkg with your Developer ID Installer certificate.
+
 The postinstall script:
+- Boots out any previously installed daemon/agent so an upgrade does not keep the old binaries running
 - Copies `PaCoDaemon` and `PaCoAgent` binaries to `/Library/Application Support/PaCo/`
-- Bootstraps the LaunchDaemon via `launchctl bootstrap system`
-- The LaunchAgent (`com.paco.agent`) loads automatically at login
+- Bootstraps the LaunchDaemon via `launchctl bootstrap system` and the LaunchAgent into the console user's GUI domain
 
 ### LaunchDaemon and LaunchAgent plists
 
@@ -169,7 +180,8 @@ The postinstall script:
 | Target | Description |
 |--------|-------------|
 | `make build` | Debug build |
-| `make build-release` | Release build to `build/DerivedData` |
+| `make build-release` | Release build to `build/DerivedData` (signed when `TEAM_ID` is set) |
+| `make notarize` | Build the pkg, submit to Apple notary service, staple (`TEAM_ID`, `NOTARY_PROFILE`) |
 | `make pkg` | Release build → staged pkg → `build/PaCo-<VERSION>.pkg` |
 | `make clean` | Remove `build/` directory |
 | `make clear-pin` | Delete stored PIN from Keychain (for testing) |
@@ -185,8 +197,8 @@ make pkg VERSION=1.2.0
 ## Resetting State
 
 ```bash
-# Reset role selection (triggers onboarding on next launch)
-rm -rf ~/Library/Application\ Support/com.paco.app
+# Reset the app's database (role selection, profiles, schedules, rules, pairings)
+rm -f ~/Library/Application\ Support/com.paco/PaCo.store*
 
 # Clear stored PIN
 make clear-pin
@@ -197,7 +209,7 @@ security delete-generic-password -s "com.paco.pin.salt"
 # Clear stale window state
 defaults delete com.paco.app
 
-# Remove shared JSON data
+# Remove everything app-side (database + usage/events/request logs)
 rm -rf ~/Library/Application\ Support/com.paco/
 
 # Remove the daemon's policy and block state (root-owned)

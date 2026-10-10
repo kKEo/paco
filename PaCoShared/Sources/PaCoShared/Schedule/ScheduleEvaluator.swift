@@ -55,71 +55,58 @@ public enum ScheduleEvaluator {
         return hasGrace ?? .allowed
     }
 
+    /// Evaluate one schedule.
+    ///
+    /// A window is attributed to the day it *starts* on. For an overnight window
+    /// (off > on, e.g. 21:00 → 07:00) the part after midnight belongs to the
+    /// previous day's selection: "Thursday 21:00 → 07:00" blocks until Friday
+    /// 07:00 and does not block Friday evening. Same-day windows use today only.
     private static func evaluateSingle<S: Schedulable>(schedule: S, at date: Date) -> InternetAction {
         let calendar = Calendar.current
-
-        // Check if today is one of the schedule's active days
-        let weekday = calendar.component(.weekday, from: date)
-        guard let day = DayOfWeek.from(weekday: weekday),
-              schedule.days.contains(day) else {
-            return .allowed
-        }
-
         let hour = calendar.component(.hour, from: date)
         let minute = calendar.component(.minute, from: date)
         let currentMinutes = hour * 60 + minute
 
         let offMinutes = schedule.offHour * 60 + schedule.offMinute
         let onMinutes = schedule.onHour * 60 + schedule.onMinute
+        guard offMinutes != onMinutes else { return .allowed }  // off == on means no block
 
-        // Determine if current time is in the blocked window
+        let isOvernight = offMinutes > onMinutes
         let isInBlockedWindow: Bool
-        if offMinutes > onMinutes {
-            // Overnight block: e.g., 21:00 to 07:00
-            isInBlockedWindow = currentMinutes >= offMinutes || currentMinutes < onMinutes
-        } else if offMinutes < onMinutes {
-            // Same-day block: e.g., 09:00 to 17:00
-            isInBlockedWindow = currentMinutes >= offMinutes && currentMinutes < onMinutes
+        let windowStartDay: Date
+        if isOvernight {
+            if currentMinutes >= offMinutes {
+                isInBlockedWindow = true
+                windowStartDay = date
+            } else if currentMinutes < onMinutes {
+                isInBlockedWindow = true
+                windowStartDay = calendar.date(byAdding: .day, value: -1, to: date) ?? date
+            } else {
+                return .allowed
+            }
         } else {
-            // off == on means no block
+            isInBlockedWindow = currentMinutes >= offMinutes && currentMinutes < onMinutes
+            windowStartDay = date
+        }
+        guard isInBlockedWindow else { return .allowed }
+
+        guard let day = DayOfWeek.from(weekday: calendar.component(.weekday, from: windowStartDay)),
+              schedule.days.contains(day) else {
             return .allowed
         }
 
-        if !isInBlockedWindow {
-            return .allowed
-        }
-
-        // Check grace period (only applies right after offMinutes)
+        // Grace period: only right after offMinutes, possibly wrapping past midnight.
         if schedule.gracePeriodMinutes > 0 {
             let graceEndMinutes = offMinutes + schedule.gracePeriodMinutes
-            let isInGrace: Bool
-
             if graceEndMinutes > 24 * 60 {
-                // Grace period wraps past midnight:
-                // e.g., off at 23:50, grace 15 min → grace until 00:05
                 let wrappedEnd = graceEndMinutes - 24 * 60
-                isInGrace = currentMinutes >= offMinutes || currentMinutes < wrappedEnd
-            } else {
-                // Same-day grace period
-                isInGrace = currentMinutes >= offMinutes && currentMinutes < graceEndMinutes
-            }
-
-            if isInGrace {
-                // Calculate remaining seconds
-                let remaining: Int
-                if graceEndMinutes > 24 * 60 {
-                    let wrappedEnd = graceEndMinutes - 24 * 60
-                    if currentMinutes >= offMinutes {
-                        // Before midnight portion
-                        remaining = ((24 * 60 - currentMinutes) + wrappedEnd) * 60
-                    } else {
-                        // After midnight portion
-                        remaining = (wrappedEnd - currentMinutes) * 60
-                    }
-                } else {
-                    remaining = (graceEndMinutes - currentMinutes) * 60
+                if currentMinutes >= offMinutes {
+                    return .gracePeriod(remainingSeconds: ((24 * 60 - currentMinutes) + wrappedEnd) * 60)
+                } else if currentMinutes < wrappedEnd {
+                    return .gracePeriod(remainingSeconds: (wrappedEnd - currentMinutes) * 60)
                 }
-                return .gracePeriod(remainingSeconds: remaining)
+            } else if currentMinutes >= offMinutes && currentMinutes < graceEndMinutes {
+                return .gracePeriod(remainingSeconds: (graceEndMinutes - currentMinutes) * 60)
             }
         }
 
