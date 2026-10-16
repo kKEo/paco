@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Consistency checks for the GitBook in docs/gitbook.
 
-0. No template tags other than the {% hint %} callouts (they break both renderers).
+0. No template tags other than the {% hint %} callouts (they break both renderers),
+   and no backslash line breaks outside code blocks (HonKit prints the backslash).
 1. Every relative Markdown link points to an existing file, and every #anchor
    matches a heading in the target page (GitBook slug rules).
 2. Every page is listed in SUMMARY.md, and every SUMMARY entry exists.
@@ -47,6 +48,15 @@ for page in pages:
         for tag in re.findall(r'{%.*?%}', line):
             if not re.fullmatch(r'{%\s*(hint\s+style="(info|warning|danger|success)"|endhint)\s*%}', tag):
                 error(f'{page}:{n}: template tag {tag} is not allowed (only hint callouts); rephrase it')
+
+# 0b. backslash hard line breaks: GitBook renders them, HonKit prints a literal "\".
+for page in pages:
+    in_code = False
+    for n, line in enumerate(open(page).read().split('\n'), 1):
+        if line.lstrip().startswith('```'):
+            in_code = not in_code
+        elif not in_code and line.endswith('\\'):
+            error(f'{page}:{n}: backslash line break renders as a literal "\\" on the Pages site; join the lines')
 
 # 1. links and anchors
 for page in pages:

@@ -1,3 +1,20 @@
+/* Palette shared with the diagrams (docs/diagrams/svgkit.py). */
+.book {
+  --paco-ink: #0F172A;
+  --paco-text: #334155;
+  --paco-muted: #64748B;
+  --paco-faint: #94A3B8;
+  --paco-border: #E2E8F0;
+  --paco-panel: #F8FAFC;
+  --paco-hover: #EEF2F6;
+  --paco-blue: #2563EB;
+  --paco-blue-ink: #1D4ED8;
+  --paco-blue-tint: #EAF1FE;
+  --paco-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Content ---------- */
+
 /* Figures: centred, scaled to the column, caption under the image. */
 .markdown-section figure { margin: 1.5em 0; text-align: center; }
 .markdown-section figure img { max-width: 100%; height: auto; }
@@ -6,4 +23,262 @@
 /* Mermaid diagrams: allow horizontal scroll on narrow screens. */
 .markdown-section .mermaid { overflow-x: auto; text-align: center; margin: 1.5em 0; }
 .markdown-section .mermaid-failed { white-space: pre; text-align: left; font-family: monospace; }
-.book-header .paco-repo { font-size: 13px; font-weight: 600; padding: 0 12px; }
+
+/* ---------- Top bar ---------- */
+
+.book-header .paco-repo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  margin: 9px 8px 0 0;
+  padding: 0 12px;
+  border: 1px solid var(--paco-border);
+  border-radius: 8px;
+  color: var(--paco-text);
+  font: 500 13px/1 var(--paco-font);
+  text-transform: none;
+}
+.book-header .paco-repo:hover { color: var(--paco-ink); background: var(--paco-panel); border-color: #CBD5E1; }
+.book-header .paco-repo svg { width: 15px; height: 15px; }
+
+/* ---------- Sidebar ---------- */
+
+/* The sidebar scrolls as one column (the theme restores its scroll position after
+   client-side navigation). <nav> is display:contents so the brand, search box,
+   chapter list and footer are siblings that can be ordered: brand, search, list. */
+.book .book-summary {
+  display: flex;
+  flex-direction: column;
+  background: var(--paco-panel);
+  border-right: 1px solid var(--paco-border);
+  color: var(--paco-text);
+  font-family: var(--paco-font);
+  font-size: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+.book .book-summary::-webkit-scrollbar { width: 8px; }
+.book .book-summary::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; border: 2px solid var(--paco-panel); }
+.book .book-summary nav { display: contents; }
+
+.paco-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Brand */
+.book-summary .paco-brand {
+  order: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 20px 14px;
+  color: var(--paco-ink);
+  text-decoration: none;
+}
+.book-summary .paco-brand:hover { text-decoration: none; }
+.book-summary .paco-logo { width: 34px; height: 34px; flex: none; border-radius: 9px; box-shadow: 0 1px 2px rgba(15, 23, 42, .12), 0 2px 8px rgba(37, 99, 235, .18); }
+.book-summary .paco-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.book-summary .paco-brand-name { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.book-summary .paco-brand-tagline { font-size: 12px; color: var(--paco-muted); }
+
+/* Search: stays at the top while the list scrolls */
+.book .book-summary #book-search-input {
+  order: 1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 4px 14px 12px;
+  background: var(--paco-panel);
+  border: 0;
+}
+.book .book-summary #book-search-input::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: 14px;
+  width: 15px;
+  height: 15px;
+  background: var(--paco-faint);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
+.book .book-summary #book-search-input::after {
+  content: "/";
+  position: absolute;
+  right: 24px;
+  top: 12px;
+  min-width: 18px;
+  height: 20px;
+  border: 1px solid var(--paco-border);
+  border-radius: 5px;
+  background: var(--paco-panel);
+  color: var(--paco-faint);
+  font: 500 11px/18px var(--paco-font);
+  text-align: center;
+  pointer-events: none;
+}
+.book .book-summary #book-search-input.paco-has-focus::after { opacity: 0; }
+.book .book-summary #book-search-input input,
+.book .book-summary #book-search-input input:hover,
+.book .book-summary #book-search-input input:focus {
+  height: 36px;
+  padding: 0 34px 0 34px;
+  border: 1px solid var(--paco-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--paco-ink);
+  font: 14px var(--paco-font);
+  line-height: 34px;
+  box-shadow: 0 1px 1px rgba(15, 23, 42, .03);
+  transition: border-color .15s, box-shadow .15s;
+}
+.book .book-summary #book-search-input input:hover { border-color: #CBD5E1; }
+.book .book-summary #book-search-input input:focus { border-color: var(--paco-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+.book .book-summary #book-search-input input::placeholder { color: var(--paco-faint); }
+
+/* Chapter list */
+.book .book-summary ul.summary { order: 2; flex: 1 0 auto; padding: 4px 12px 16px; }
+.book .book-summary ul.summary ul.articles { margin: 0; padding: 0; list-style: none; }
+
+/* Undo the theme's generic "li a, li span" block styling (padding, clipping). */
+.book .book-summary ul.summary li a,
+.book .book-summary ul.summary li span {
+  overflow: visible;
+  white-space: normal;
+}
+.book .book-summary ul.summary li summary span { display: inline; padding: 0; }
+.book .book-summary ul.summary li.chapter > a {
+  position: relative;
+  display: block;
+  padding: 6px 10px 6px 12px;
+  margin: 1px 0;
+  border-radius: 7px;
+  color: var(--paco-text);
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color .12s, color .12s;
+}
+.book .book-summary ul.summary li.chapter > a:hover { background: var(--paco-hover); color: var(--paco-ink); text-decoration: none; }
+.book .book-summary ul.summary li.chapter > a:focus-visible,
+.book .book-summary details > summary:focus-visible,
+.book .book-summary .paco-brand:focus-visible,
+.book .book-summary .paco-sidebar-footer a:focus-visible { outline: 2px solid var(--paco-blue); outline-offset: -2px; }
+.book .book-summary ul.summary li.chapter.active > a {
+  background: var(--paco-blue-tint);
+  color: var(--paco-blue-ink);
+  font-weight: 600;
+}
+
+/* Landing page link(s) above the groups */
+.book .book-summary li.paco-top { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--paco-border); }
+.book .book-summary li.paco-top li.chapter > a { display: flex; align-items: center; gap: 10px; padding-left: 8px; }
+.book .book-summary li.paco-top li.chapter > a::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M5 9v11h5v-6h4v6h5V9'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M5 9v11h5v-6h4v6h5V9'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: .8;
+}
+
+/* Collapsible groups (one per SUMMARY part) */
+.book .book-summary li.paco-group { margin-top: 6px; }
+.book .book-summary li.paco-group > details > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 7px;
+  color: var(--paco-ink);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.book .book-summary li.paco-group > details > summary::-webkit-details-marker { display: none; }
+.book .book-summary li.paco-group > details > summary:hover { background: var(--paco-hover); }
+.book .book-summary li.paco-group .paco-group-title { flex: 1; }
+.book .book-summary li.paco-group .paco-icon { color: var(--paco-blue); }
+.book .book-summary li.paco-group .paco-group-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #E2E8F0;
+  color: var(--paco-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+.book .book-summary li.paco-group .paco-chevron {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: var(--paco-faint);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .18s ease;
+}
+.book .book-summary li.paco-group > details[open] > summary .paco-chevron { transform: rotate(90deg); }
+/* Pages hang off a guide line; the current page marks it in blue. */
+.book .book-summary li.paco-group > details > ul.articles {
+  position: relative;
+  margin: 2px 0 6px 15px;
+  padding-left: 9px;
+  border-left: 1px solid var(--paco-border);
+}
+.book .book-summary li.paco-group li.chapter.active > a::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--paco-blue);
+}
+
+/* Footer */
+.book .book-summary .paco-sidebar-footer {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 12px 18px;
+  margin: 0 12px;
+  border-top: 1px solid var(--paco-border);
+}
+.book .book-summary .paco-sidebar-footer a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  color: var(--paco-text);
+  text-decoration: none;
+}
+.book .book-summary .paco-sidebar-footer a:hover { background: var(--paco-hover); color: var(--paco-ink); }
+.book .book-summary .paco-sidebar-footer a.paco-built-with { padding-left: 34px; color: var(--paco-faint); font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .book .book-summary * { transition: none !important; }
+}
+
+/* No keyboard shortcut hint on touch screens. */
+@media (hover: none) {
+  .book .book-summary #book-search-input::after { display: none; }
+}

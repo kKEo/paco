@@ -5,7 +5,8 @@
 
 Fails on: internal links or images that do not resolve, #anchors with no matching
 id, links still pointing at .md files, GitBook template tags or Markdown tables left
-unrendered, and pages missing from the output.
+unrendered, pages missing from the output, and pages without the custom sidebar
+(theme/_layouts) marking the current page.
 """
 import os
 import re
@@ -57,6 +58,10 @@ for path, (page, text) in pages.items():
         error(f'{rel}: unrendered {{% hint %}} tag')
     if re.search(r'\|\s*-{3,}\s*\|', body):
         error(f'{rel}: unrendered Markdown table (a table nested in a list item?)')
+    if 'class="paco-brand"' not in text:
+        error(f'{rel}: default sidebar (theme/_layouts override not applied)')
+    elif text.count('aria-current="page"') != 1:
+        error(f'{rel}: sidebar does not mark exactly one current page')
     for href in page.links:
         u = urlparse(href)
         if u.scheme or href.startswith('//') or href.startswith('mailto:'):

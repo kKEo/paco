@@ -21,6 +21,8 @@ find "$WORK" -name '*.md' -print0 | xargs -0 sed -i.bak 's#\.gitbook/assets/#ass
 find "$WORK" -name '*.md.bak' -delete
 
 cp "$HERE/book.json" "$WORK/book.json"
+# Theme overrides (sidebar layout); HonKit picks up _layouts/ from the book root.
+cp -R "$HERE/theme/_layouts" "$WORK/_layouts"
 ln -s "$HERE/node_modules" "$WORK/node_modules"
 
 rm -rf "$OUT"

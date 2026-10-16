@@ -36,7 +36,7 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests \
 
 - `ci.yml`: XcodeGen project-sync check (pinned `XCODEGEN_VERSION` — bump it when upgrading XcodeGen locally), Debug build, tests, Release build; ad-hoc signed on `macos-15`.
 - `docs.yml`: `python3 .github/scripts/check_book.py` — links, anchors, SUMMARY, images, and that `docs/diagrams/*.py` reproduce the committed SVGs. Regenerate diagrams after editing the scripts.
-- `pages.yml`: builds `docs/gitbook` with HonKit (`docs/site/build.sh`, pinned in `docs/site/package-lock.json`, local plugin in `docs/site/plugin/`), checks it with `docs/site/check_site.py`, deploys to https://kkeo.github.io/paco/ from `master`. Don't nest tables inside list items in the book — HonKit renders them as raw pipes.
+- `pages.yml`: builds `docs/gitbook` with HonKit (`docs/site/build.sh`, pinned in `docs/site/package-lock.json`, local plugin in `docs/site/plugin/`, sidebar template in `docs/site/theme/_layouts/`), checks it with `docs/site/check_site.py`, deploys to https://kkeo.github.io/paco/ from `master`. Don't nest tables inside list items in the book — HonKit renders them as raw pipes; no backslash line breaks either (`check_book.py` rejects them).
 - `release.yml`: on `v*` tags, signed + notarized pkg published as a GitHub Release. Needs the `TEAM_ID` variable and the signing/notary secrets listed in its header.
 
 ## Architecture

@@ -56,9 +56,10 @@ The book is published at [kkeo.github.io/paco](https://kkeo.github.io/paco/). Th
 |---|---|
 | `docs/site/package.json`, `package-lock.json` | Pinned HonKit and plugins |
 | `docs/site/book.json` | Site title and plugins: `hints` for the callout blocks, and the local `paco` plugin |
-| `docs/site/plugin/` | Local plugin: renders Mermaid diagrams in the browser with a pinned Mermaid version, styles figures, adds a GitHub link |
-| `docs/site/build.sh` | Copies the book, moves `.gitbook/assets` to `assets/` (static hosts skip dot-folders), runs HonKit, adds `.nojekyll` |
-| `docs/site/check_site.py` | Fails on broken links, anchors or images in the HTML, `.md` links, and unrendered callouts or tables |
+| `docs/site/plugin/` | Local plugin: renders Mermaid diagrams in the browser with a pinned Mermaid version, styles the sidebar, figures and top bar, adds a GitHub link |
+| `docs/site/theme/_layouts/website/summary.html` | Replaces the theme's sidebar: logo, search, one collapsible group per `SUMMARY.md` part, footer |
+| `docs/site/build.sh` | Copies the book and the theme overrides, moves `.gitbook/assets` to `assets/` (static hosts skip dot-folders), runs HonKit, adds `.nojekyll` |
+| `docs/site/check_site.py` | Fails on broken links, anchors or images in the HTML, `.md` links, unrendered callouts or tables, and pages without the custom sidebar |
 
 Pull requests that touch `docs/` build and check the site without deploying. Pushes to `master` also deploy it. Pages must use **GitHub Actions** as its source (*Settings → Pages*), which is already the case for this repository.
 
@@ -71,8 +72,10 @@ python3 -m http.server --directory ../../build/site 8000   # then open http://lo
 ```
 
 {% hint style="info" %}
-HonKit's Markdown parser does not support a table nested inside a list item. End the list first and put the table after it; `check_site.py` catches raw table syntax in the output.
+HonKit's Markdown parser is stricter than GitBook's. It does not support a table nested inside a list item (end the list first and put the table after it) or a backslash at the end of a line as a line break (it prints the backslash). `check_site.py` catches raw table syntax in the output, and `check_book.py` rejects backslash line breaks.
 {% endhint %}
+
+The sidebar has one collapsible group per titled part of `SUMMARY.md`. The group holding the current page is always open; the others remember what the reader last chose. Press <kbd>/</kbd> to jump to the search box. Template comments in `theme/_layouts` use HonKit's triple-hash comment delimiters (see the top of `summary.html`), not the usual Nunjucks ones.
 
 ## Release
 

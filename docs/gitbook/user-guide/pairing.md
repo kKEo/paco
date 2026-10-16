@@ -16,8 +16,7 @@ Pairing creates a secret key shared by the two Macs. Every message between them 
 
 <figure><img src="../.gitbook/assets/ug-pairing.svg" alt="Step 1: click Pair next to the child's Mac and read the code. Step 2: type the code on the child's Mac. Step 3: both Macs show Connected."><figcaption><p>Pairing takes one code and about 30 seconds.</p></figcaption></figure>
 
-1. On your Mac, open the dashboard and click **Devices**.\
-   The child's Mac appears under **Nearby Devices (Not Paired)** with its computer name.
+1. On your Mac, open the dashboard and click **Devices**. The child's Mac appears under **Nearby Devices (Not Paired)** with its computer name.
 2. Click **Pair** next to it. PaCo shows an 8-character **Pairing Code**.
 3. On the child's Mac, click the shield in the menu bar, then **Pair with Parent**.
 4. Type the code and click **Pair**. Upper or lower case does not matter, and spaces are ignored.

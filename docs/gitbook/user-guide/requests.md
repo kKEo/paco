@@ -10,8 +10,7 @@ When the internet is off, your child can ask for more time. You decide on your M
 
 ## What the child does
 
-1. Click the shield in the menu bar and then **Request More Time**.\
-   The button is available only while the child's Mac is connected to your Mac.
+1. Click the shield in the menu bar and then **Request More Time**. The button is available only while the child's Mac is connected to your Mac.
 2. Choose 15 to 120 minutes, optionally type a reason, and click **Send Request**.
 3. A card shows **Request for N min sent at HH:MM — waiting for parent…**
 
