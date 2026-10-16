@@ -116,6 +116,8 @@ final class AgentDelegate: NSObject, AppMonitorDelegate {
         guard let data = try? JSONEncoder().encode(transfer) else { return }
         try? FileManager.default.createDirectory(at: PaCoFiles.baseDirectory, withIntermediateDirectories: true)
         try? data.write(to: PaCoFiles.usageFileURL, options: .atomic)
+        // The daemon uploads it to PaCo Cloud when this Mac is enrolled (else ignores it).
+        daemonProxy?.reportUsage(data) { _ in }
     }
 
     // MARK: - AppMonitorDelegate

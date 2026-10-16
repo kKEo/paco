@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-PaCo is a macOS (14+) parental control app: internet on/off scheduling via `pf` firewall, app restrictions, usage tracking, and a child→parent time-extension request/approve workflow over Bonjour. See README.md for full architecture, installation, and state-reset instructions.
+PaCo is a macOS (14+) parental control app: internet on/off scheduling via `pf` firewall, app restrictions, usage tracking, and a child→parent time-extension request/approve workflow over Bonjour. A child Mac can instead be managed from a browser through **PaCo Cloud**, a self-hosted Laravel app in `server/`. See README.md for full architecture, installation, and state-reset instructions.
 
 ## Commands
 
@@ -32,27 +32,39 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests \
   -only-testing:PaCoTests/ScheduleEvaluatorTests/testSomething
 ```
 
+### PaCo Cloud server (`server/`)
+
+```bash
+make server-install server-serve   # SQLite at http://localhost:8080; parent@example.com / password, PIN 123456
+make server-test                   # Pest (cd server && vendor/bin/pest); vendor/bin/pint for style
+make server-up                     # Docker: Octane/FrankenPHP, PostgreSQL, queue, scheduler, Mailpit
+cd server && php artisan paco:enrollment-code | paco:push-event | paco:approve | paco:devices
+```
+
 ### CI (GitHub Actions)
 
-- `ci.yml`: XcodeGen project-sync check (pinned `XCODEGEN_VERSION` — bump it when upgrading XcodeGen locally), Debug build, tests, Release build; ad-hoc signed on `macos-15`.
+- `ci.yml`: XcodeGen project-sync check (pinned `XCODEGEN_VERSION` — bump it when upgrading XcodeGen locally), Debug build, tests, Release build; ad-hoc signed on `macos-15`. Ignores `server/**` except `server/tests/Fixtures/**` (the shared policy fixture).
+- `server.yml`: Pint + Pest for `server/` on SQLite, and on PostgreSQL + Redis (runs `tests/Postgres`, `tests/Redis`). PHP 8.3; `composer.json` pins `config.platform.php` so the lock stays 8.3-compatible.
 - `docs.yml`: `python3 .github/scripts/check_book.py` — links, anchors, SUMMARY, images, and that `docs/diagrams/*.py` reproduce the committed SVGs. Regenerate diagrams after editing the scripts.
 - `pages.yml`: builds `docs/gitbook` with HonKit (`docs/site/build.sh`, pinned in `docs/site/package-lock.json`, local plugin in `docs/site/plugin/`, sidebar template in `docs/site/theme/_layouts/`), checks it with `docs/site/check_site.py`, deploys to https://kkeo.github.io/paco/ from `master`. Don't nest tables inside list items in the book — HonKit renders them as raw pipes; no backslash line breaks either (`check_book.py` rejects them).
 - `release.yml`: on `v*` tags, signed + notarized pkg published as a GitHub Release. Needs the `TEAM_ID` variable and the signing/notary secrets listed in its header.
 
 ## Architecture
 
-One Xcode project, four targets:
+One Xcode project, four targets (plus the PaCo Cloud server in `server/`, a separate Laravel app):
 
 - **PaCo** (`PaCo/`) — SwiftUI `MenuBarExtra` app (`LSUIElement`), runs as either Parent or Child role chosen at onboarding (`AppState.mode`: onboarding/parent/child). SwiftData persistence.
 - **PaCoDaemon** (`PaCoDaemon/`) — root LaunchDaemon; owns the `pf` anchor `com.paco` and process killing. Reached from the app via XPC (`DaemonXPCClient` ↔ `DaemonXPCProtocol` in PaCoShared).
 - **PaCoAgent** (`PaCoAgent/`) — user LaunchAgent; 30-second schedule tick (most-restrictive-wins, optional grace period), NSWorkspace app monitoring, usage tracking.
-- **PaCoShared** (`PaCoShared/`) — local Swift package all three link against: SwiftData models, XPC protocol, Codable transfer types, PIN/Keychain, `ScheduleEvaluator`, `PaCoFiles` (shared JSON paths).
+- **PaCoShared** (`PaCoShared/`) — local Swift package all three link against: SwiftData models, XPC protocol, Codable transfer types, PIN/Keychain, `ScheduleEvaluator`, `PaCoFiles` (shared JSON paths), and `Cloud/` (PaCo Cloud wire types, `CloudCodec`, `CloudEventReducer`, `UsageOutbox`, `CloudCredentials`).
 
-### Communication (three distinct channels)
+### Communication (four distinct channels)
 
 1. **App/Agent ↔ Daemon:** XPC (`DaemonXPCProtocol`). The daemon **owns the policy**: the app pushes `PolicyTransfer` (`updatePolicy`), the active profile (`setActiveProfile`) and approved overrides (`grantInternetOverride`); the daemon persists a `DaemonPolicy` at `/Library/Application Support/PaCo/policy.json` (root-owned) and evaluates it itself every 30 s in `PolicyEngine`. The agent only `fetchPolicy`s to know which apps to watch. Connections carry a code-signing requirement (`setCodeSigningRequirement`) built from the daemon's own Team ID + `com.paco.app`/`com.paco.agent`.
 2. **Agent → App:** JSON files in `~/Library/Application Support/com.paco/` (`usage.json` watched by the app with a `DispatchSource` in `AppDelegate.swift`; `events.json` is an agent-side log nobody reads yet; `child-requests.json` is the child app's own persisted request log; `PaCo.store` is the SwiftData database — explicit URL, not the shared default store). No policy files live here any more. `SyncManager` composes the `PolicyTransfer` and always fetches fresh from the `ModelContext` (never pass a `@Query` array — it lags one change behind), then fires `onPolicyChanged`.
 3. **Parent Mac ↔ Child Mac:** Bonjour/TCP (`BonjourService`) carrying `PaCoMessage` commands: `.updatePolicy` (`PolicyTransfer`, parent → child on connect and after every policy change), `.requestExtension` and `.verifyPIN` (child → parent, answered with a `PaCoResponse`), `.approveExtension`/`.denyExtension`. Browsing and auto-connect are app-level (`BonjourService.autoConnectPairedDevices`, keyed off stored `PairingKeyManager` keys), not tied to the Devices tab.
+
+4. **Daemon ↔ PaCo Cloud:** HTTPS from `CloudSyncService` in the daemon (never the app) on a child whose `DeviceConfig.controller == .cloud`. Long-poll `GET /api/v1/device/events` for commands (`policyChanged`, `activeProfileChanged`, `approveExtension`, `denyExtension`, `setManualInternet`, `clearManualInternet`, `unenrolled`); heartbeat every 30 s; usage via the agent's XPC `reportUsage`; the app uses the single XPC `cloud(_:reply:)` with a `CloudXPCRequest`. Device token in root-only `cloud.json`. A cloud child does not advertise over Bonjour.
 
 The time-extension flow: child sends `.requestExtension` over Bonjour and records it in `ChildRequestLog` (persisted) → parent inserts a `TimeExtensionRequest` into SwiftData with `childDeviceName` = the **connection identity** the request arrived on (deduped by request id) → approval sends `.approveExtension` back on that identity (and is only recorded once the send succeeded) → child resolves the request in `ChildRequestLog` (one-shot, replay guard) and grants the override to its daemon over XPC.
 
@@ -73,4 +85,9 @@ The time-extension flow: child sends `.requestExtension` over Bonjour and record
 - Replies to a child go to `TimeExtensionRequest.childDeviceName`, which must be the Bonjour connection identity (the paired name), never the name the child self-reports in a payload.
 - `BonjourService` callbacks and `ChildRequestLog` run on the main queue; `connectedIdentities` / `isParentConnected` are the only "is the peer reachable" signals (an entry in `parentConnections` may still be handshaking).
 - `SWIFT_STRICT_CONCURRENCY` is `minimal` on all targets.
+- **PaCo Cloud wire format:** cloud JSON goes through `CloudCodec` (ISO-8601, no fractional seconds); local files and XPC policy payloads keep the default `JSONEncoder`. The server must emit dates via `App\Support\Iso` (Laravel's default has microseconds, which Swift rejects). `server/tests/Fixtures/policy.json` is checked by both the server's `PolicyTest` and `CloudFixtureTests` — change both sides together.
+- Cloud events are delivered at least once: payloads carry absolute `until`/`grantedUntil`, and `CloudEventReducer` skips ids ≤ cursor. Server-side, insert events only through `DeviceEventOutbox` (it locks the device row so ids commit in order).
+- On a cloud child, never push the app's local `DeviceConfig.childProfileId` to the daemon at launch: the profile comes from the server.
+- The `pf` relay table (`paco_cloud`) is refreshed by `FirewallManager.updateRelay` (`pfctl -T replace`), never by re-running `applyBlockLocked` during a block: its `pfctl -F states` kills the long-poll.
+- Server: `AuthenticateDevice` implements `AuthenticatesRequests` so it sorts before `ThrottleRequests`; otherwise device rate limits key by IP. Fortify is used only for 2FA actions (`Fortify::ignoreRoutes()`).
 - Full end-to-end daemon/agent testing requires Developer ID signing (`SMAppService`/XPC mach services enforce it); unsigned builds run the UI but daemon/agent connections fail.

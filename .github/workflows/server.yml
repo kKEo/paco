@@ -1,0 +1,95 @@
+# PaCo Cloud server (Laravel, server/): style and tests on SQLite, and on PostgreSQL + Redis.
+name: Server
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
+  pull_request:
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: server
+
+jobs:
+  test:
+    name: Test (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, pgsql]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: paco_test
+          POSTGRES_USER: paco
+          POSTGRES_PASSWORD: paco
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U paco"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, pdo_pgsql, intl, mbstring
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('server/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Code style (Pint)
+        if: matrix.database == 'sqlite'
+        run: vendor/bin/pint --test
+
+      - name: Test
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: ${{ matrix.database == 'pgsql' && 'paco_test' || ':memory:' }}
+          DB_USERNAME: paco
+          DB_PASSWORD: paco
+          # tests/Redis (long-poll waker) run in the PostgreSQL job only.
+          PACO_TEST_REDIS: ${{ matrix.database == 'pgsql' && '1' || '' }}
+          REDIS_CLIENT: predis
+          REDIS_HOST: 127.0.0.1
+        run: vendor/bin/pest

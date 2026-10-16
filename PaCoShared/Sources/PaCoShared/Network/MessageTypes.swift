@@ -113,7 +113,7 @@ public struct ExtensionResponsePayload: Codable, Sendable {
 
 /// Child → parent payload of `.verifyPIN`. The PIN travels only inside the
 /// TLS-PSK session; `nonce` lets the child match the reply.
-public struct PINVerifyRequest: Codable, Sendable {
+public struct PINVerifyRequest: Codable, Sendable, Equatable {
     public var nonce: UUID
     public var pin: String
 
@@ -124,7 +124,7 @@ public struct PINVerifyRequest: Codable, Sendable {
 }
 
 /// Parent → child reply payload for `.verifyPIN`.
-public struct PINVerifyResult: Codable, Sendable {
+public struct PINVerifyResult: Codable, Sendable, Equatable {
     public enum Outcome: String, Codable, Sendable {
         case success
         case incorrect

@@ -10,7 +10,8 @@ The adversary is the **monitored child**: logged in to a **standard** macOS acco
 
 1. The enforcement decision (internet on/off, which apps run).
 2. The parent PIN.
-3. The parent–child channel.
+3. The parent–child channel, and on a cloud-managed Mac the device token.
+4. The parent's PaCo Cloud account, which controls the child's Mac.
 
 ## Trust boundaries and mitigations
 
@@ -30,6 +31,12 @@ The adversary is the **monitored child**: logged in to a **standard** macOS acco
 | Send commands to a child from the LAN | TLS-PSK with a pairing-derived key; an unpaired child drops every connection | `BonjourService` |
 | Replay an approval | Each request id resolves once in the persisted `ChildRequestStore` | `ChildRequestLog` |
 | Crash the app with a malformed payload | KDF rejects empty salt/password; frames are length-bounded; decode failures are ignored | `CryptoKDF`, `FrameCodec` |
+| Read or replace the PaCo Cloud device token | Root-owned `cloud.json`, mode 0600, created with that mode before it holds the token | `CloudCredentials`, `SecureFile` |
+| Recover the PIN of a cloud-managed Mac | The PIN hash lives only on the server (Argon2id); the Mac gets a verdict, with the same 5-try lockout | `PinVerifier` |
+| Use the device token to change rules | The device API can read the policy and report; rules, approvals and the manual toggle exist only in the parent's web session | `routes/api.php` |
+| Cut the Mac off from the cloud while blocked | Only the server's addresses and port pass the block; only literal IPs reach the rules | `CloudRelay` |
+| Replay or delay a cloud command | Absolute end times; event ids at or below the cursor are skipped; a late grant is not applied | `CloudEventReducer` |
+| Take over the parent's cloud account | Email verification, optional TOTP 2FA, password confirmation before removing a Mac or changing the PIN | `server/` |
 
 ## XPC peer validation
 
@@ -50,6 +57,12 @@ If the daemon itself has no team id (unsigned or ad-hoc build), it refuses every
 * PBKDF2-HMAC-SHA256, 210,000 iterations, 16-byte random salt, 32-byte output, constant-time comparison.
 * Keychain generic passwords, service `com.paco.keychain`, accessible when unlocked, this device only.
 * Attempt counter and lockout end are Keychain items too.
+
+## PaCo Cloud
+
+The device token is the cloud-managed Mac's only credential. A child who somehow read it could see their own policy, send bogus usage, send requests (rate limited and visible to the parent) and guess the PIN at the same 5-per-5-minutes rate as on the Mac itself. They could not change rules, approve anything or reach another device: all of that needs the parent's web session. Tokens are rotated every 30 days and die when the Mac is removed. TLS is mandatory in Release builds. See [PaCo Cloud server](cloud-server.md).
+
+The server is trusted the way the parent's Mac is trusted on the LAN: whoever controls it controls the child's Mac.
 
 ## Out of scope
 

@@ -5,6 +5,9 @@ struct RoleSelectionView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @State private var showParentPINSetup = false
+    @State private var childSetup: ChildSetupStep?
+
+    private enum ChildSetupStep { case choose, cloud }
 
     var body: some View {
         ZStack {
@@ -29,7 +32,7 @@ struct RoleSelectionView: View {
                         title: "Set up as Child",
                         description: "This Mac will be monitored and controlled by a parent.",
                         systemImage: "person.crop.circle",
-                        action: { appState.completeSetup(role: .child, context: modelContext) }
+                        action: { childSetup = .choose }
                     )
                 }
             }
@@ -46,7 +49,80 @@ struct RoleSelectionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(radius: 12)
             }
+
+            if let step = childSetup {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                Group {
+                    switch step {
+                    case .choose:
+                        ChildControllerChoiceView(
+                            onLocalParent: { appState.completeSetup(role: .child, controller: .localParent, context: modelContext) },
+                            onCloud: { childSetup = .cloud },
+                            onCancel: { childSetup = nil })
+                    case .cloud:
+                        CloudEnrollView(
+                            onCancel: { childSetup = .choose },
+                            onEnrolled: { appState.completeSetup(role: .child, controller: .cloud, context: modelContext) })
+                    }
+                }
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
+            }
         }
+    }
+}
+
+/// Child onboarding: who will manage this Mac.
+struct ChildControllerChoiceView: View {
+    let onLocalParent: () -> Void
+    let onCloud: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Text("Who manages this Mac?").font(.title2).fontWeight(.semibold)
+            VStack(spacing: 12) {
+                choice(
+                    title: "A parent's Mac nearby",
+                    detail: "The parent runs PaCo on their own Mac on the same network and pairs with a code.",
+                    systemImage: "laptopcomputer.and.iphone",
+                    action: onLocalParent)
+                choice(
+                    title: "PaCo Cloud, from a browser",
+                    detail: "The parent manages this Mac and sees its screen time on a PaCo Cloud web page.",
+                    systemImage: "cloud",
+                    action: onCloud)
+            }
+            Button("Back", action: onCancel)
+        }
+        .padding(30)
+        .frame(width: 420)
+    }
+
+    private func choice(title: String, detail: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: systemImage)
+                    .font(.title)
+                    .foregroundStyle(.blue)
+                    .frame(width: 40)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.headline)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .background(.background)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
     }
 }
 

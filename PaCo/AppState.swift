@@ -26,6 +26,9 @@ final class AppState {
     /// The persisted device role; nil until onboarding completes. Network roles
     /// (advertise vs browse) key off this, not off `mode`.
     private(set) var role: DeviceRole?
+    /// Child device: managed by a parent Mac nearby or by PaCo Cloud (persisted
+    /// in `DeviceConfig`). Bonjour advertising and the PIN check key off this.
+    private(set) var controller: DeviceController = .localParent
     /// The parent dashboard is shown only while unlocked. Cleared by `lock()`
     /// whenever the dashboard goes away so the PIN is required on every open.
     var isUnlocked = false
@@ -47,15 +50,17 @@ final class AppState {
             return
         }
         role = config.role
+        controller = config.controller
         mode = config.role == .parent ? .parent : .child
         let currentMode = mode
         logger.info("App mode: \(String(describing: currentMode))")
     }
 
-    func completeSetup(role: DeviceRole, context: ModelContext) {
-        let config = DeviceConfig(role: role)
+    func completeSetup(role: DeviceRole, controller: DeviceController = .localParent, context: ModelContext) {
+        let config = DeviceConfig(role: role, controller: controller)
         context.insert(config)
         try? context.save()
+        self.controller = controller
         self.role = role
         mode = role == .parent ? .parent : .child
         // The parent just created the PIN; don't ask for it again immediately.
@@ -84,14 +89,26 @@ final class AppState {
         }
     }
 
-    /// Child device: ask the connected parent to verify the PIN. Completion runs on main.
-    func attemptRemoteUnlock(pin: String, completion: @escaping (UnlockResult) -> Void) {
+    /// Child device: ask the parent (its Mac, or PaCo Cloud) to verify the PIN.
+    /// Completion runs on main.
+    func attemptRemoteUnlock(pin: String, unlockOnSuccess: Bool = true, completion: @escaping (UnlockResult) -> Void) {
         guard !pin.isEmpty else { completion(.incorrect); return }
         guard let verifier = remotePINVerifier else { completion(.parentUnavailable); return }
         verifier(pin) { [weak self] result in
-            if result == .success { self?.unlock() }
+            if result == .success, unlockOnSuccess { self?.unlock() }
             completion(result)
         }
+    }
+
+    /// Child device: switch between a parent Mac nearby and PaCo Cloud.
+    func setController(_ newController: DeviceController, context: ModelContext) {
+        guard newController != controller else { return }
+        if let config = try? context.fetch(FetchDescriptor<DeviceConfig>()).first {
+            config.controller = newController
+            try? context.save()
+        }
+        controller = newController
+        logger.info("Child device now managed by \(newController.rawValue)")
     }
 
     /// Show the parent dashboard without a PIN check (after PIN creation).

@@ -3,6 +3,8 @@ import PaCoShared
 
 final class FirewallManager {
     private var _isBlocking = false
+    /// PaCo Cloud server kept reachable while blocking (nil when not enrolled).
+    private var relay: CloudRelay?
     private let lock = NSLock()
     private let logger = PaCoLogger.firewall
 
@@ -37,7 +39,7 @@ final class FirewallManager {
     /// Write and load the block anchor. Caller must hold `lock` (NSLock is not
     /// recursive, so `verifyIntegrity` calls this rather than `disableInternet`).
     private func applyBlockLocked() throws {
-        let rules = FirewallRuleBuilder.blockInternetRules()
+        let rules = FirewallRuleBuilder.blockInternetRules(relay: relay)
         try rules.write(toFile: FirewallRuleBuilder.anchorFilePath, atomically: true, encoding: .utf8)
         try runPfctl(["-e"])
         try ensureAnchorInMainRuleset()
@@ -57,6 +59,40 @@ final class FirewallManager {
         _isBlocking = false
         persistBlocking(false)
         logger.info("Internet enabled: pf anchor rules flushed")
+    }
+
+    // MARK: - PaCo Cloud relay
+
+    /// Set (or clear) the cloud server that stays reachable while blocking. When a
+    /// block is in force, the anchor file is rewritten and only the address table
+    /// is replaced (or the anchor reloaded when the rules change). Never via
+    /// `applyBlockLocked`: its `pfctl -F states` would drop the open long-poll.
+    /// Without a block nothing is loaded; the next block uses it.
+    func updateRelay(_ newRelay: CloudRelay?) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard newRelay != relay else { return }
+        let structureChanged = (newRelay == nil) != (relay == nil) || newRelay?.port != relay?.port
+        relay = newRelay
+        guard _isBlocking else { return }
+
+        do {
+            if structureChanged {
+                // Enrolled/unenrolled or a new port: the rules themselves change.
+                let rules = FirewallRuleBuilder.blockInternetRules(relay: relay)
+                try rules.write(toFile: FirewallRuleBuilder.anchorFilePath, atomically: true, encoding: .utf8)
+                try runPfctl(["-a", FirewallRuleBuilder.anchorName, "-f", FirewallRuleBuilder.anchorFilePath])
+            } else if let relay {
+                let rules = FirewallRuleBuilder.blockInternetRules(relay: relay)
+                try rules.write(toFile: FirewallRuleBuilder.anchorFilePath, atomically: true, encoding: .utf8)
+                let table = ["-a", FirewallRuleBuilder.anchorName, "-t", FirewallRuleBuilder.relayTableName]
+                let addresses = relay.validAddresses
+                try runPfctl(addresses.isEmpty ? table + ["-T", "flush"] : table + ["-T", "replace"] + addresses)
+            }
+            logger.info("PaCo Cloud relay updated: \(newRelay?.validAddresses.joined(separator: ", ") ?? "none")")
+        } catch {
+            logger.error("Failed to update PaCo Cloud relay: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Intended-state persistence

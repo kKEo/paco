@@ -1,0 +1,85 @@
+# Local development stack: `make server-up` from the repository root, then
+# http://localhost:8080. Mail lands in Mailpit at http://localhost:8025.
+#
+# For a Mac daemon on the same machine, set PACO_CLOUD_URL=http://localhost:8080
+# (Debug builds only; see server/README.md).
+
+x-env: &env
+  APP_ENV: local
+  DB_CONNECTION: pgsql
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_DATABASE: paco
+  DB_USERNAME: paco
+  DB_PASSWORD: paco
+  QUEUE_CONNECTION: database
+  CACHE_STORE: database
+  SESSION_DRIVER: database
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: 1025
+
+x-app: &app
+  build:
+    context: .
+    target: app
+  image: paco-cloud:dev
+  env_file: .env
+  environment: *env
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    environment:
+      <<: *env
+      PACO_MIGRATE: "1"
+    ports:
+      - "8080:8080"
+    # The web container runs the migrations; workers start once it is up.
+    healthcheck:
+      test: ["CMD", "php", "artisan", "migrate:status", "--no-ansi"]
+      interval: 5s
+      retries: 30
+
+  queue:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: paco
+      POSTGRES_USER: paco
+      POSTGRES_PASSWORD: paco
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "paco"]
+      interval: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"
+
+volumes:
+  pgdata:

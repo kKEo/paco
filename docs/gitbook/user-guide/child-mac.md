@@ -41,3 +41,7 @@ When you close the dashboard, the child's Mac returns to the child view.
 {% hint style="info" %}
 Profiles, schedules and app rules are managed on your Mac. The dashboard on a child's Mac does not list them.
 {% endhint %}
+
+## On a Mac managed by PaCo Cloud
+
+The child view is the same, except that the link line shows the connection to PaCo Cloud, requests go to the parent's PaCo Cloud page, and Parent Access checks the PIN with PaCo Cloud. See [PaCo Cloud](cloud.md#on-the-childs-mac).

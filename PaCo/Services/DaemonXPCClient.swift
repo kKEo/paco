@@ -9,6 +9,8 @@ final class DaemonXPCClient: ObservableObject {
     @Published var isConnected = false
     /// The parent's timed manual toggle currently in force, if any.
     @Published var manualOverride: ManualInternetOverride?
+    /// The daemon's PaCo Cloud state (nil until first fetched).
+    @Published var cloudStatus: CloudStatus?
 
     /// How long a dashboard toggle overrides the schedule before it takes over again.
     static let manualOverrideMinutes = 60
@@ -54,6 +56,40 @@ final class DaemonXPCClient: ObservableObject {
         proxy?.fetchPolicy { [weak self] data in
             let policy = data.flatMap { try? JSONDecoder().decode(DaemonPolicy.self, from: $0) }
             DispatchQueue.main.async { self?.manualOverride = policy?.activeManualOverride() }
+        }
+        refreshCloudStatus()
+    }
+
+    // MARK: - PaCo Cloud
+
+    func refreshCloudStatus() {
+        cloud(.status) { _ in }
+    }
+
+    /// Run a cloud request in the daemon. The completion runs on main exactly
+    /// once, also when the daemon is unreachable; `cloudStatus` is updated from
+    /// every reply that carries a status.
+    func cloud(_ request: CloudXPCRequest, completion: @escaping (CloudXPCResponse) -> Void) {
+        var finished = false
+        let finish: (CloudXPCResponse) -> Void = { [weak self] response in
+            DispatchQueue.main.async {
+                guard !finished else { return }
+                finished = true
+                if let status = response.status { self?.cloudStatus = status }
+                completion(response)
+            }
+        }
+        guard let data = try? CloudCodec.encode(request),
+              let proxy = connection?.remoteObjectProxyWithErrorHandler({ [weak self] error in
+                  self?.logger.error("XPC error: \(error.localizedDescription)")
+                  finish(.failure("PaCo's background service is not running."))
+              }) as? DaemonXPCProtocol else {
+            finish(.failure("PaCo's background service is not running."))
+            return
+        }
+        proxy.cloud(data) { reply in
+            let response = reply.flatMap { try? CloudCodec.decode(CloudXPCResponse.self, from: $0) }
+            finish(response ?? .failure("PaCo's background service gave an unexpected answer."))
         }
     }
 

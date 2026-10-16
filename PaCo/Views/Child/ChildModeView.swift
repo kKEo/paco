@@ -20,6 +20,10 @@ struct ChildModeView: View {
     @State private var pairingError = ""
     @State private var todayUsage: UsageTransfer?
     @State private var usageRefreshTimer: Timer?
+    @State private var cloudRefreshTimer: Timer?
+    @State private var showCloudEnroll = false
+    @State private var showCloudInfo = false
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         ZStack {
@@ -38,7 +42,7 @@ struct ChildModeView: View {
                 // Parent link status
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(bonjour.isParentConnected ? .green : (isPaired ? .orange : .secondary))
+                        .fill(isParentReachable ? .green : (isLinked ? .orange : .secondary))
                         .frame(width: 8, height: 8)
                     Text(parentStatusText)
                         .font(.subheadline)
@@ -69,13 +73,13 @@ struct ChildModeView: View {
 
                 requestStatusView
 
-                if requestLog.pending == nil {
+                if pendingRequest == nil {
                     Button("Request More Time") {
                         requestError = ""
                         showRequestOverlay = true
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!bonjour.isParentConnected)
+                    .disabled(!isParentReachable)
                     .padding(.top, 4)
                 }
                 if !requestError.isEmpty {
@@ -88,18 +92,30 @@ struct ChildModeView: View {
                 // Note: no Quit button in child mode — the monitored user should
                 // not be able to stop PaCo from the UI.
                 HStack {
-                    Button("Pair with Parent") {
-                        pairingCode = ""
-                        pairingError = ""
-                        showPairingPrompt = true
+                    if isCloud {
+                        Button(cloudFooterTitle) { showCloudInfo = true }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Button("Pair with Parent") {
+                            pairingCode = ""
+                            pairingError = ""
+                            showPairingPrompt = true
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                        if !isPaired {
+                            Button("Use PaCo Cloud") { showCloudEnroll = true }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
 
                     Spacer()
 
                     Button("Parent Access") {
-                        pinError = bonjour.isParentConnected ? "" : "The parent's Mac must be connected to check the PIN."
+                        pinError = isParentReachable ? "" : unreachableMessage
                         showPINPrompt = true
                     }
                     .font(.caption)
@@ -115,10 +131,16 @@ struct ChildModeView: View {
                     loadUsage()
                     daemonClient.refreshStatus()
                 }
+                // A cloud approval lands in the daemon within a second; show it promptly.
+                cloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { _ in
+                    if isCloud { daemonClient.refreshCloudStatus() }
+                }
             }
             .onDisappear {
                 usageRefreshTimer?.invalidate()
                 usageRefreshTimer = nil
+                cloudRefreshTimer?.invalidate()
+                cloudRefreshTimer = nil
             }
 
             if showRequestOverlay {
@@ -181,12 +203,37 @@ struct ChildModeView: View {
                 .shadow(radius: 12)
             }
 
+            if showCloudEnroll {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                CloudEnrollView(
+                    onCancel: { showCloudEnroll = false },
+                    onEnrolled: {
+                        showCloudEnroll = false
+                        appState.setController(.cloud, context: modelContext)
+                    })
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(radius: 12)
+            }
+
+            if showCloudInfo {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                cloudInfoView
+                    .padding(30)
+                    .frame(width: 320)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(radius: 12)
+            }
+
             if showPINPrompt {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                 VStack(spacing: 16) {
                     Text("Enter Parent PIN").font(.headline)
-                    Text("Checked with the parent's Mac — nothing PIN-related is stored here.")
+                    Text(isCloud
+                         ? "Checked with PaCo Cloud — nothing PIN-related is stored here."
+                         : "Checked with the parent's Mac — nothing PIN-related is stored here.")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
@@ -223,16 +270,102 @@ struct ChildModeView: View {
 
     private var isPaired: Bool { PairingKeyManager.hasAnyKey() }
 
+    /// Managed by PaCo Cloud rather than a parent Mac nearby.
+    private var isCloud: Bool { appState.controller == .cloud }
+
+    private var cloud: CloudStatus? { daemonClient.cloudStatus }
+
+    /// Paired (Bonjour) or enrolled (cloud), whether or not reachable right now.
+    private var isLinked: Bool { isCloud ? (cloud?.enrolled ?? true) : isPaired }
+
+    /// Whether the parent can be asked right now (requests, PIN checks).
+    private var isParentReachable: Bool {
+        isCloud ? (cloud?.enrolled == true && cloud?.connected == true) : bonjour.isParentConnected
+    }
+
+    private var unreachableMessage: String {
+        isCloud ? "PaCo Cloud must be reachable to check the PIN." : "The parent's Mac must be connected to check the PIN."
+    }
+
     private var parentStatusText: String {
+        if isCloud {
+            guard let cloud else { return "PaCo Cloud" }
+            if !cloud.enrolled { return "Disconnected from PaCo Cloud" }
+            return cloud.connected ? "Connected to PaCo Cloud" : "PaCo Cloud not reachable"
+        }
         if bonjour.isParentConnected { return "Connected to parent" }
         return isPaired ? "Paired — parent not connected" : "Not paired with a parent"
+    }
+
+    private var cloudFooterTitle: String {
+        cloud?.enrolled == false ? "Reconnect to PaCo Cloud" : "PaCo Cloud"
+    }
+
+    /// The child's requests: kept by the daemon in cloud mode, by the app otherwise.
+    private var pendingRequest: ChildRequestRecord? {
+        isCloud ? cloud?.pendingRequest : requestLog.pending
+    }
+
+    private var latestRequest: ChildRequestRecord? {
+        isCloud ? cloud?.latestRequest : requestLog.latest
+    }
+
+    private func withdrawRequest() {
+        guard isCloud else {
+            requestLog.withdrawPending()
+            return
+        }
+        guard let id = pendingRequest?.id else { return }
+        daemonClient.cloud(.withdrawRequest(requestId: id)) { response in
+            if !response.ok { requestError = response.error ?? "Could not withdraw the request." }
+        }
+    }
+
+    /// Details of the PaCo Cloud link. Disconnecting needs the parent: it lives
+    /// in Settings behind Parent Access.
+    @ViewBuilder
+    private var cloudInfoView: some View {
+        VStack(spacing: 12) {
+            Text("PaCo Cloud").font(.headline)
+            if let cloud, cloud.enrolled {
+                VStack(alignment: .leading, spacing: 6) {
+                    LabeledContent("Server", value: cloud.serverURL?.host ?? "—")
+                    LabeledContent("This Mac", value: cloud.deviceName ?? "—")
+                    LabeledContent("Last contact", value: cloud.lastContactAt?.formatted(date: .omitted, time: .standard) ?? "never")
+                }
+                .font(.caption)
+                if let error = cloud.lastError {
+                    Text(error).font(.caption).foregroundStyle(.orange).multilineTextAlignment(.center)
+                }
+                Text("Screen time and requests go to the parent's PaCo Cloud page.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Button("Close") { showCloudInfo = false }
+                    .buttonStyle(.borderedProminent)
+            } else {
+                Text(cloud?.lastError ?? "This Mac is not connected to PaCo Cloud. The last rules the parent set still apply.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Button("Close") { showCloudInfo = false }
+                    Button("Connect…") {
+                        showCloudInfo = false
+                        showCloudEnroll = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
     }
 
     /// Feedback for the most recent time request: waiting, approved (with the
     /// granted window) or denied. Resolved requests fade out after an hour.
     @ViewBuilder
     private var requestStatusView: some View {
-        if let record = requestLog.latest, shouldShow(record) {
+        if let record = latestRequest, shouldShow(record) {
             HStack(spacing: 8) {
                 Image(systemName: statusIcon(for: record))
                     .foregroundStyle(statusColor(for: record))
@@ -241,7 +374,7 @@ struct ChildModeView: View {
                     .foregroundStyle(.secondary)
                 if record.isPending {
                     Spacer(minLength: 0)
-                    Button("Withdraw") { requestLog.withdrawPending() }
+                    Button("Withdraw") { withdrawRequest() }
                         .buttonStyle(.plain)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -306,7 +439,7 @@ struct ChildModeView: View {
                 pinEntry = ""
                 pinError = ""
             case .parentUnavailable:
-                pinError = "Parent's Mac is not connected."
+                pinError = isCloud ? "PaCo Cloud cannot be reached." : "Parent's Mac is not connected."
             case .noPIN:
                 pinError = "The parent has not set a PIN yet."
             case .lockedOut(let until):
@@ -347,6 +480,7 @@ struct ChildModeView: View {
             // Child stores a single parent key; restart advertising so the TLS-PSK
             // listener uses the real key and the parent can connect.
             try PairingKeyManager.pair(code: code, identity: "parent")
+            appState.setController(.localParent, context: modelContext)
             let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
             bonjour.restartAdvertising(name: deviceName)
             showPairingPrompt = false
@@ -358,8 +492,16 @@ struct ChildModeView: View {
     }
 
     private func sendExtensionRequest() {
-        let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
         let requestId = UUID()
+        if isCloud {
+            // The daemon sends it to PaCo Cloud and records it once accepted.
+            let minutes = requestMinutes
+            daemonClient.cloud(.submitExtensionRequest(requestId: requestId, requestedMinutes: minutes, reason: requestReason)) { response in
+                if !response.ok { requestError = response.error ?? "Could not send the request." }
+            }
+            return
+        }
+        let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
         let payload = ExtensionRequestPayload(
             requestId: requestId,
             childDeviceName: deviceName,

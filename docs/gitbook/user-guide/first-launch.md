@@ -33,6 +33,7 @@ The **Quit PaCo** button is in the dashboard's toolbar.
 
 ## On the child's Mac: Set up as Child
 
-Log in to the child's account and click **Set up as Child**. PaCo switches to the child view right away. There is no PIN on the child's Mac; your PIN stays on your Mac and is checked there.
+Log in to the child's account and click **Set up as Child**. PaCo asks who manages this Mac:
 
-Next, [pair the child's Mac](pairing.md) with yours.
+* **A parent's Mac nearby.** PaCo switches to the child view. There is no PIN on the child's Mac; your PIN stays on your Mac and is checked there. Next, [pair the child's Mac](pairing.md) with yours.
+* **PaCo Cloud, from a browser.** For a parent without a Mac of their own. Type the server address and the code from the PaCo Cloud page; see [PaCo Cloud](cloud.md).

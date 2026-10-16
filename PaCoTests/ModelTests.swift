@@ -70,4 +70,17 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(req.statusRaw, "approved")
         XCTAssertEqual(req.status, .approved)
     }
+
+    func testDeviceControllerDefaultsToLocalParent() {
+        let config = DeviceConfig(role: .child)
+        XCTAssertEqual(config.controller, .localParent)
+
+        // Stores created before PaCo Cloud have no controller value.
+        config.controllerRaw = nil
+        XCTAssertEqual(config.controller, .localParent)
+
+        config.controller = .cloud
+        XCTAssertEqual(config.controllerRaw, "cloud")
+        XCTAssertEqual(DeviceConfig(role: .child, controller: .cloud).controller, .cloud)
+    }
 }

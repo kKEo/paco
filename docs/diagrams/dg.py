@@ -343,6 +343,72 @@ def storage():
     s.save(f'{OUT}/dg-storage.svg')
 
 
-for fn in (architecture, trust, pipeline, evaluator, pf_rules, frame, pairing_crypto, conn_states, storage):
+def cloud():
+    s = SVG(760, 470, "PaCo Cloud",
+            "The parent uses a browser. The PaCo Cloud server keeps the rules, requests and screen time. "
+            "On the child's Mac the root daemon talks to the server over HTTPS: a long-poll brings commands, "
+            "heartbeats, usage and requests go up; a pf pass rule keeps the server reachable while internet is off.")
+    # parent's browser
+    s.rect(20, 40, 170, 230, fill=C['white'], stroke=C['line'], rx=16, sw=1.5)
+    s.text(105, 66, "Parent", size=15, weight=800, anchor='middle')
+    s.box(36, 86, 138, 92, 'Browser', ['any device', 'no PaCo app'], fill=C['blueL'], stroke=C['blue'], ssize=11)
+    s.text(105, 214, 'rules · requests', size=11, anchor='middle', fill=C['muted'])
+    s.text(105, 230, 'screen time · PIN', size=11, anchor='middle', fill=C['muted'])
+    s.text(105, 246, 'Macs · activity', size=11, anchor='middle', fill=C['muted'])
+
+    # server
+    s.rect(230, 20, 260, 370, fill=C['panel'], stroke=C['slate'], rx=16, sw=1.5)
+    s.text(360, 46, 'PaCo Cloud server', size=15, weight=800, anchor='middle')
+    s.text(360, 64, 'Laravel · Octane on FrankenPHP', size=11, anchor='middle', fill=C['muted'])
+    s.box(250, 80, 220, 58, 'Parent dashboard', ['Livewire pages, 2FA'], fill=C['white'], stroke=C['blue'], ssize=11)
+    s.box(250, 158, 220, 58, 'Device API  /api/v1', ['bearer device token'], fill=C['white'], stroke=C['green'], ssize=11)
+    s.cylinder(258, 238, 204, 64, 'PostgreSQL', 'rules · usage_days · device_events')
+    s.text(360, 330, 'device_events = outbox,', size=11, anchor='middle', fill=C['muted'])
+    s.text(360, 346, 'delivered at least once', size=11, anchor='middle', fill=C['muted'])
+    s.line(360, 138, 360, 156, color='slate', sw=1.4)
+    s.line(360, 216, 360, 236, color='slate', sw=1.4)
+
+    # browser <-> dashboard
+    s.line(174, 120, 248, 110, color='blue', sw=2.5, arrow=True, start_arrow=True)
+    s.text(211, 94, 'HTTPS', size=11, weight=700, anchor='middle', fill=C['blue'])
+
+    # child's Mac
+    s.rect(530, 20, 210, 370, fill=C['white'], stroke=C['slate'], rx=16, sw=1.5)
+    s.text(635, 46, "Child's Mac", size=15, weight=800, anchor='middle')
+    s.rect(540, 60, 190, 120, fill=C['panel'], rx=12)
+    s.text(552, 78, 'LOGGED-IN USER', size=10.5, weight=700, fill=C['muted'])
+    s.box(550, 88, 82, 54, 'PaCo.app', ['child view'], fill=C['blueL'], stroke=C['blue'], tsize=12.5, ssize=10.5)
+    s.box(640, 88, 82, 54, 'PaCoAgent', ['usage'], fill=C['purpleL'], stroke=C['purple'], tsize=12.5, ssize=10.5)
+    s.rect(540, 190, 190, 190, fill=C['slateL'], rx=12)
+    s.text(635, 208, 'ROOT', size=10.5, weight=700, anchor='middle', fill=C['slate'])
+    s.box(550, 218, 172, 66, 'PaCoDaemon', ['CloudSyncService', 'PolicyEngine'],
+          fill=C['slate'], stroke=C['slate'], tcolor='#fff', scolor='#CBD5E1', ssize=10.5)
+    s.cylinder(548, 300, 88, 56, 'cloud.json', '0600, token')
+    s.cylinder(642, 300, 82, 56, 'pf anchor', 'paco_cloud')
+    # XPC
+    s.line(591, 142, 591, 216, color='ink', sw=2, arrow=True)
+    s.pill(566, 150, 50, 18, 'cloud()', C['white'], C['ink'], size=10)
+    s.line(681, 142, 681, 216, color='ink', sw=2, arrow=True)
+    s.pill(646, 150, 70, 18, 'reportUsage', C['white'], C['ink'], size=10)
+
+    # daemon <-> device API
+    s.line(548, 236, 472, 176, color='green', sw=2.5, arrow=True)
+    s.text(512, 186, 'up', size=11, weight=700, anchor='middle', fill=C['green'])
+    s.line(472, 198, 548, 262, color='orange', sw=2.5, arrow=True)
+    s.text(472, 232, 'down', size=11, weight=700, anchor='middle', fill=C['orange'])
+
+    # legend
+    y = 418
+    s.line(30, y, 62, y, color='green', sw=2.5, arrow=True)
+    s.text(70, y + 4, 'heartbeat 30 s, usage, requests, PIN check', size=12)
+    s.line(360, y, 392, y, color='orange', sw=2.5, arrow=True)
+    s.text(400, y + 4, 'long-poll: commands within a second', size=12)
+    s.line(30, y + 28, 62, y + 28, color='ink', sw=2, arrow=True)
+    s.text(70, y + 32, 'XPC, code-signing checked', size=12)
+    s.text(360, y + 32, 'All traffic HTTPS; the daemon starts every connection.', size=12, fill=C['muted'])
+    s.save(f'{OUT}/dg-cloud.svg')
+
+
+for fn in (architecture, trust, pipeline, evaluator, pf_rules, frame, pairing_crypto, conn_states, storage, cloud):
     fn()
 print('dg done')

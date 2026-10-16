@@ -1,10 +1,10 @@
 ---
-description: XPC, the per-user files, and Bonjour — what flows where.
+description: XPC, the per-user files, Bonjour and PaCo Cloud — what flows where.
 ---
 
 # Communication channels
 
-PaCo uses three channels.
+PaCo uses four channels. A child's Mac uses Bonjour (3) or PaCo Cloud (4), never both.
 
 ## 1. App and agent to daemon: XPC
 
@@ -21,6 +21,8 @@ Mach service `com.paco.daemon`, interface `DaemonXPCProtocol` in PaCoShared. Eve
 | `isInternetEnabled(reply:)` | Agent, app | Whether the block is currently loaded. |
 | `killProcess(pid:reply:)` | Agent | Kill a process if its signed bundle ID is in the restricted set. |
 | `verifyFirewallIntegrity(reply:)`, `status(reply:)` | Diagnostics | Integrity check, human-readable status. |
+| `cloud(_:reply:)` | App (child) | PaCo Cloud: a `CloudXPCRequest` (enroll, unenroll, status, submit or withdraw a request, verify the PIN), answered with a `CloudXPCResponse`. Both encoded with `CloudCodec`. |
+| `reportUsage(_:reply:)` | Agent | Today's `UsageTransfer`, every 30 s. Uploaded to PaCo Cloud when enrolled, ignored otherwise. |
 
 XPC replies arrive on an arbitrary queue. Both clients hop to the main queue before touching state.
 
@@ -46,6 +48,15 @@ Service type `_paco._tcp` in `local.`. The child advertises, the parent connects
 | `.approveExtension` | Parent → child | `ExtensionResponsePayload` with `grantedMinutes` | None |
 | `.denyExtension` | Parent → child | `ExtensionResponsePayload` | None |
 | `.verifyPIN` | Child → parent | `PINVerifyRequest` with a nonce | `PaCoResponse` carrying `PINVerifyResult` |
+
+## 4. Daemon to PaCo Cloud: HTTPS
+
+On a cloud-managed child Mac, `CloudSyncService` in the daemon talks to the PaCo Cloud server: a long-poll on `/api/v1/device/events` brings commands from the parent, and heartbeats, usage, time requests and PIN checks go up. The device token lives in a root-only file; the app reaches the cloud only through the daemon's `cloud(_:reply:)`. Details in [PaCo Cloud server](cloud-server.md).
+
+| Direction | What |
+|---|---|
+| Server → daemon (long-poll) | `policyChanged`, `activeProfileChanged`, `approveExtension`, `denyExtension`, `setManualInternet`, `clearManualInternet`, `unenrolled` |
+| Daemon → server | Heartbeat every 30 s, usage snapshots, time requests, PIN checks, token rotation |
 
 ## Flows
 

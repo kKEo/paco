@@ -9,12 +9,14 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
     private let firewallManager = FirewallManager()
     private let processManager = ProcessManager()
     private let policyEngine: PolicyEngine
+    private let cloudSync: CloudSyncService
     private let logger = PaCoLogger.daemon
     private var integrityTimer: DispatchSourceTimer?
     private let integrityQueue = DispatchQueue(label: "com.paco.daemon.integrity")
 
     private override init() {
         policyEngine = PolicyEngine(firewall: firewallManager, processManager: processManager)
+        cloudSync = CloudSyncService(policyEngine: policyEngine, firewall: firewallManager)
         super.init()
     }
 
@@ -105,6 +107,23 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
         reply(try? JSONEncoder().encode(policyEngine.policy))
     }
 
+    // MARK: - PaCo Cloud
+
+    func cloud(_ request: Data, reply: @escaping (Data?) -> Void) {
+        guard let decoded = try? CloudCodec.decode(CloudXPCRequest.self, from: request) else {
+            reply(try? CloudCodec.encode(CloudXPCResponse.failure("Malformed request.")))
+            return
+        }
+        cloudSync.handle(decoded) { response in
+            reply(try? CloudCodec.encode(response))
+        }
+    }
+
+    func reportUsage(_ usageData: Data, reply: @escaping (Bool) -> Void) {
+        cloudSync.reportUsage(usageData)
+        reply(true)
+    }
+
     // MARK: - Lifecycle
 
     /// Called once at launch: reconcile persisted block state, start the policy
@@ -113,6 +132,8 @@ final class DaemonService: NSObject, DaemonXPCProtocol {
     func startup() {
         firewallManager.reconcileOnStartup()
         policyEngine.start()
+        // Resumes a PaCo Cloud enrollment, if this Mac has one.
+        cloudSync.start()
         let timer = DispatchSource.makeTimerSource(queue: integrityQueue)
         timer.schedule(deadline: .now() + 15, repeating: 15)
         timer.setEventHandler { [weak self] in

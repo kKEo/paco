@@ -21,6 +21,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var usageWatcher: DispatchSourceFileSystemObject?
     private var statusTimer: DispatchSourceTimer?
     private var configuredRole: DeviceRole?
+    /// Child: whether the Bonjour listener is up (not when PaCo Cloud manages it).
+    private var advertisingAsChild = false
     /// Child side: outstanding PIN checks sent to the parent, keyed by nonce.
     private var pendingPINChecks: [UUID: (UnlockResult) -> Void] = [:]
     private let logger = PaCoLogger.app
@@ -71,11 +73,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             self?.daemonClient.setActiveProfile(id)
         }
         appState.remotePINVerifier = { [weak self] pin, completion in
-            self?.verifyPINWithParent(pin, completion: completion)
+            guard let self else { return }
+            if self.appState.controller == .cloud {
+                self.verifyPINWithCloud(pin, completion: completion)
+            } else {
+                self.verifyPINWithParent(pin, completion: completion)
+            }
         }
         // The daemon keeps policy across restarts; the active profile is the one
         // device-local piece, so re-assert it from SwiftData at every launch.
-        daemonClient.setActiveProfile(appState.activeProfileId(context: context))
+        // Not on a cloud-managed child: there the parent assigns the profile from
+        // the web, and this Mac's SwiftData knows nothing about it.
+        if !(appState.role == .child && appState.controller == .cloud) {
+            daemonClient.setActiveProfile(appState.activeProfileId(context: context))
+        }
         startUsageWatcher()
         SyncManager.shared.readUsage(context: context)
         configureRole()
@@ -102,7 +113,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// Idempotent per role. Re-run when `appState.role` changes (onboarding
     /// completes) so no relaunch is needed.
     private func configureRole() {
-        guard let role = appState.role, role != configuredRole else { return }
+        guard let role = appState.role else { return }
+        if role == .child { configureChildNetworking() }
+        guard role != configuredRole else { return }
         configuredRole = role
         switch role {
         case .child:
@@ -114,7 +127,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             bonjour.onIncomingResponse = { [weak self] response in
                 self?.handleChildResponse(response)
             }
-            bonjour.startAdvertising(name: Self.deviceName)
         case .parent:
             // The parent's own daemon enforces the same policy locally (single-Mac use).
             SyncManager.shared.syncAll(context: context)
@@ -137,9 +149,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
+    /// A child managed by PaCo Cloud has no business on the local network: it
+    /// talks to the cloud through its daemon. Re-run when the controller changes.
+    private func configureChildNetworking() {
+        let wantsBonjour = appState.controller != .cloud
+        guard wantsBonjour != advertisingAsChild else { return }
+        advertisingAsChild = wantsBonjour
+        if wantsBonjour {
+            bonjour.startAdvertising(name: Self.deviceName)
+        } else {
+            bonjour.stop()
+            logger.info("Managed by PaCo Cloud: not advertising on the local network")
+        }
+    }
+
     private func observeRole() {
         withObservationTracking {
             _ = appState.role
+            _ = appState.controller
         } onChange: { [weak self] in
             DispatchQueue.main.async {
                 self?.configureRole()
@@ -307,6 +334,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         case .incorrect: completion(.incorrect)
         case .noPIN: completion(.noPIN)
         case .lockedOut: completion(.lockedOut(until: result.lockedOutUntil ?? Date().addingTimeInterval(300)))
+        }
+    }
+
+    /// Cloud-managed child: PaCo Cloud holds the PIN hash and the lockout; the
+    /// daemon relays the check and this Mac only learns the verdict.
+    private func verifyPINWithCloud(_ pin: String, completion: @escaping (UnlockResult) -> Void) {
+        daemonClient.cloud(.verifyPIN(nonce: UUID(), pin: pin)) { response in
+            guard response.ok, let result = response.pinResult else {
+                completion(.parentUnavailable)
+                return
+            }
+            switch result.outcome {
+            case .success: completion(.success)
+            case .incorrect: completion(.incorrect)
+            case .noPIN: completion(.noPIN)
+            case .lockedOut: completion(.lockedOut(until: result.lockedOutUntil ?? Date().addingTimeInterval(300)))
+            }
         }
     }
 

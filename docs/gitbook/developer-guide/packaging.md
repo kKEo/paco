@@ -19,7 +19,7 @@ make notarize TEAM_ID=ABCDE12345 NOTARY_PROFILE=paco
 | `APP_IDENTITY` | `Developer ID Application` | Code-signing identity for the targets. |
 | `PKG_IDENTITY` | `Developer ID Installer` | Identity for `pkgbuild --sign`. |
 | `NOTARY_PROFILE` | empty | `xcrun notarytool` keychain profile, created once with `xcrun notarytool store-credentials`. |
-| `VERSION` | `1.0.0` | Package version and file name. |
+| `VERSION` | `1.1.0` | Package version and file name. |
 
 Tagged releases are built by the Release workflow; see [Continuous integration](continuous-integration.md#release).
 

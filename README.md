@@ -4,7 +4,7 @@
 
 **Documentation:** [kkeo.github.io/paco](https://kkeo.github.io/paco/) — user guide and developer guide.
 
-A personal-use macOS parental control app with internet on/off scheduling, app restrictions, usage tracking, and a child time-extension request/approve workflow.
+A personal-use macOS parental control app with internet on/off scheduling, app restrictions, usage tracking, and a child time-extension request/approve workflow. A child's Mac is managed either from a parent's Mac on the same network or, for a parent without a Mac, from a browser through the self-hosted **PaCo Cloud** server (`server/`).
 
 ## Requirements
 
@@ -12,6 +12,7 @@ A personal-use macOS parental control app with internet on/off scheduling, app r
 - Xcode 15+ with license accepted (`sudo xcodebuild -license`)
 - [`xcodegen`](https://github.com/yonaskolb/XcodeGen) 2.45+ (`brew install xcodegen`)
 - Two Macs on the same local network (parent Mac + child Mac), or one Mac for single-device testing
+- Or, with PaCo Cloud: one child Mac plus a PaCo Cloud server (PHP 8.3, PostgreSQL; see [`server/README.md`](server/README.md))
 
 ---
 
@@ -24,8 +25,9 @@ PaCo/
 ├── PaCo/              # Main app (SwiftUI, MenuBarExtra, SwiftData)
 ├── PaCoDaemon/        # LaunchDaemon — root-level pf firewall + process kill
 ├── PaCoAgent/         # LaunchAgent — schedule evaluation, app monitoring, usage tracking
-├── PaCoShared/        # Local Swift Package — models, XPC protocol, network types, security
-└── PaCoTests/         # Unit tests
+├── PaCoShared/        # Local Swift Package — models, XPC protocol, network types, security, cloud types
+├── PaCoTests/         # Unit tests
+└── server/            # PaCo Cloud: Laravel web dashboard + device API (see server/README.md)
 ```
 
 ### Component Overview
@@ -44,7 +46,10 @@ PaCo.app ←──── XPC ────→ PaCoDaemon   (policy push, active p
 PaCoAgent ←─── XPC ────→ PaCoDaemon   (fetch policy, internet status, kill process)
 PaCoAgent ──→ JSON files ──→ PaCo.app  (usage.json; events.json is an agent-side log — via ~/Library/Application Support/com.paco/)
 Parent Mac ←── Bonjour/TCP ──→ Child Mac  (policy push, PIN verification, time-extension requests/approvals)
+PaCoDaemon ──── HTTPS ────→ PaCo Cloud  (cloud-managed child: long-poll for commands; heartbeat, usage, requests, PIN checks)
 ```
+
+A child Mac uses Bonjour **or** PaCo Cloud, never both (`DeviceConfig.controller`).
 
 ### Where the policy lives
 
@@ -88,6 +93,12 @@ The daemon evaluates the active profile's schedules every 30 seconds (`PolicyEng
 
 The agent counts **foreground** time per regular (Dock) app using `NSWorkspace` activation events (`UsageLedger`), so an app that is open shows its time immediately, apps already running when the agent starts count from then, and helpers are not listed. Internet-on time comes from the daemon's state. Counters reset at midnight; a snapshot is written every 30 s to `usage.json` and restored on agent restart.
 
+### PaCo Cloud
+
+For a parent without a Mac of their own. The child's **root daemon** (`CloudSyncService`) enrolls with a one-time code from the PaCo Cloud web page and keeps a device token in `/Library/Application Support/PaCo/cloud.json` (root-only). It long-polls `/api/v1/device/events` for the parent's commands (policy changes, approvals, manual on/off, profile), sends a heartbeat every 30 s, uploads the agent's usage snapshots, and relays time requests and PIN checks. While the internet is blocked, a `pf` table keeps only the server reachable. The parent manages schedules, app rules, profiles, requests and the PIN, and sees screen time per day and per app, in the browser.
+
+Server: Laravel + Livewire under `server/`, Octane on FrankenPHP (the long-poll needs it), PostgreSQL. Run it with `make server-install server-serve` (SQLite) or `make server-up` (Docker). Protocol and design: [PaCo Cloud server](docs/gitbook/developer-guide/cloud-server.md).
+
 ### Parent Access on a child Mac
 
 The parent PIN hash never leaves the parent Mac. When a parent types the PIN on a child Mac, the child sends it to the parent over the TLS-PSK channel (`.verifyPIN`) and the parent answers with the verdict, applying the same brute-force lockout as its own dashboard. The child must be connected to the parent for this to work.
@@ -99,6 +110,7 @@ The parent PIN hash never leaves the parent Mac. When a parent types the PIN on 
 - Policy is root-owned (`/Library/Application Support/PaCo/policy.json`) and only changeable through the daemon's XPC interface.
 - Parent ↔ child traffic is TLS-PSK with a key derived from the one-time pairing code. An unpaired child advertises for discovery only and drops every incoming connection.
 - `pf` tamper detection: daemon re-applies rules if anchor rules are missing while blocking is active.
+- PaCo Cloud: device token root-only and rotated every 30 days; the PIN hash stays on the server (the Mac gets a verdict); the device API cannot change rules; HTTPS only in Release; parent accounts with email verification and optional TOTP two-factor authentication.
 
 ---
 
@@ -152,7 +164,7 @@ make pkg TEAM_ID=ABCDE12345
 make notarize TEAM_ID=ABCDE12345 NOTARY_PROFILE=paco
 
 # 3. Install (requires sudo)
-sudo installer -pkg build/PaCo-1.0.0.pkg -target /
+sudo installer -pkg build/PaCo-1.1.0.pkg -target /
 ```
 
 Without `TEAM_ID` the build is unsigned (local UI testing only). With it, all four targets are signed with your Developer ID Application certificate and hardened runtime, and the pkg with your Developer ID Installer certificate.
@@ -189,6 +201,10 @@ The postinstall script:
 | `make pkg` | Release build → staged pkg → `build/PaCo-<VERSION>.pkg` |
 | `make clean` | Remove `build/` directory |
 | `make clear-pin` | Delete stored PIN from Keychain (for testing) |
+| `make server-install` / `server-serve` | PaCo Cloud server on SQLite at http://localhost:8080 |
+| `make server-up` / `server-down` | PaCo Cloud server in Docker (Octane, PostgreSQL, Mailpit) |
+| `make server-test` / `server-pint` | Server tests / code style |
+| `make server-enroll-code` | One-time code for enrolling a child Mac |
 
 Pass a custom version:
 

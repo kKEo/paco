@@ -4,23 +4,22 @@ name: CI
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.gitbook.yaml'
-      - '.github/workflows/docs.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/pages.yml'
-      - '.github/scripts/check_book.py'
+    paths: &paths
+      - '**'
+      - '!docs/**'
+      - '!**/*.md'
+      - '!.gitbook.yaml'
+      - '!.github/workflows/docs.yml'
+      - '!.github/workflows/release.yml'
+      - '!.github/workflows/pages.yml'
+      - '!.github/workflows/server.yml'
+      - '!.github/scripts/check_book.py'
+      # The server has its own workflow (server.yml), except the golden policy
+      # fixture that PaCoTests decodes (CloudFixtureTests).
+      - '!server/**'
+      - 'server/tests/Fixtures/**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.gitbook.yaml'
-      - '.github/workflows/docs.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/pages.yml'
-      - '.github/scripts/check_book.py'
+    paths: *paths
   workflow_dispatch:
 
 concurrency:

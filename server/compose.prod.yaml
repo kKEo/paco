@@ -1,0 +1,63 @@
+# Production overrides: `docker compose -f compose.yaml -f compose.prod.yaml up -d`
+# on a small VPS. FrankenPHP's Caddy gets a certificate for PACO_DOMAIN and
+# redirects HTTP to HTTPS. Put real secrets in .env (APP_KEY, DB_PASSWORD, MAIL_*).
+# Back up Postgres nightly, e.g. `docker compose exec db pg_dump -U paco paco`.
+
+x-env: &env
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: https://${PACO_DOMAIN}
+  DB_CONNECTION: pgsql
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_DATABASE: paco
+  DB_USERNAME: paco
+  DB_PASSWORD: ${DB_PASSWORD}
+  QUEUE_CONNECTION: redis
+  CACHE_STORE: redis
+  SESSION_DRIVER: redis
+  SESSION_SECURE_COOKIE: "true"
+  REDIS_HOST: redis
+  # Wake held device polls the moment an event commits.
+  PACO_LONGPOLL_WAITER: redis
+  MAIL_MAILER: ${MAIL_MAILER:-smtp}
+
+services:
+  app:
+    environment:
+      <<: *env
+      PACO_MIGRATE: "1"
+    command: ["sh", "-c", "exec php artisan octane:frankenphp --host=${PACO_DOMAIN} --port=443 --https --http-redirect --workers=${OCTANE_WORKERS:-32} --max-requests=${OCTANE_MAX_REQUESTS:-1000}"]
+    ports: !override
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  queue:
+    environment: *env
+  scheduler:
+    environment: *env
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+
+  mailpit: !reset null
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redisdata:

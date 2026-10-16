@@ -1,4 +1,4 @@
-VERSION      ?= 1.0.0
+VERSION      ?= 1.1.0
 # Developer ID signing. Leave TEAM_ID empty for an unsigned local build (the
 # daemon then refuses XPC peers unless PACO_ALLOW_UNSIGNED_XPC=1, see README).
 TEAM_ID      ?=
@@ -20,7 +20,8 @@ PKG_ROOT     := build/pkg-root
 PKG_SCRIPTS  := build/pkg-scripts
 PKG_OUT      := build/PaCo-$(VERSION).pkg
 
-.PHONY: build build-release pkg notarize clean clear-pin clear-policy
+.PHONY: build build-release pkg notarize clean clear-pin clear-policy \
+	server-install server-reset server-serve server-up server-down server-test server-pint server-enroll-code
 
 build:
 	xcodebuild -project PaCo.xcodeproj -scheme PaCo -destination "platform=macOS" build
@@ -115,3 +116,42 @@ clear-pin:
 
 clear-policy:
 	sudo rm -f "/Library/Application Support/PaCo/policy.json" "/Library/Application Support/PaCo/daemon-state.json"
+
+# ── PaCo Cloud server (server/, Laravel) ─────────────────────────────
+# Without Docker: `make server-install server-serve` (SQLite, http://localhost:8080,
+# seeded parent parent@example.com / password, PIN 123456).
+# With Docker: `make server-up` (Postgres + Octane/FrankenPHP + Mailpit).
+SERVER_DIR := server
+
+# Safe to re-run: keeps .env, APP_KEY and data; seeds only a brand-new database.
+server-install:
+	cd $(SERVER_DIR) && composer install --no-interaction
+	cd $(SERVER_DIR) && test -f .env || cp .env.example .env
+	cd $(SERVER_DIR) && grep -q '^APP_KEY=base64' .env || php artisan key:generate --no-interaction
+	cd $(SERVER_DIR) && if [ -s database/database.sqlite ]; then php artisan migrate --force; \
+		else touch database/database.sqlite && php artisan migrate --seed --force; fi
+	cd $(SERVER_DIR) && npm ci --no-audit --no-fund && npm run build
+
+# Wipe the local SQLite database and re-seed the development data.
+server-reset:
+	cd $(SERVER_DIR) && php artisan migrate:fresh --seed --force
+
+server-serve:
+	cd $(SERVER_DIR) && PHP_CLI_SERVER_WORKERS=4 php artisan serve --port=8080
+
+server-up:
+	cd $(SERVER_DIR) && test -f .env || { cp .env.example .env && php artisan key:generate --no-interaction; }
+	cd $(SERVER_DIR) && docker compose up -d --build
+
+server-down:
+	cd $(SERVER_DIR) && docker compose down
+
+server-test:
+	cd $(SERVER_DIR) && vendor/bin/pest
+
+server-pint:
+	cd $(SERVER_DIR) && vendor/bin/pint
+
+# One-time code for enrolling a child Mac: make server-enroll-code [USER_EMAIL=parent@example.com]
+server-enroll-code:
+	cd $(SERVER_DIR) && php artisan paco:enrollment-code $(if $(USER_EMAIL),--user=$(USER_EMAIL),)

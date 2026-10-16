@@ -72,7 +72,13 @@ final class PolicyEngine {
 
     func setManual(enabled: Bool, minutes: Int) throws {
         guard minutes > 0 else { throw PolicyError.invalidOverride }
-        let until = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        try setManual(enabled: enabled, until: Date().addingTimeInterval(TimeInterval(minutes * 60)))
+    }
+
+    /// Manual toggle with an absolute end (PaCo Cloud sends `until`, so a
+    /// re-delivered command never extends the window).
+    func setManual(enabled: Bool, until: Date) throws {
+        guard until > Date() else { throw PolicyError.invalidOverride }
         try mutate { $0.manualOverride = ManualInternetOverride(enabled: enabled, until: until) }
         logger.info("Manual internet \(enabled ? "ON" : "OFF") until \(until)")
     }

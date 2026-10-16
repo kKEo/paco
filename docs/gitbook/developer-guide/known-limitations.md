@@ -6,14 +6,23 @@ description: Gaps in the current version, open questions, and the roadmap.
 
 ## Behaviour
 
-* **Child Macs enforce every profile.** A child's daemon has no active profile, because profiles live only in the parent's SwiftData. The parent pushes all profiles' rules, so with several children each child's Mac enforces all of them. Fix: send the target profile per paired device, for example a profile id on `PairingInfo` passed with `.updatePolicy`.
-* **No remote on/off.** The Home switch controls the local daemon. A child Mac can only be opened up remotely by approving a request.
-* **Child usage stays on the child.** Nothing sends `usage.json` to the parent; the parent's Usage page shows the parent Mac's own usage.
+* **Child Macs paired with a parent Mac enforce every profile.** A child's daemon has no active profile, because profiles live only in the parent's SwiftData. The parent pushes all profiles' rules, so with several children each child's Mac enforces all of them. Fix: send the target profile per paired device, for example a profile id on `PairingInfo` passed with `.updatePolicy`. PaCo Cloud assigns a profile per Mac.
+* **No remote on/off between Macs.** The Home switch controls the local daemon. A paired child Mac can only be opened up remotely by approving a request. PaCo Cloud has remote on/off.
+* **Usage of a paired child stays on the child.** Nothing sends `usage.json` to a parent Mac; its Usage page shows its own usage. PaCo Cloud shows each Mac's screen time.
+* **The app's usage watcher misses updates.** The agent replaces `usage.json` atomically, and the app's `DispatchSource` watches writes to the old file, so the app's `UsageRecord`s are refreshed only at launch. PaCo Cloud does not depend on it (the agent hands usage to the daemon over XPC).
 * **No notifications.** The agent cannot post user notifications and `events.json` has no reader. Children get no message when an app is closed or a grace period starts.
 * **Pairing is tied to the computer name.** Renaming the child's Mac breaks auto-connect until re-paired.
 * **One parent per child.** The child stores a single key under `"parent"`.
 * **Shared Mac.** On a single Mac in the Parent role, rules apply to every account, including the parent's.
 * **Role reset.** **Reset & Change Role** deletes only `DeviceConfig`; profiles and rules remain in the store. Changing role at runtime does not stop the previous role's Bonjour services; relaunch after switching.
+
+## PaCo Cloud
+
+* **One controller per Mac.** A child Mac follows a parent Mac or PaCo Cloud, not both. A parent Mac cannot also sync its rules to the cloud.
+* **Enrolling during a block** works only if DNS still resolves (a router-provided resolver). Afterwards the cached addresses keep the server reachable.
+* **DNS while blocked.** If the server's addresses change while the Mac blocks and uses a public resolver, the Mac cannot reach the server until the internet is on again.
+* **Device clock.** Grants and manual toggles carry absolute end times from the server clock; a child Mac with a wrong clock sees them end early or late.
+* **No public service.** PaCo Cloud must be self-hosted (see `server/README.md`).
 
 ## Platform and packaging
 
@@ -34,7 +43,8 @@ See [Security model → Out of scope](security-model.md#out-of-scope): administr
 
 | Version | Features |
 |---|---|
-| **V1 (current)** | Internet schedules via pf, app rules, usage, Bonjour pairing, time-extension requests |
+| V1 | Internet schedules via pf, app rules, usage, Bonjour pairing, time-extension requests |
+| **V1.1 (current)** | PaCo Cloud: browser management, remote on/off, screen time, per-Mac profiles |
 | V1.2 | Daily usage budgets, bedtime mode, usage reports |
 | V2.0 | DNS-level content filtering |
 | V2.5 | Network Extension for per-app traffic control |

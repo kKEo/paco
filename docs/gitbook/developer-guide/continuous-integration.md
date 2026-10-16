@@ -4,16 +4,17 @@ description: The GitHub Actions workflows, what they check, how the docs site is
 
 # Continuous integration
 
-Four workflows live in `.github/workflows/`. Dependabot (`.github/dependabot.yml`) keeps the actions and the docs site's npm packages up to date.
+Five workflows live in `.github/workflows/`. Dependabot (`.github/dependabot.yml`) keeps the actions and the docs site's npm packages up to date.
 
 | Workflow | Runs on | Trigger | What it does |
 |---|---|---|---|
 | **CI** (`ci.yml`) | `macos-15` | Push to `master`, pull requests, manual | Checks the Xcode project is in sync, builds Debug, runs the tests, builds Release |
+| **Server** (`server.yml`) | `ubuntu-latest` | Changes under `server/` | Pint, then the PaCo Cloud server's Pest suite on SQLite and on PostgreSQL with Redis |
 | **Docs** (`docs.yml`) | `ubuntu-latest` | Changes under `docs/` | Checks the book's links, table of contents, images and diagrams |
 | **Pages** (`pages.yml`) | `ubuntu-latest` | Changes under `docs/` | Builds the book into a static site; deploys it to GitHub Pages from `master` |
 | **Release** (`release.yml`) | `macos-15` | Tag `v*`, manual | Builds a signed pkg, notarizes it, publishes a GitHub Release |
 
-CI skips commits that only touch documentation, and Docs runs only for them, so each kind of change pays only for its own checks.
+CI skips commits that only touch documentation or the server, and Docs and Server run only for theirs, so each kind of change pays only for its own checks. One exception: CI also runs when `server/tests/Fixtures/` changes, because `CloudFixtureTests` decodes the shared policy fixture.
 
 ## CI
 
@@ -31,6 +32,10 @@ xcodegen generate && git diff --exit-code PaCo.xcodeproj
 xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests -configuration Debug \
   -destination "platform=macOS" CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM=
 ```
+
+## Server
+
+Runs from `server/` with PHP 8.3 (the lock file is resolved for 8.3 through Composer's `platform` setting): `composer install`, `vendor/bin/pint --test` (SQLite job only), `vendor/bin/pest`. The PostgreSQL job also starts Redis and sets `PACO_TEST_REDIS=1`, so `tests/Postgres` (outbox row locks) and `tests/Redis` (long-poll waker) run there; on SQLite they are skipped. Locally: `make server-test`. See [PaCo Cloud server](cloud-server.md#tests).
 
 ## Docs
 

@@ -10,11 +10,12 @@ PaCo is a parental-control app for macOS 14 and later. It lets a parent decide w
 
 * **Internet schedules.** Turn the internet off at set times, for example school nights from 21:00 to 07:00.
 * **App rules.** Block an app completely, or block it only while a schedule has the internet off.
-* **Time extension requests.** The child asks for 15–120 more minutes; the parent approves or denies from their own Mac.
+* **Time extension requests.** The child asks for 15–120 more minutes; the parent approves or denies from their own Mac, or from a browser.
 * **Usage.** See how long the internet was on and which apps were in the foreground today.
 * **Parent PIN.** Every parent screen is protected by a 6-digit PIN.
+* **PaCo Cloud (optional).** No second Mac? Manage the child's Mac and follow its screen time from a web page.
 
-Everything stays on your local network. PaCo has no cloud account and sends nothing to the internet.
+With a parent's Mac, everything stays on your local network and PaCo sends nothing to the internet. [PaCo Cloud](user-guide/cloud.md) is an optional, self-hosted server for parents without a Mac of their own.
 
 ## How it fits together
 

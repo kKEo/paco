@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="470" viewBox="0 0 760 470" role="img" aria-labelledby="t d">
+<title id="t">PaCo Cloud</title>
+<desc id="d">The parent uses a browser. The PaCo Cloud server keeps the rules, requests and screen time. On the child's Mac the root daemon talks to the server over HTTPS: a long-poll brings commands, heartbeats, usage and requests go up; a pf pass rule keeps the server reachable while internet is off.</desc>
+<defs>
+<marker id="a-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F172A"/></marker>
+<marker id="a-muted" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker>
+<marker id="a-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+<marker id="a-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/></marker>
+<marker id="a-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+<marker id="a-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+<marker id="a-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+<marker id="a-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="a-faint" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#DCFCE7"/><line x1="0" y1="0" x2="0" y2="8" stroke="#16A34A" stroke-width="3"/></pattern>
+</defs>
+<rect x="0.5" y="0.5" width="759" height="469" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/>
+<rect x="20" y="40" width="170" height="230" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="105" y="66" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#0F172A" text-anchor="middle">Parent</text>
+<rect x="36" y="86" width="138" height="92" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="105.0" y="119.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Browser</text>
+<text x="105.0" y="138.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">any device</text>
+<text x="105.0" y="153.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">no PaCo app</text>
+<text x="105" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">rules · requests</text>
+<text x="105" y="230" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">screen time · PIN</text>
+<text x="105" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">Macs · activity</text>
+<rect x="230" y="20" width="260" height="370" rx="16" fill="#F8FAFC" stroke="#334155" stroke-width="1.5"/>
+<text x="360" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#0F172A" text-anchor="middle">PaCo Cloud server</text>
+<text x="360" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">Laravel · Octane on FrankenPHP</text>
+<rect x="250" y="80" width="220" height="58" rx="10" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.5"/>
+<text x="360.0" y="104.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Parent dashboard</text>
+<text x="360.0" y="123.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">Livewire pages, 2FA</text>
+<rect x="250" y="158" width="220" height="58" rx="10" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.5"/>
+<text x="360.0" y="182.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A" text-anchor="middle">Device API  /api/v1</text>
+<text x="360.0" y="201.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">bearer device token</text>
+<path d="M258,245 V295 A102.0,7 0 0 0 462,295 V245" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="360.0" cy="245" rx="102.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="360.0" y="274.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">PostgreSQL</text>
+<text x="360.0" y="289.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">rules · usage_days · device_events</text>
+<text x="360" y="330" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">device_events = outbox,</text>
+<text x="360" y="346" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">delivered at least once</text>
+<line x1="360" y1="138" x2="360" y2="156" stroke="#334155" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="360" y1="216" x2="360" y2="236" stroke="#334155" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="174" y1="120" x2="248" y2="110" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-blue)" marker-start="url(#a-blue)"/>
+<text x="211" y="94" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2563EB" text-anchor="middle">HTTPS</text>
+<rect x="530" y="20" width="210" height="370" rx="16" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="635" y="46" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#0F172A" text-anchor="middle">Child's Mac</text>
+<rect x="540" y="60" width="190" height="120" rx="12" fill="#F8FAFC"/>
+<text x="552" y="78" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="start">LOGGED-IN USER</text>
+<rect x="550" y="88" width="82" height="54" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="591.0" y="109.75" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">PaCo.app</text>
+<text x="591.0" y="128.25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">child view</text>
+<rect x="640" y="88" width="82" height="54" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="681.0" y="109.75" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">PaCoAgent</text>
+<text x="681.0" y="128.25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">usage</text>
+<rect x="540" y="190" width="190" height="190" rx="12" fill="#E2E8F0"/>
+<text x="635" y="208" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">ROOT</text>
+<rect x="550" y="218" width="172" height="66" rx="10" fill="#334155" stroke="#334155" stroke-width="1.5"/>
+<text x="636.0" y="239.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">PaCoDaemon</text>
+<text x="636.0" y="257.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#CBD5E1" text-anchor="middle">CloudSyncService</text>
+<text x="636.0" y="272.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#CBD5E1" text-anchor="middle">PolicyEngine</text>
+<path d="M548,307 V349 A44.0,7 0 0 0 636,349 V307" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="592.0" cy="307" rx="44.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="592.0" y="332.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">cloud.json</text>
+<text x="592.0" y="347.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">0600, token</text>
+<path d="M642,307 V349 A41.0,7 0 0 0 724,349 V307" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<ellipse cx="683.0" cy="307" rx="41.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+<text x="683.0" y="332.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">pf anchor</text>
+<text x="683.0" y="347.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">paco_cloud</text>
+<line x1="591" y1="142" x2="591" y2="216" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="566" y="150" width="50" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="591.0" y="162.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">cloud()</text>
+<line x1="681" y1="142" x2="681" y2="216" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<rect x="646" y="150" width="70" height="18" rx="9.0" fill="#FFFFFF"/>
+<text x="681.0" y="162.6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#0F172A" text-anchor="middle">reportUsage</text>
+<line x1="548" y1="236" x2="472" y2="176" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-green)"/>
+<text x="512" y="186" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#16A34A" text-anchor="middle">up</text>
+<line x1="472" y1="198" x2="548" y2="262" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-orange)"/>
+<text x="472" y="232" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#EA580C" text-anchor="middle">down</text>
+<line x1="30" y1="418" x2="62" y2="418" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-green)"/>
+<text x="70" y="422" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">heartbeat 30 s, usage, requests, PIN check</text>
+<line x1="360" y1="418" x2="392" y2="418" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" marker-end="url(#a-orange)"/>
+<text x="400" y="422" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">long-poll: commands within a second</text>
+<line x1="30" y1="446" x2="62" y2="446" stroke="#0F172A" stroke-width="2" stroke-linecap="round" marker-end="url(#a-ink)"/>
+<text x="70" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0F172A" text-anchor="start">XPC, code-signing checked</text>
+<text x="360" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#64748B" text-anchor="start">All traffic HTTPS; the daemon starts every connection.</text>
+</svg>

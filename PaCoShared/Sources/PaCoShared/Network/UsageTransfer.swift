@@ -1,6 +1,6 @@
 import Foundation
 
-public struct UsageTransfer: Codable, Sendable {
+public struct UsageTransfer: Codable, Sendable, Equatable {
     public var date: Date
     public var profileId: UUID?
     public var internetOnDuration: TimeInterval

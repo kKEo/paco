@@ -32,6 +32,17 @@ The destinations come from `FirewallRuleBuilder.passDestinations`: private IPv4 
 
 <figure><img src="../.gitbook/assets/dg-pf-rules.svg" alt="For a packet to 192.168.1.20, without quick the block rule matches last and the packet is blocked; with quick the pass rule for 192.168.0.0/16 stops evaluation and the packet passes."><figcaption><p>Why every pass rule must be quick.</p></figcaption></figure>
 
+## PaCo Cloud relay
+
+On a Mac managed by PaCo Cloud, `blockInternetRules(relay:)` adds a table with the server's addresses and one pass rule for the server's port, both before the block:
+
+```
+table <paco_cloud> persist { 203.0.113.7 }
+pass out quick proto tcp to <paco_cloud> port 443
+```
+
+Without it the child could not ask for more time, and the parent's commands could not arrive, while the internet is off. The daemon resolves the server's host while it can and calls `FirewallManager.updateRelay(_:)` when the addresses change. During a block it replaces only the table (`pfctl -a com.paco -t paco_cloud -T replace …`, or `-T flush` when empty), and reloads the anchor file only when the rules themselves change (enrolled, unenrolled, new port). It never re-runs `applyBlockLocked`, whose `pfctl -F states` would cut the open long-poll. Only literal IP addresses reach the rules (`CloudRelay.validAddresses`). See [PaCo Cloud server](cloud-server.md#staying-reachable-while-blocked).
+
 ## Applying and lifting the block
 
 **Block** (`disableInternet` → `applyBlockLocked`):
@@ -61,6 +72,7 @@ Code that already holds the lock must call `applyBlockLocked()`, never `disableI
 
 ```bash
 sudo pfctl -a com.paco -sr          # rules currently loaded in the anchor
+sudo pfctl -a com.paco -t paco_cloud -T show   # PaCo Cloud addresses (cloud-managed Macs)
 sudo pfctl -s info | head -3        # is pf enabled?
 cat /etc/pf.anchors/com.paco
 grep paco /etc/pf.conf

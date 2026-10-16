@@ -5,7 +5,10 @@ import PaCoShared
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var daemonClient: DaemonXPCClient
     @Query private var deviceConfigs: [DeviceConfig]
+    @State private var showCloudDisconnectConfirm = false
+    @State private var cloudMessage = ""
 
     @State private var currentPIN = ""
     @State private var newPIN = ""
@@ -39,6 +42,12 @@ struct SettingsView: View {
                     .padding(12)
                 }
 
+                if appState.role == .child, appState.controller == .cloud {
+                    GroupBox("PaCo Cloud") {
+                        cloudSection.padding(12)
+                    }
+                }
+
                 GroupBox("Device Role") {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Reset this device to choose a new role (Parent or Child). This clears all local data.")
@@ -52,6 +61,33 @@ struct SettingsView: View {
                 }
             }
             .padding(24)
+
+            if showCloudDisconnectConfirm {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Text("Disconnect from PaCo Cloud?")
+                        .font(.headline)
+                    Text("This Mac stops reporting screen time and taking commands from PaCo Cloud. The rules it has now keep applying until a parent Mac or PaCo Cloud manages it again.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    HStack(spacing: 16) {
+                        Button("Cancel") { showCloudDisconnectConfirm = false }
+                        Button("Disconnect", role: .destructive) {
+                            showCloudDisconnectConfirm = false
+                            disconnectFromCloud()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
+                }
+                .padding(30)
+                .frame(width: 380)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12)
+            }
 
             if showResetConfirm {
                 Color.black.opacity(0.3)
@@ -79,6 +115,42 @@ struct SettingsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(radius: 12)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var cloudSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let cloud = daemonClient.cloudStatus, cloud.enrolled {
+                Text("This Mac is managed from PaCo Cloud at \(cloud.serverURL?.host ?? "?") as “\(cloud.deviceName ?? "?")”.")
+                    .font(.caption)
+                Text(cloud.connected ? "Connected." : (cloud.lastError ?? "Not reachable right now."))
+                    .font(.caption)
+                    .foregroundStyle(cloud.connected ? Color.secondary : Color.orange)
+                Text("Schedules, app rules and the parent PIN are managed on the PaCo Cloud web page, not here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button("Disconnect from PaCo Cloud…", role: .destructive) { showCloudDisconnectConfirm = true }
+            } else {
+                Text(daemonClient.cloudStatus?.lastError ?? "This Mac is not connected to PaCo Cloud.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if !cloudMessage.isEmpty {
+                Text(cloudMessage).font(.caption).foregroundStyle(.red)
+            }
+        }
+        .onAppear { daemonClient.refreshCloudStatus() }
+    }
+
+    private func disconnectFromCloud() {
+        cloudMessage = ""
+        daemonClient.cloud(.unenroll) { response in
+            guard response.ok else {
+                cloudMessage = response.error ?? "Could not disconnect."
+                return
+            }
+            appState.setController(.localParent, context: modelContext)
         }
     }
 

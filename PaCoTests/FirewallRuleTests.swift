@@ -44,4 +44,47 @@ final class FirewallRuleTests: XCTestCase {
         XCTAssertEqual(passLines.count, FirewallRuleBuilder.passDestinations.count)
     }
 
+    // MARK: - PaCo Cloud relay
+
+    private func lines(_ rules: String) -> [String] {
+        rules.split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+    }
+
+    func testNoRelayLeavesRulesUnchanged() {
+        XCTAssertEqual(FirewallRuleBuilder.blockInternetRules(relay: nil), FirewallRuleBuilder.blockInternetRules())
+        XCTAssertFalse(FirewallRuleBuilder.blockInternetRules().contains("paco_cloud"))
+    }
+
+    func testRelayPassesOnlyTheServerPortAndPrecedesTheBlock() {
+        let rules = lines(FirewallRuleBuilder.blockInternetRules(
+            relay: CloudRelay(addresses: ["203.0.113.7", "2001:db8::7"], port: 443)))
+
+        XCTAssertEqual(rules.first, "table <paco_cloud> persist { 203.0.113.7 2001:db8::7 }")
+        let relayRule = "pass out quick proto tcp to <paco_cloud> port 443"
+        let relayIndex = rules.firstIndex(of: relayRule)
+        let blockIndex = rules.firstIndex { $0.hasPrefix("block") }
+        XCTAssertNotNil(relayIndex)
+        XCTAssertEqual(blockIndex, rules.count - 1)
+        XCTAssertLessThan(relayIndex!, blockIndex!)
+        for line in rules where line.hasPrefix("pass") {
+            XCTAssertTrue(line.hasPrefix("pass out quick "), "not quick: \(line)")
+        }
+    }
+
+    func testRelayTableIsEmittedBeforeAnyAddressIsKnown() {
+        let rules = lines(FirewallRuleBuilder.blockInternetRules(relay: CloudRelay(addresses: [], port: 8443)))
+        XCTAssertTrue(rules.contains("table <paco_cloud> persist {}"))
+        XCTAssertTrue(rules.contains("pass out quick proto tcp to <paco_cloud> port 8443"))
+    }
+
+    func testOnlyLiteralAddressesReachTheRules() {
+        let relay = CloudRelay(addresses: [
+            "203.0.113.7", "203.0.113.7", "example.com", "10.0.0.0/8",
+            "1.2.3.4 } pass out all {", "::1", "",
+        ], port: 443)
+        XCTAssertEqual(relay.validAddresses, ["203.0.113.7", "::1"])
+        XCTAssertFalse(FirewallRuleBuilder.blockInternetRules(relay: relay).contains("pass out all"))
+    }
 }

@@ -22,4 +22,14 @@ import Foundation
     func grantInternetOverride(requestId: String, until: Date, reply: @escaping (Bool, String?) -> Void)
     /// The daemon's current policy as JSON-encoded `DaemonPolicy` (nil on encoding failure).
     func fetchPolicy(reply: @escaping (Data?) -> Void)
+
+    // MARK: PaCo Cloud
+
+    /// One entry point for everything cloud: `request` is a `CloudXPCRequest` and
+    /// the reply a `CloudXPCResponse`, both JSON-encoded with `CloudCodec`. The
+    /// daemon owns the enrollment and the device token; the app never sees it.
+    func cloud(_ request: Data, reply: @escaping (Data?) -> Void)
+    /// Agent → daemon each tick: today's usage snapshot (a JSON-encoded
+    /// `UsageTransfer`, default encoder), uploaded to PaCo Cloud when enrolled.
+    func reportUsage(_ usageData: Data, reply: @escaping (Bool) -> Void)
 }
