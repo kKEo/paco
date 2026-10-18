@@ -11,8 +11,8 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
-        <testsuite name="Postgres">
-            <directory>tests/Postgres</directory>
+        <testsuite name="MariaDb">
+            <directory>tests/MariaDb</directory>
         </testsuite>
         <testsuite name="Redis">
             <directory>tests/Redis</directory>

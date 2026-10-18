@@ -65,7 +65,7 @@ Delivery is at least once, so every time window is absolute: a re-delivered “6
 
 The heartbeat is the safety net: it reports the policy version the Mac holds, and the server answers `policyStale` when that is behind.
 
-Inserts into the outbox lock the device row first (`DeviceEventOutbox`). On PostgreSQL, sequence values are handed out before commit, so without the lock event 11 could commit before event 10, and a poller already past 11 would never see 10. `tests/Postgres/OutboxLockTest.php` proves a second writer waits.
+Inserts into the outbox lock the device row first (`DeviceEventOutbox`). InnoDB hands out auto-increment ids at insert time, before commit, so without the lock event 11 could commit before event 10, and a poller already past 11 would never see 10. `tests/MariaDb/OutboxLockTest.php` proves a second writer waits.
 
 ### Waiting
 
@@ -92,6 +92,7 @@ DNS itself is not passed. Home routers usually resolve DNS on a private address,
 * **Tokens:** `pcd_<device uuid>.<secret>`, only SHA-256 of the secret stored. The daemon rotates it every 30 days; until the new one is used, both work, so a lost reply cannot lock the Mac out.
 * **Parent accounts:** email verification required; optional TOTP two-factor authentication (Fortify actions, Volt pages); password confirmation before removing a Mac or changing the PIN.
 * **Notifications:** new requests are mailed, and pushed to browsers the parent subscribed (Web Push, VAPID keys).
+* **Database:** MariaDB 10.6 or newer in production (the Docker stack bundles 11.4, or points at an existing server), SQLite for development and the default test run. Three MariaDB details matter: columns that are never null are `datetime`, not `timestamp`, because before 10.10 the first NOT NULL `timestamp` of a table silently gets `ON UPDATE CURRENT_TIMESTAMP`; the connection pins the session time zone to UTC, since `timestamp` values pass through it; and it runs at READ COMMITTED, the isolation the outbox and the long-poll were written for. `tests/MariaDb/SchemaTest.php` guards all three.
 * **Scheduler:** `paco:expire-requests` (requests unanswered for 24 hours are denied) and `paco:prune` (old codes, acknowledged events after 90 days, usage after 400 days).
 
 ## Developing against a local server
@@ -105,7 +106,7 @@ cd server && php artisan paco:approve      # newest pending request
 
 The seeded parent is `parent@example.com` / `password` with PIN `123456`. A **Debug** daemon accepts a plain `http://` address on a loopback host, so type `http://localhost:8080` in the enrollment form; Release builds accept only `https://`. Full daemon testing still needs Developer ID signing, see [Getting started](getting-started.md).
 
-`make server-up` runs the production-like stack in Docker: Octane on FrankenPHP, PostgreSQL, a queue worker, the scheduler and Mailpit.
+`make server-up` runs the production-like stack in Docker: Octane on FrankenPHP, MariaDB, a queue worker, the scheduler and Mailpit.
 
 ## Tests
 
@@ -114,7 +115,7 @@ The seeded parent is `parent@example.com` / `password` with PIN `123456`. A **De
 | `server/tests/Feature/Api/Device` | Every device endpoint, long-poll cursor and acknowledgement semantics, PIN lockout, time-zone bucketing, token rotation |
 | `server/tests/Feature/Web` | Every dashboard page, ownership checks, password confirmation |
 | `server/tests/Feature/Auth` | Starter-kit auth plus two-factor login |
-| `server/tests/Postgres`, `server/tests/Redis` | Outbox locking on PostgreSQL; the Redis waker. Skipped unless those servers are configured. |
+| `server/tests/MariaDb`, `server/tests/Redis` | Outbox locking and the schema caveats on MariaDB; the Redis waker. Skipped unless those servers are configured. |
 | `PaCoTests/Cloud*` | Codec, events, reducer, credentials, URL validation, the shared fixture |
 
-The `Server` workflow runs the suite on SQLite and on PostgreSQL with Redis, see [Continuous integration](continuous-integration.md).
+The `Server` workflow runs the suite on SQLite, MariaDB 10.6 and MariaDB 11.4 with Redis, see [Continuous integration](continuous-integration.md).

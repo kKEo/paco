@@ -78,6 +78,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // PaCo Cloud: `timestamp` columns convert through the session time zone,
+            // so pin it to UTC; READ COMMITTED avoids InnoDB gap locks around the
+            // outbox/usage row locks (the semantics the app was designed for).
+            'timezone' => env('DB_TIMEZONE', '+00:00'),
+            'isolation_level' => env('DB_ISOLATION_LEVEL', 'READ COMMITTED'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80400 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

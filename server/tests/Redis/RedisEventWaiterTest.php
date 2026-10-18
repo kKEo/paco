@@ -7,7 +7,7 @@ use App\Services\Devices\RedisEventWaiter;
 use Illuminate\Support\Facades\Redis;
 
 /*
-| Against a real Redis: PACO_TEST_REDIS=1 REDIS_CLIENT=predis (CI's pgsql job,
+| Against a real Redis: PACO_TEST_REDIS=1 REDIS_CLIENT=predis (CI's MariaDB 11.4 job,
 | or `docker run -p 6379:6379 redis:7-alpine` locally).
 */
 

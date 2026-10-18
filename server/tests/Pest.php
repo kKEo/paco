@@ -12,10 +12,10 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 // Tests that need committed rows visible to a second connection (no wrapping
-// transaction). They only run against PostgreSQL; see tests/Postgres.
+// transaction). They only run against MariaDB; see tests/MariaDb.
 pest()->extend(TestCase::class)
     ->use(DatabaseMigrations::class)
-    ->in('Postgres');
+    ->in('MariaDb');
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('code', 8)->index();
             $table->string('device_name_hint')->nullable();
             $table->foreignUuid('active_profile_id')->nullable()->constrained('profiles')->nullOnDelete();
-            $table->timestamp('expires_at');
+            $table->dateTime('expires_at'); // not timestamp: MariaDB < 10.10 adds ON UPDATE CURRENT_TIMESTAMP
             $table->timestamp('used_at')->nullable();
             $table->foreignUuid('used_by_device_id')->nullable()->constrained('child_devices')->nullOnDelete();
             $table->timestamps();

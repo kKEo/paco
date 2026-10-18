@@ -120,8 +120,12 @@ clear-policy:
 # ── PaCo Cloud server (server/, Laravel) ─────────────────────────────
 # Without Docker: `make server-install server-serve` (SQLite, http://localhost:8080,
 # seeded parent parent@example.com / password, PIN 123456).
-# With Docker: `make server-up` (Postgres + Octane/FrankenPHP + Mailpit).
+# With Docker: `make server-up` (MariaDB + Octane/FrankenPHP + Mailpit).
+# The bundled MariaDB runs under the compose profile `mariadb`; pass
+# SERVER_DB_PROFILE= to use an external server configured in server/.env.
 SERVER_DIR := server
+SERVER_DB_PROFILE ?= mariadb
+SERVER_COMPOSE = docker compose $(if $(SERVER_DB_PROFILE),--profile $(SERVER_DB_PROFILE),)
 
 # Safe to re-run: keeps .env, APP_KEY and data; seeds only a brand-new database.
 server-install:
@@ -141,10 +145,10 @@ server-serve:
 
 server-up:
 	cd $(SERVER_DIR) && test -f .env || { cp .env.example .env && php artisan key:generate --no-interaction; }
-	cd $(SERVER_DIR) && docker compose up -d --build
+	cd $(SERVER_DIR) && $(SERVER_COMPOSE) up -d --build
 
 server-down:
-	cd $(SERVER_DIR) && docker compose down
+	cd $(SERVER_DIR) && $(SERVER_COMPOSE) down
 
 server-test:
 	cd $(SERVER_DIR) && vendor/bin/pest

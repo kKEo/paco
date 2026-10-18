@@ -12,7 +12,7 @@ A personal-use macOS parental control app with internet on/off scheduling, app r
 - Xcode 15+ with license accepted (`sudo xcodebuild -license`)
 - [`xcodegen`](https://github.com/yonaskolb/XcodeGen) 2.45+ (`brew install xcodegen`)
 - Two Macs on the same local network (parent Mac + child Mac), or one Mac for single-device testing
-- Or, with PaCo Cloud: one child Mac plus a PaCo Cloud server (PHP 8.3, PostgreSQL; see [`server/README.md`](server/README.md))
+- Or, with PaCo Cloud: one child Mac plus a PaCo Cloud server (PHP 8.3, MariaDB 10.6+; see [`server/README.md`](server/README.md))
 
 ---
 
@@ -97,7 +97,7 @@ The agent counts **foreground** time per regular (Dock) app using `NSWorkspace` 
 
 For a parent without a Mac of their own. The child's **root daemon** (`CloudSyncService`) enrolls with a one-time code from the PaCo Cloud web page and keeps a device token in `/Library/Application Support/PaCo/cloud.json` (root-only). It long-polls `/api/v1/device/events` for the parent's commands (policy changes, approvals, manual on/off, profile), sends a heartbeat every 30 s, uploads the agent's usage snapshots, and relays time requests and PIN checks. While the internet is blocked, a `pf` table keeps only the server reachable. The parent manages schedules, app rules, profiles, requests and the PIN, and sees screen time per day and per app, in the browser.
 
-Server: Laravel + Livewire under `server/`, Octane on FrankenPHP (the long-poll needs it), PostgreSQL. Run it with `make server-install server-serve` (SQLite) or `make server-up` (Docker). Protocol and design: [PaCo Cloud server](docs/gitbook/developer-guide/cloud-server.md).
+Server: Laravel + Livewire under `server/`, Octane on FrankenPHP (the long-poll needs it), MariaDB. Run it with `make server-install server-serve` (SQLite) or `make server-up` (Docker). Protocol and design: [PaCo Cloud server](docs/gitbook/developer-guide/cloud-server.md).
 
 ### Parent Access on a child Mac
 
@@ -202,7 +202,7 @@ The postinstall script:
 | `make clean` | Remove `build/` directory |
 | `make clear-pin` | Delete stored PIN from Keychain (for testing) |
 | `make server-install` / `server-serve` | PaCo Cloud server on SQLite at http://localhost:8080 |
-| `make server-up` / `server-down` | PaCo Cloud server in Docker (Octane, PostgreSQL, Mailpit) |
+| `make server-up` / `server-down` | PaCo Cloud server in Docker (Octane, MariaDB, Mailpit) |
 | `make server-test` / `server-pint` | Server tests / code style |
 | `make server-enroll-code` | One-time code for enrolling a child Mac |
 

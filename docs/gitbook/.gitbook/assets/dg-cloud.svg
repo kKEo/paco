@@ -34,7 +34,7 @@
 <text x="360.0" y="201.1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">bearer device token</text>
 <path d="M258,245 V295 A102.0,7 0 0 0 462,295 V245" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
 <ellipse cx="360.0" cy="245" rx="102.0" ry="7" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
-<text x="360.0" y="274.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">PostgreSQL</text>
+<text x="360.0" y="274.0" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600" fill="#0F172A" text-anchor="middle">MariaDB</text>
 <text x="360.0" y="289.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="middle">rules · usage_days · device_events</text>
 <text x="360" y="330" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">device_events = outbox,</text>
 <text x="360" y="346" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" fill="#64748B" text-anchor="middle">delivered at least once</text>

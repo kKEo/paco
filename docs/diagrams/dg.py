@@ -362,7 +362,7 @@ def cloud():
     s.text(360, 64, 'Laravel · Octane on FrankenPHP', size=11, anchor='middle', fill=C['muted'])
     s.box(250, 80, 220, 58, 'Parent dashboard', ['Livewire pages, 2FA'], fill=C['white'], stroke=C['blue'], ssize=11)
     s.box(250, 158, 220, 58, 'Device API  /api/v1', ['bearer device token'], fill=C['white'], stroke=C['green'], ssize=11)
-    s.cylinder(258, 238, 204, 64, 'PostgreSQL', 'rules · usage_days · device_events')
+    s.cylinder(258, 238, 204, 64, 'MariaDB', 'rules · usage_days · device_events')
     s.text(360, 330, 'device_events = outbox,', size=11, anchor='middle', fill=C['muted'])
     s.text(360, 346, 'delivered at least once', size=11, anchor='middle', fill=C['muted'])
     s.line(360, 138, 360, 156, color='slate', sw=1.4)

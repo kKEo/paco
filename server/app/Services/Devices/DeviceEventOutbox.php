@@ -11,8 +11,9 @@ use Illuminate\Support\Facades\DB;
  * The only writer of `device_events`.
  *
  * Inserts lock the device row first, so a device's events commit in id order.
- * Without that, two concurrent transactions on Postgres can commit id 11 before
- * id 10; a poller that already moved its cursor to 11 would never see 10.
+ * InnoDB hands out auto-increment ids at insert time, not at commit, so without
+ * that two concurrent transactions could commit id 11 before id 10; a poller
+ * that already moved its cursor to 11 would never see 10.
  */
 final class DeviceEventOutbox
 {

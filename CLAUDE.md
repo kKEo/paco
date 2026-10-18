@@ -37,14 +37,14 @@ xcodebuild test -project PaCo.xcodeproj -scheme PaCoTests \
 ```bash
 make server-install server-serve   # SQLite at http://localhost:8080; parent@example.com / password, PIN 123456
 make server-test                   # Pest (cd server && vendor/bin/pest); vendor/bin/pint for style
-make server-up                     # Docker: Octane/FrankenPHP, PostgreSQL, queue, scheduler, Mailpit
+make server-up                     # Docker: Octane/FrankenPHP, MariaDB (profile `mariadb`), queue, scheduler, Mailpit
 cd server && php artisan paco:enrollment-code | paco:push-event | paco:approve | paco:devices
 ```
 
 ### CI (GitHub Actions)
 
 - `ci.yml`: XcodeGen project-sync check (pinned `XCODEGEN_VERSION` — bump it when upgrading XcodeGen locally), Debug build, tests, Release build; ad-hoc signed on `macos-15`. Ignores `server/**` except `server/tests/Fixtures/**` (the shared policy fixture).
-- `server.yml`: Pint + Pest for `server/` on SQLite, and on PostgreSQL + Redis (runs `tests/Postgres`, `tests/Redis`). PHP 8.3; `composer.json` pins `config.platform.php` so the lock stays 8.3-compatible.
+- `server.yml`: Pint + Pest for `server/` on SQLite, MariaDB 10.6 and 11.4 + Redis (runs `tests/MariaDb`, `tests/Redis`). PHP 8.3; `composer.json` pins `config.platform.php` so the lock stays 8.3-compatible.
 - `docs.yml`: `python3 .github/scripts/check_book.py` — links, anchors, SUMMARY, images, and that `docs/diagrams/*.py` reproduce the committed SVGs. Regenerate diagrams after editing the scripts.
 - `pages.yml`: builds `docs/gitbook` with HonKit (`docs/site/build.sh`, pinned in `docs/site/package-lock.json`, local plugin in `docs/site/plugin/`, sidebar template in `docs/site/theme/_layouts/`), checks it with `docs/site/check_site.py`, deploys to https://kkeo.github.io/paco/ from `master`. Don't nest tables inside list items in the book — HonKit renders them as raw pipes; no backslash line breaks either (`check_book.py` rejects them).
 - `release.yml`: on `v*` tags, signed + notarized pkg published as a GitHub Release. Needs the `TEAM_ID` variable and the signing/notary secrets listed in its header.
@@ -89,5 +89,6 @@ The time-extension flow: child sends `.requestExtension` over Bonjour and record
 - Cloud events are delivered at least once: payloads carry absolute `until`/`grantedUntil`, and `CloudEventReducer` skips ids ≤ cursor. Server-side, insert events only through `DeviceEventOutbox` (it locks the device row so ids commit in order).
 - On a cloud child, never push the app's local `DeviceConfig.childProfileId` to the daemon at launch: the profile comes from the server.
 - The `pf` relay table (`paco_cloud`) is refreshed by `FirewallManager.updateRelay` (`pfctl -T replace`), never by re-running `applyBlockLocked` during a block: its `pfctl -F states` kills the long-poll.
+- Server database is MariaDB 10.6+ (SQLite for dev/tests). Never add a NOT NULL `timestamp` column (use `dateTime`: before 10.10 it silently gets `ON UPDATE CURRENT_TIMESTAMP`); the `mariadb` connection pins UTC and READ COMMITTED in `config/database.php`.
 - Server: `AuthenticateDevice` implements `AuthenticatesRequests` so it sorts before `ThrottleRequests`; otherwise device rate limits key by IP. Fortify is used only for 2FA actions (`Fortify::ignoreRoutes()`).
 - Full end-to-end daemon/agent testing requires Developer ID signing (`SMAppService`/XPC mach services enforce it); unsigned builds run the UI but daemon/agent connections fail.

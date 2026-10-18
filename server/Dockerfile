@@ -21,7 +21,7 @@ COPY vite.config.js ./
 RUN npm run build
 
 FROM dunglas/frankenphp:1-php8.3 AS app
-RUN install-php-extensions pcntl pdo_pgsql pdo_sqlite intl opcache zip redis gmp bcmath
+RUN install-php-extensions pcntl pdo_mysql pdo_sqlite intl opcache zip redis gmp bcmath
 WORKDIR /app
 COPY --from=vendor /app /app
 COPY --from=assets /app/public/build /app/public/build

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('internet_on_seconds')->default(0);
             $table->unsignedInteger('app_seconds')->default(0); // sum of app_entries durations
             $table->json('app_entries');
-            $table->timestamp('reported_at');
+            $table->dateTime('reported_at'); // not timestamp: MariaDB < 10.10 adds ON UPDATE CURRENT_TIMESTAMP
             $table->timestamps();
 
             $table->unique(['device_id', 'local_date']);
